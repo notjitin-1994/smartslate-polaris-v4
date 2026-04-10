@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Bot, Sparkles } from 'lucide-react';
+import { GoogleButton } from '@/components/Auth/GoogleButton';
 
 async function signup(formData: FormData) {
   'use server';
@@ -63,6 +64,20 @@ export default async function SignupPage({
             </div>
           )}
 
+          {/* Google OAuth */}
+          <GoogleButton />
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-3 bg-transparent text-white/30 font-medium">or sign up with email</span>
+            </div>
+          </div>
+
+          {/* Email/Password Form */}
           <form action={signup} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-white/70 mb-2">

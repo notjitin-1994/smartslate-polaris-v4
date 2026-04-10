@@ -36,6 +36,7 @@ export async function proxy(request: NextRequest) {
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&
     !request.nextUrl.pathname.startsWith('/signup') &&
+    !request.nextUrl.pathname.startsWith('/auth/callback') &&
     !request.nextUrl.pathname.startsWith('/api')
   ) {
     // no user, potentially respond by redirecting the user to the login page
