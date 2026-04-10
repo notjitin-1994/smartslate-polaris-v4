@@ -1,14 +1,22 @@
-import { experimental_createProviderRegistry as createProviderRegistry } from 'ai';
+import { createProviderRegistry } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
-import { moonshot } from '@ai-sdk/moonshotai';
+import { moonshotai as moonshot } from '@ai-sdk/moonshotai';
 import { zhipu } from 'zhipu-ai-provider';
-import { minimax } from 'vercel-minimax-ai-provider';
 
 /**
  * Unified Provider Registry for Polaris v4
- * Supports hot-swapping models via environment variables or user settings.
+ * 
+ * Maps provider IDs to their SDK instances. Use `provider:model` format
+ * when selecting models (e.g. "anthropic:claude-sonnet-4.5").
+ *
+ * Supported providers:
+ * - openai: GPT models
+ * - anthropic: Claude models
+ * - google: Gemini models
+ * - moonshot: Kimi models (Moonshot AI)
+ * - zhipu: GLM models (Z.AI / ZhipuAI)
  */
 export const modelRegistry = createProviderRegistry({
   openai,
@@ -16,21 +24,16 @@ export const modelRegistry = createProviderRegistry({
   google,
   moonshot,
   zhipu,
-  minimax,
 });
 
 /**
- * Helper to get a model with proper caching and configuration.
+ * Get a language model by ID.
+ *
+ * @example
+ * getModel('anthropic:claude-sonnet-4.5')
+ * getModel('zhipu:glm-4')
  */
-export function getModel(modelId: string = process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'anthropic:claude-3-5-sonnet-latest') {
-  return modelRegistry.languageModel(modelId);
+export function getModel(modelId: string = process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'anthropic:claude-sonnet-4.5') {
+  // Type assertion needed because registry generates a union of known model IDs
+  return modelRegistry.languageModel(modelId as Parameters<typeof modelRegistry.languageModel>[0]);
 }
-
-/**
- * Model specific options for prompt caching where supported.
- */
-export const providerOptions = {
-  anthropic: {
-    cacheControl: { type: 'ephemeral' as const },
-  },
-};

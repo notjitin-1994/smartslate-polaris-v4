@@ -1,5 +1,5 @@
-import { streamText, tool } from 'ai';
-import { getModel, providerOptions } from '@/lib/ai/models';
+import { streamText, UIMessage, convertToModelMessages } from 'ai';
+import { getModel } from '@/lib/ai/models';
 import { DISCOVERY_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { z } from 'zod';
 
@@ -7,38 +7,36 @@ import { z } from 'zod';
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages, modelId } = await req.json();
+  const { messages, modelId }: { messages: UIMessage[]; modelId?: string } = await req.json();
 
   const result = streamText({
     model: getModel(modelId),
     system: DISCOVERY_SYSTEM_PROMPT,
-    messages,
+    messages: await convertToModelMessages(messages as UIMessage[]),
     tools: {
-      requestApproval: tool({
+      // Client-side tool: requests user approval before transitioning stages
+      requestApproval: {
         description: 'Request user approval before proceeding to the next discovery stage.',
-        parameters: z.object({
-          summary: z.string().description('A summary of what has been learned in the current stage.'),
-          nextStage: z.string().description('The name of the next discovery stage.'),
+        inputSchema: z.object({
+          summary: z.string().describe('A summary of what has been learned in the current stage.'),
+          nextStage: z.string().describe('The name of the next discovery stage.'),
         }),
-        // Human-in-the-Loop: this tool requires explicit client-side interaction
-      }),
-      saveDiscoveryContext: tool({
+      },
+      // Server-side tool: persists discovery data
+      saveDiscoveryContext: {
         description: 'Save gathered discovery data to the database.',
-        parameters: z.object({
+        inputSchema: z.object({
           starmapId: z.string().uuid(),
-          data: z.record(z.any()),
+          data: z.record(z.string(), z.any()),
         }),
         execute: async ({ starmapId, data }) => {
-          // Implementation for database saving
+          // TODO: Wire to Supabase/Drizzle once DB is set up
+          console.log(`[saveDiscoveryContext] starmap=${starmapId}`, data);
           return { success: true };
-        }
-      })
-    },
-    // Prompt caching for supported models
-    experimental_providerMetadata: {
-      anthropic: providerOptions.anthropic,
+        },
+      },
     },
   });
 
-  return result.toDataStreamResponse();
+  return result.toUIMessageStreamResponse();
 }

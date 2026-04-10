@@ -1,47 +1,45 @@
-import { useChat } from 'ai/react';
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from 'ai';
 import { useState } from 'react';
 
 export function useDiscovery(starmapId: string) {
   const [currentStage, setCurrentStage] = useState(1);
-  const [isApproving, setIsApproving] = useState(false);
 
-  const { messages, input, handleInputChange, handleSubmit, addToolResult, isLoading } = useChat({
-    api: '/api/chat',
-    body: {
-      starmapId,
-      currentStage,
-    },
-    onToolCall({ toolCall }) {
-      if (toolCall.toolName === 'requestApproval') {
-        setIsApproving(true);
-      }
-    },
+  const { messages, sendMessage, addToolOutput, status, error, stop } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   });
 
-  const approveStage = async (toolCallId: string) => {
-    addToolResult({
+  const approveStage = (toolCallId: string) => {
+    addToolOutput({
+      tool: 'requestApproval',
       toolCallId,
-      result: { approved: true },
+      output: { approved: true },
     });
-    setIsApproving(false);
     setCurrentStage((prev) => Math.min(prev + 1, 7));
   };
 
-  const rejectStage = async (toolCallId: string, feedback: string) => {
-    addToolResult({
+  const rejectStage = (toolCallId: string, feedback: string) => {
+    addToolOutput({
+      tool: 'requestApproval',
       toolCallId,
-      result: { approved: false, feedback },
+      output: { approved: false, feedback },
     });
-    setIsApproving(false);
   };
 
   return {
     messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    isApproving,
+    sendMessage,
+    addToolOutput,
+    status,
+    error,
+    stop,
+    isApproving: status === 'submitted' || status === 'streaming',
+    isLoading: status === 'submitted' || status === 'streaming',
     approveStage,
     rejectStage,
     currentStage,
