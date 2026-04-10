@@ -8,99 +8,103 @@ import { createClient } from '@/lib/supabase/server';
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages, modelId, starmapId }: { messages: UIMessage[]; modelId?: string; starmapId?: string } = await req.json();
+  try {
+    const { messages, modelId, starmapId }: { messages: UIMessage[]; modelId?: string; starmapId?: string } = await req.json();
 
-  // Check authentication
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
-  if (authError || !user) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+    // Check authentication
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return new Response('Unauthorized', { status: 401 });
+    }
 
-  // If starmapId is provided, we should ideally verify ownership here too
-  // but we definitely must verify it in the tool execution.
+    const result = streamText({
+      model: getModel(modelId),
+      system: `${DISCOVERY_SYSTEM_PROMPT}\n\nCURRENT STARMAP ID: ${starmapId || 'NOT_PROVIDED'}`,
+      messages: await convertToModelMessages(messages as UIMessage[]),
+      tools: {
+        // Client-side tool: requests user approval before transitioning stages
+        requestApproval: {
+          description: 'Request user approval before proceeding to the next discovery stage.',
+          inputSchema: z.object({
+            summary: z.string().describe('A summary of what has been learned in the current stage.'),
+            nextStage: z.string().describe('The name of the next discovery stage.'),
+          }),
+        },
+        // Server-side tool: persists discovery data
+        saveDiscoveryContext: {
+          description: 'Save gathered discovery data to the database.',
+          inputSchema: z.object({
+            starmapId: z.string().uuid().describe('The ID of the starmap to save to.'),
+            data: z.record(z.string(), z.unknown()),
+          }),
+          execute: async ({ starmapId: toolStarmapId, data }) => {
+            const { db } = await import('@/lib/db');
+            const { starmapResponses, starmaps } = await import('@/lib/db/schema');
+            const { eq, and } = await import('drizzle-orm');
 
-  const result = streamText({
-    model: getModel(modelId),
-    system: `${DISCOVERY_SYSTEM_PROMPT}\n\nCURRENT STARMAP ID: ${starmapId || 'NOT_PROVIDED'}`,
-    messages: await convertToModelMessages(messages as UIMessage[]),
-    tools: {
-      // Client-side tool: requests user approval before transitioning stages
-      requestApproval: {
-        description: 'Request user approval before proceeding to the next discovery stage.',
-        inputSchema: z.object({
-          summary: z.string().describe('A summary of what has been learned in the current stage.'),
-          nextStage: z.string().describe('The name of the next discovery stage.'),
-        }),
-      },
-      // Server-side tool: persists discovery data
-      saveDiscoveryContext: {
-        description: 'Save gathered discovery data to the database.',
-        inputSchema: z.object({
-          starmapId: z.string().uuid().describe('The ID of the starmap to save to.'),
-          data: z.record(z.string(), z.unknown()),
-        }),
-        execute: async ({ starmapId: toolStarmapId, data }) => {
-          const { db } = await import('@/lib/db');
-          const { starmapResponses, starmaps } = await import('@/lib/db/schema');
-          const { eq, and } = await import('drizzle-orm');
+            try {
+              // VERIFY OWNERSHIP before saving
+              const starmap = await db.query.starmaps.findFirst({
+                where: and(
+                  eq(starmaps.id, toolStarmapId),
+                  eq(starmaps.userId, user.id)
+                )
+              });
 
-          try {
-            // VERIFY OWNERSHIP before saving
-            const starmap = await db.query.starmaps.findFirst({
-              where: and(
-                eq(starmaps.id, toolStarmapId),
-                eq(starmaps.userId, user.id)
-              )
-            });
+              if (!starmap) {
+                return { success: false, saved: false, error: 'Unauthorized or Starmap not found' };
+              }
 
-            if (!starmap) {
-              return { success: false, saved: false, error: 'Unauthorized or Starmap not found' };
+              // Extract a human-readable answer if present, otherwise fallback to a summary
+              const readableAnswer = data.answer || data.value || data.response || JSON.stringify(data);
+              const questionId = data.questionId || data.id || 'discovery_context';
+              
+              // Insert discovery data into database
+              await db.insert(starmapResponses).values({
+                starmapId: toolStarmapId,
+                questionId,
+                answer: String(readableAnswer),
+                stage: data.stage as number || 1,
+                modelMessageId: data.messageId as string,
+                metadata: data,
+              });
+
+              // If the data contains high-level context, update the starmap record
+              const contextUpdates: Record<string, unknown> = {};
+              if (data.role) contextUpdates.role = data.role;
+              if (data.goals || data.goal) contextUpdates.goals = data.goals || data.goal;
+              if (data.industry) contextUpdates.industry = data.industry;
+              if (data.organization || data.org) contextUpdates.organization = data.organization || data.org;
+              if (data.title) contextUpdates.title = data.title;
+
+              if (Object.keys(contextUpdates).length > 0) {
+                await db.update(starmaps)
+                  .set({ 
+                    context: { ...starmap.context, ...contextUpdates },
+                    ...(data.title ? { title: data.title } : {}),
+                    updatedAt: new Date()
+                  })
+                  .where(eq(starmaps.id, toolStarmapId));
+              }
+
+              return { success: true, saved: true };
+            } catch (error) {
+              console.error('[saveDiscoveryContext] Error:', error);
+              return { success: false, saved: false, error: String(error) };
             }
-
-            // Extract a human-readable answer if present, otherwise fallback to a summary
-            const readableAnswer = data.answer || data.value || data.response || JSON.stringify(data);
-            const questionId = data.questionId || data.id || 'discovery_context';
-            
-            // Insert discovery data into database
-            await db.insert(starmapResponses).values({
-              starmapId: toolStarmapId,
-              questionId,
-              answer: String(readableAnswer),
-              stage: data.stage as number || 1,
-              modelMessageId: data.messageId as string,
-              metadata: data,
-            });
-
-            // If the data contains high-level context, update the starmap record
-            const contextUpdates: Record<string, unknown> = {};
-            if (data.role) contextUpdates.role = data.role;
-            if (data.goals || data.goal) contextUpdates.goals = data.goals || data.goal;
-            if (data.industry) contextUpdates.industry = data.industry;
-            if (data.organization || data.org) contextUpdates.organization = data.organization || data.org;
-            if (data.title) contextUpdates.title = data.title;
-
-            if (Object.keys(contextUpdates).length > 0) {
-              await db.update(starmaps)
-                .set({ 
-                  context: { ...starmap.context, ...contextUpdates },
-                  // Also update title if provided
-                  ...(data.title ? { title: data.title } : {}),
-                  updatedAt: new Date()
-                })
-                .where(eq(starmaps.id, toolStarmapId));
-            }
-
-            return { success: true, saved: true };
-          } catch (error) {
-            console.error('[saveDiscoveryContext] Error:', error);
-            return { success: false, saved: false, error: String(error) };
-          }
+          },
         },
       },
-    },
-  });
+    });
 
-  return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse();
+  } catch (error) {
+    console.error('[Chat API] Fatal Error:', error);
+    return new Response(
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal Server Error' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
 }

@@ -60,6 +60,7 @@ export default function DiscoveryPage() {
     messages,
     sendMessage,
     isLoading,
+    error,
     approveStage,
     rejectStage,
     currentStage,
@@ -206,7 +207,12 @@ export default function DiscoveryPage() {
 
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {messages.length === 0 && (
+            {error && (
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
+                Error: {error.message || 'The AI failed to respond. Please check your connection or environment variables and try again.'}
+              </div>
+            )}
+            {messages.length === 0 && !error && (
               <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto space-y-4">
                 <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-primary-500 animate-pulse">
                   <Bot size={24} />
