@@ -123,43 +123,49 @@ export function FinalizationPanel({ starmapId, initialBlueprint }: FinalizationP
           </div>
 
           <div className="space-y-4">
-            {assumptionsObject?.assumptions?.map((assumption: { category: string; statement: string }, index: number) => (
-              <div key={index} className="glass-card p-6 rounded-2xl border-white/5 relative group">
-                <div className="flex justify-between items-start gap-4">
-                  <div className="flex-1">
-                    <span className="text-[10px] uppercase tracking-widest text-primary-500 font-bold mb-2 block">
-                      {assumption.category}
-                    </span>
-                    {editAssumptionIndex === index ? (
-                      <textarea
-                        className="w-full bg-white/5 border border-white/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-primary-500 min-h-[80px]"
-                        value={editAssumptionText}
-                        onChange={(e) => setEditAssumptionText(e.target.value)}
-                        autoFocus
-                        onBlur={() => {
-                          assumption.statement = editAssumptionText;
-                          setEditAssumptionIndex(null);
+            {assumptionsObject?.assumptions?.map((assumption, index) => {
+              if (!assumption?.statement || !assumption?.category) return null;
+              
+              return (
+                <div key={index} className="glass-card p-6 rounded-2xl border-white/5 relative group">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <span className="text-[10px] uppercase tracking-widest text-primary-500 font-bold mb-2 block">
+                        {assumption.category}
+                      </span>
+                      {editAssumptionIndex === index ? (
+                        <textarea
+                          className="w-full bg-white/5 border border-white/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-primary-500 min-h-[80px]"
+                          value={editAssumptionText}
+                          onChange={(e) => setEditAssumptionText(e.target.value)}
+                          autoFocus
+                          onBlur={() => {
+                            // Using a temporary variable to handle the potentially read-only or partial nature
+                            // although useObject state is generally managed by the hook
+                            (assumption as any).statement = editAssumptionText;
+                            setEditAssumptionIndex(null);
+                          }}
+                        />
+                      ) : (
+                        <p className="text-sm text-white/90 leading-relaxed">{assumption.statement}</p>
+                      )}
+                    </div>
+                    
+                    {editAssumptionIndex !== index && (
+                      <button 
+                        onClick={() => {
+                          setEditAssumptionIndex(index);
+                          setEditAssumptionText(assumption.statement || '');
                         }}
-                      />
-                    ) : (
-                      <p className="text-sm text-white/90 leading-relaxed">{assumption.statement}</p>
+                        className="text-white/30 hover:text-white transition-colors"
+                      >
+                        <Edit2 size={16} />
+                      </button>
                     )}
                   </div>
-                  
-                  {editAssumptionIndex !== index && (
-                    <button 
-                      onClick={() => {
-                        setEditAssumptionIndex(index);
-                        setEditAssumptionText(assumption.statement);
-                      }}
-                      className="text-white/30 hover:text-white transition-colors"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {!isGeneratingAssumptions && assumptionsObject?.assumptions?.length && (
@@ -228,7 +234,7 @@ export function FinalizationPanel({ starmapId, initialBlueprint }: FinalizationP
                   <section>
                     <h3 className="text-xs font-bold text-primary-500 uppercase tracking-widest mb-4 print:text-gray-500">Target Audience</h3>
                     <ul className="space-y-3">
-                      {blueprintToRender.targetAudience?.map((item: string, i: number) => (
+                      {blueprintToRender.targetAudience?.filter((item): item is string => !!item).map((item, i) => (
                         <li key={i} className="flex items-start gap-3 text-sm text-white/80 print:text-black">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary-500 mt-1.5 shrink-0" />
                           <span>{item}</span>
@@ -240,7 +246,7 @@ export function FinalizationPanel({ starmapId, initialBlueprint }: FinalizationP
                   <section>
                     <h3 className="text-xs font-bold text-primary-500 uppercase tracking-widest mb-4 print:text-gray-500">Learning Objectives</h3>
                     <ul className="space-y-3">
-                      {blueprintToRender.learningObjectives?.map((item: string, i: number) => (
+                      {blueprintToRender.learningObjectives?.filter((item): item is string => !!item).map((item, i) => (
                         <li key={i} className="flex items-start gap-3 text-sm text-white/80 print:text-black">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary-500 mt-1.5 shrink-0" />
                           <span>{item}</span>
@@ -252,7 +258,7 @@ export function FinalizationPanel({ starmapId, initialBlueprint }: FinalizationP
                   <section>
                     <h3 className="text-xs font-bold text-primary-500 uppercase tracking-widest mb-4 print:text-gray-500">Tech Stack</h3>
                     <div className="flex flex-wrap gap-2">
-                      {blueprintToRender.techStack?.map((tech: string, i: number) => (
+                      {blueprintToRender.techStack?.filter((tech): tech is string => !!tech).map((tech, i) => (
                         <span key={i} className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white/80 print:border-black/20 print:text-black print:bg-transparent">
                           {tech}
                         </span>
@@ -266,7 +272,7 @@ export function FinalizationPanel({ starmapId, initialBlueprint }: FinalizationP
                   <section>
                     <h3 className="text-xs font-bold text-primary-500 uppercase tracking-widest mb-4 print:text-gray-500">Curriculum Path</h3>
                     <div className="space-y-4">
-                      {blueprintToRender.curriculumPath?.map((module: { moduleName: string; deliveryFormat: string; description: string }, i: number) => (
+                      {blueprintToRender.curriculumPath?.filter((module): module is { moduleName: string; deliveryFormat: string; description: string } => !!module?.moduleName).map((module, i) => (
                         <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/5 print:border-black/10 print:bg-transparent">
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="font-bold text-white text-sm print:text-black">{module?.moduleName}</h4>
@@ -285,7 +291,7 @@ export function FinalizationPanel({ starmapId, initialBlueprint }: FinalizationP
                   <section>
                     <h3 className="text-xs font-bold text-primary-500 uppercase tracking-widest mb-4 print:text-gray-500">Success Metrics</h3>
                     <ul className="space-y-3">
-                      {blueprintToRender.successMetrics?.map((item: string, i: number) => (
+                      {blueprintToRender.successMetrics?.filter((item): item is string => !!item).map((item, i) => (
                         <li key={i} className="flex items-start gap-3 text-sm text-white/80 print:text-black">
                           <Check className="text-secondary-500 shrink-0" size={16} />
                           <span>{item}</span>
