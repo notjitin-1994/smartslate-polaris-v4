@@ -25,8 +25,8 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-[calc(100-64px)] bg-brand-bg p-6 sm:p-8 lg:p-12">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-[calc(100vh-64px)] bg-brand-bg p-6 sm:p-8 lg:p-8">
+      <div className="max-w-6xl mx-auto pt-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-12">
           <div>
