@@ -2,16 +2,28 @@ import { streamText, UIMessage, convertToModelMessages } from 'ai';
 import { getModel } from '@/lib/ai/models';
 import { DISCOVERY_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { z } from 'zod';
+import { createClient } from '@/lib/supabase/server';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages, modelId }: { messages: UIMessage[]; modelId?: string } = await req.json();
+  const { messages, modelId, starmapId }: { messages: UIMessage[]; modelId?: string; starmapId?: string } = await req.json();
+
+  // Check authentication
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError || !user) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
+  // If starmapId is provided, we should ideally verify ownership here too
+  // but we definitely must verify it in the tool execution.
 
   const result = streamText({
     model: getModel(modelId),
-    system: DISCOVERY_SYSTEM_PROMPT,
+    system: `${DISCOVERY_SYSTEM_PROMPT}\n\nCURRENT STARMAP ID: ${starmapId || 'NOT_PROVIDED'}`,
     messages: await convertToModelMessages(messages as UIMessage[]),
     tools: {
       // Client-side tool: requests user approval before transitioning stages
@@ -26,22 +38,34 @@ export async function POST(req: Request) {
       saveDiscoveryContext: {
         description: 'Save gathered discovery data to the database.',
         inputSchema: z.object({
-          starmapId: z.string().uuid(),
+          starmapId: z.string().uuid().describe('The ID of the starmap to save to.'),
           data: z.record(z.string(), z.unknown()),
         }),
-        execute: async ({ starmapId, data }) => {
+        execute: async ({ starmapId: toolStarmapId, data }) => {
           const { db } = await import('@/lib/db');
           const { starmapResponses, starmaps } = await import('@/lib/db/schema');
-          const { eq } = await import('drizzle-orm');
+          const { eq, and } = await import('drizzle-orm');
 
           try {
+            // VERIFY OWNERSHIP before saving
+            const starmap = await db.query.starmaps.findFirst({
+              where: and(
+                eq(starmaps.id, toolStarmapId),
+                eq(starmaps.userId, user.id)
+              )
+            });
+
+            if (!starmap) {
+              return { success: false, saved: false, error: 'Unauthorized or Starmap not found' };
+            }
+
             // Extract a human-readable answer if present, otherwise fallback to a summary
             const readableAnswer = data.answer || data.value || data.response || JSON.stringify(data);
             const questionId = data.questionId || data.id || 'discovery_context';
             
             // Insert discovery data into database
             await db.insert(starmapResponses).values({
-              starmapId,
+              starmapId: toolStarmapId,
               questionId,
               answer: String(readableAnswer),
               stage: data.stage as number || 1,
@@ -60,11 +84,12 @@ export async function POST(req: Request) {
             if (Object.keys(contextUpdates).length > 0) {
               await db.update(starmaps)
                 .set({ 
-                  context: contextUpdates,
+                  context: { ...starmap.context, ...contextUpdates },
                   // Also update title if provided
-                  ...(data.title ? { title: data.title } : {})
+                  ...(data.title ? { title: data.title } : {}),
+                  updatedAt: new Date()
                 })
-                .where(eq(starmaps.id, starmapId));
+                .where(eq(starmaps.id, toolStarmapId));
             }
 
             return { success: true, saved: true };

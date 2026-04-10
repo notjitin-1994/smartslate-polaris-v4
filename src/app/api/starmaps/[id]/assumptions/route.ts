@@ -3,8 +3,9 @@ import { getModel } from '@/lib/ai/models';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { starmaps } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { NextRequest } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 export const maxDuration = 60;
 
@@ -25,9 +26,21 @@ export async function POST(
   try {
     const { id } = await params;
     
+    // Check authentication
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+
     // Fetch starmap with responses to provide context to the AI
+    // AND verify ownership
     const starmapData = await db.query.starmaps.findFirst({
-      where: eq(starmaps.id, id),
+      where: and(
+        eq(starmaps.id, id),
+        eq(starmaps.userId, user.id)
+      ),
       with: {
         starmapResponses: {
           orderBy: (responses, { asc }) => [asc(responses.createdAt)],
@@ -36,7 +49,7 @@ export async function POST(
     });
 
     if (!starmapData) {
-      return new Response('Starmap not found', { status: 404 });
+      return new Response('Starmap not found or unauthorized', { status: 404 });
     }
 
     // Format the gathered context

@@ -63,7 +63,7 @@ export default function DiscoveryPage() {
     approveStage,
     rejectStage,
     currentStage,
-  } = useDiscovery();
+  } = useDiscovery(id as string);
 
   const [input, setInput] = useState('');
 

@@ -4,12 +4,15 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from 'ai';
 import { useState } from 'react';
 
-export function useDiscovery() {
+export function useDiscovery(starmapId?: string) {
   const [currentStage, setCurrentStage] = useState(1);
 
   const { messages, sendMessage, addToolOutput, status, error, stop } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
+      body: {
+        starmapId,
+      },
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   });
