@@ -95,7 +95,9 @@ export function FinalizationPanel({ starmapId, initialBlueprint }: FinalizationP
 
   const handleApproveAssumptions = () => {
     // Gather all assumptions (edited or original)
-    const finalAssumptions = assumptionsObject?.assumptions?.map((a: { statement: string }) => a.statement) || [];
+    const finalAssumptions = assumptionsObject?.assumptions
+      ?.filter((a): a is { statement: string } => !!a?.statement)
+      .map((a) => a.statement) || [];
     setStep('blueprint');
     generateBlueprint({ approvedAssumptions: finalAssumptions });
   };
