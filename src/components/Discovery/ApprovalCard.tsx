@@ -61,6 +61,7 @@ export function ApprovalCard({ summary, nextStage, state, onApprove, onReject }:
           <button
             onClick={() => onReject('I need more detail on this stage.')}
             className="px-4 flex items-center justify-center rounded-xl border border-white/10 hover:bg-white/5 transition text-white/60"
+            aria-label="Request changes"
           >
             <X size={16} />
           </button>

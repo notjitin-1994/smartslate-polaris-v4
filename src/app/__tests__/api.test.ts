@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
-import { POST } from '../api/chat/route';
 
-// Mock dependencies
-vi.mock('@ai-sdk/react', () => ({
-  streamText: vi.fn(),
-  convertToModelMessages: vi.fn(),
+// Mock dependencies before importing the route
+vi.mock('ai', () => ({
+  streamText: vi.fn(() => ({
+    toUIMessageStreamResponse: vi.fn(() => new Response()),
+  })),
+  convertToModelMessages: vi.fn(() => Promise.resolve([])),
+  UIMessage: {},
 }));
 
 vi.mock('@/lib/ai/models', () => ({
@@ -16,13 +18,15 @@ vi.mock('@/lib/ai/prompts', () => ({
 }));
 
 describe('Chat API Route', () => {
-  it('should export POST function', () => {
+  it('should export POST function', async () => {
+    const { POST } = await import('../api/chat/route');
     expect(POST).toBeDefined();
     expect(typeof POST).toBe('function');
   });
 
-  it('should have maxDuration export', () => {
-    const { maxDuration } = require('../api/chat/route');
-    expect(maxDuration).toBe(30);
+  it('should export maxDuration as 30', async () => {
+    const mod = await import('../api/chat/route');
+    // maxDuration is an export const at module level
+    expect(mod.maxDuration).toBe(30);
   });
 });
