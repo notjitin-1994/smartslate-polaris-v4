@@ -3,7 +3,7 @@ import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
 import { moonshotai as moonshot } from '@ai-sdk/moonshotai';
-import { zhipu } from 'zhipu-ai-provider';
+import { zai as zhipu } from 'zhipu-ai-provider';
 
 /**
  * Unified Provider Registry for Polaris v4
@@ -16,7 +16,7 @@ import { zhipu } from 'zhipu-ai-provider';
  * - anthropic: Claude models
  * - google: Gemini models
  * - moonshot: Kimi models (Moonshot AI)
- * - zhipu: GLM models (Z.AI / ZhipuAI)
+ * - zhipu: GLM models (Z.AI / ZhipuAI) - Points to Global Z.ai endpoint
  */
 export const modelRegistry = createProviderRegistry({
   openai,
