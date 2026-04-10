@@ -30,9 +30,25 @@ export async function POST(req: Request) {
           data: z.record(z.string(), z.any()),
         }),
         execute: async ({ starmapId, data }) => {
-          // TODO: Wire to Supabase/Drizzle once DB is set up
-          console.log(`[saveDiscoveryContext] starmap=${starmapId}`, data);
-          return { success: true };
+          const { db } = await import('@/lib/db');
+          const { starmapResponses } = await import('@/lib/db/schema');
+
+          try {
+            // Insert discovery data into database
+            await db.insert(starmapResponses).values({
+              starmapId,
+              questionId: data.questionId as string || 'discovery_context',
+              answer: JSON.stringify(data),
+              stage: data.stage as number || 1,
+              modelMessageId: data.messageId as string,
+              metadata: data.metadata as Record<string, unknown> || {},
+            });
+
+            return { success: true, saved: true };
+          } catch (error) {
+            console.error('[saveDiscoveryContext] Error:', error);
+            return { success: false, saved: false, error: String(error) };
+          }
         },
       },
     },

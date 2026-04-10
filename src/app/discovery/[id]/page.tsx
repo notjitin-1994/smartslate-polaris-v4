@@ -2,9 +2,52 @@
 
 import { useDiscovery } from '@/hooks/useDiscovery';
 import { ApprovalCard } from '@/components/Discovery/ApprovalCard';
-import { Send, User, Bot, Sparkles, Compass } from 'lucide-react';
+import { Send, User, Bot, Sparkles, Compass, FileText, Target, Users, Zap } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+
+interface StarmapData {
+  id: string;
+  title: string;
+  status: string;
+  context: Record<string, unknown>;
+  blueprint: Record<string, unknown> | null;
+  responses: Array<{
+    id: string;
+    questionId: string;
+    answer: string;
+    stage: number;
+  }>;
+}
+
+async function fetchStarmapData(id: string): Promise<StarmapData> {
+  const response = await fetch(`/api/starmaps/${id}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch starmap data');
+  }
+  return response.json();
+}
+
+const stageNames = [
+  'Discovery & Goals',
+  'Audience Analysis',
+  'Constraints & Resources',
+  'Content Strategy',
+  'Delivery Channels',
+  'Assessment Methods',
+  'Success Metrics',
+];
+
+const stageIcons = [
+  Target,
+  Users,
+  FileText,
+  Sparkles,
+  Zap,
+  Compass,
+  Target,
+];
 
 export default function DiscoveryPage() {
   const { id } = useParams();
@@ -19,7 +62,14 @@ export default function DiscoveryPage() {
   } = useDiscovery(id as string);
 
   const [input, setInput] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Fetch starmap data for blueprint preview
+  const { data: starmapData, isLoading: isLoadingData } = useQuery({
+    queryKey: ['starmap', id],
+    queryFn: () => fetchStarmapData(id as string),
+    enabled: !!id,
+    refetchInterval: 5000, // Poll for updates every 5 seconds
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,28 +78,40 @@ export default function DiscoveryPage() {
     setInput('');
   };
 
+  // Group responses by stage
+  const responsesByStage = starmapData?.responses?.reduce((acc, response) => {
+    if (!acc[response.stage]) {
+      acc[response.stage] = [];
+    }
+    acc[response.stage].push(response);
+    return acc;
+  }, {} as Record<number, typeof starmapData.responses>) || {};
+
   return (
     <div className="flex h-screen bg-brand-bg text-[#e0e0e0] overflow-hidden">
       {/* Sidebar: Navigation & Context */}
-      <aside className={`w-64 border-r border-white/5 bg-white/[0.02] flex-col ${sidebarOpen ? 'flex' : 'hidden'} md:flex transition-all`}>
+      <aside className="w-64 border-r border-white/5 bg-white/[0.02] flex-col hidden md:flex">
         <div className="p-6 border-b border-white/5">
           <h2 className="text-sm font-heading font-bold text-white uppercase tracking-widest">Discovery Phase</h2>
           <div className="mt-4 space-y-3">
-            {[
-              'Discovery & Goals', 'Audience', 'Constraints',
-              'Content', 'Delivery', 'Assessment', 'Success',
-            ].map((name, i) => (
-              <div key={name} className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border ${
-                  currentStage > i + 1 ? 'bg-primary-500 border-primary-500 text-brand-bg' :
-                  currentStage === i + 1 ? 'border-primary-500 text-primary-500 shadow-[0_0_10px_rgba(167,218,219,0.3)]' :
-                  'border-white/10 text-white/20'
-                }`}>
-                  {i + 1}
+            {stageNames.map((name, i) => {
+              const StageIcon = stageIcons[i];
+              return (
+                <div key={name} className="flex items-center gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border ${
+                    currentStage > i + 1 ? 'bg-primary-500 border-primary-500 text-brand-bg' :
+                    currentStage === i + 1 ? 'border-primary-500 text-primary-500 shadow-[0_0_10px_rgba(167,218,219,0.3)]' :
+                    'border-white/10 text-white/20'
+                  }`}>
+                    {i + 1}
+                  </div>
+                  <StageIcon size={14} className={`${
+                    currentStage === i + 1 ? 'text-primary-500' : 'text-white/30'
+                  }`} />
+                  <span className={`text-xs font-medium ${currentStage === i + 1 ? 'text-white' : 'text-white/30'}`}>{name}</span>
                 </div>
-                <span className={`text-xs font-medium ${currentStage === i + 1 ? 'text-white' : 'text-white/30'}`}>{name}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </aside>
@@ -101,7 +163,6 @@ export default function DiscoveryPage() {
                         </div>
                       );
                     }
-                    // Tool parts use typed names like 'tool-requestApproval'
                     if (part.type === 'tool-requestApproval') {
                       return (
                         <ApprovalCard
@@ -114,7 +175,6 @@ export default function DiscoveryPage() {
                         />
                       );
                     }
-                    // Dynamic tool fallback
                     if (part.type === 'dynamic-tool' && part.toolName === 'requestApproval') {
                       return (
                         <ApprovalCard
@@ -174,14 +234,86 @@ export default function DiscoveryPage() {
             </h2>
           </header>
           <div className="flex-1 p-6 space-y-6 overflow-y-auto overflow-x-hidden">
-            <div className="glass-card p-6 rounded-2xl border-dashed border-white/10 flex flex-col items-center justify-center text-center min-h-[200px]">
-              <div className="text-white/10 mb-4">
-                <Compass size={48} />
+            {isLoadingData ? (
+              <div className="glass-card p-6 rounded-2xl border-dashed border-white/10 flex flex-col items-center justify-center text-center min-h-[200px]">
+                <div className="w-8 h-8 rounded-full border-2 border-primary-500 border-t-transparent animate-spin mb-4" />
+                <p className="text-xs text-white/30">Loading blueprint data...</p>
               </div>
-              <p className="text-xs text-white/30 leading-relaxed uppercase tracking-tighter">
-                Answer the AI&apos;s questions to begin drafting the Strategy Blueprint.
-              </p>
-            </div>
+            ) : starmapData && Object.keys(responsesByStage).length > 0 ? (
+              <>
+                {/* Strategy Blueprint Card */}
+                <div className="glass-card p-5 rounded-2xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
+                      <FileText size={18} />
+                    </div>
+                    <h3 className="text-sm font-bold text-white">Strategy Blueprint</h3>
+                  </div>
+
+                  {starmapData.context && (
+                    <div className="space-y-3">
+                      {(() => {
+                        const role = starmapData.context?.role;
+                        if (role && typeof role === 'string') {
+                          return (
+                            <div>
+                              <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Role</p>
+                              <p className="text-xs text-white/80">{role}</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                      {(() => {
+                        const goals = starmapData.context?.goals;
+                        if (goals && typeof goals === 'string') {
+                          return (
+                            <div>
+                              <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Goals</p>
+                              <p className="text-xs text-white/80">{goals}</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                  )}
+                </div>
+
+                {/* Responses by Stage */}
+                {Object.entries(responsesByStage)
+                  .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                  .map(([stage, responses]) => {
+                    const StageIcon = stageIcons[parseInt(stage) - 1];
+                    return (
+                      <div key={stage} className="glass-card p-5 rounded-2xl">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-6 h-6 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
+                            <StageIcon size={14} />
+                          </div>
+                          <h4 className="text-xs font-bold text-white">Stage {stage}: {stageNames[parseInt(stage) - 1]}</h4>
+                        </div>
+                        <div className="space-y-2">
+                          {responses.map((response) => (
+                            <div key={response.id} className="text-xs text-white/60 leading-relaxed">
+                              {response.answer}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </>
+            ) : (
+              <div className="glass-card p-6 rounded-2xl border-dashed border-white/10 flex flex-col items-center justify-center text-center min-h-[200px]">
+                <div className="text-white/10 mb-4">
+                  <Compass size={48} />
+                </div>
+                <p className="text-xs text-white/30 leading-relaxed uppercase tracking-tighter">
+                  Answer the AI&apos;s questions to begin drafting the Strategy Blueprint.
+                </p>
+              </div>
+            )}
           </div>
         </section>
       </main>

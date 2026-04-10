@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Quicksand, Lato, JetBrains_Mono } from "next/font/google";
+import { Navigation } from "@/components/Navigation";
 import "./globals.css";
 
 const quicksand = Quicksand({
@@ -34,6 +35,7 @@ export default function RootLayout({
       <body
         className={`${quicksand.variable} ${lato.variable} ${jetbrainsMono.variable} min-h-screen antialiased`}
       >
+        <Navigation />
         {children}
       </body>
     </html>
