@@ -1,9 +1,18 @@
 import { createProviderRegistry } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { openai, createOpenAI } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
 import { moonshotai as moonshot } from '@ai-sdk/moonshotai';
-import { zai as zhipu } from 'zhipu-ai-provider';
+
+/**
+ * Custom Zhipu Provider using OpenAI compatibility layer.
+ * This is the recommended way to use the GLM Coding Plan (Global).
+ * The 'api.z.ai/v1' endpoint is specifically optimized for this plan.
+ */
+const zhipu = createOpenAI({
+  apiKey: process.env.ZHIPU_API_KEY,
+  baseURL: 'https://api.z.ai/v1',
+});
 
 /**
  * Unified Provider Registry for Polaris v4
@@ -16,7 +25,7 @@ import { zai as zhipu } from 'zhipu-ai-provider';
  * - anthropic: Claude models
  * - google: Gemini models
  * - moonshot: Kimi models (Moonshot AI)
- * - zhipu: GLM models (Z.AI / ZhipuAI) - Points to Global Z.ai endpoint
+ * - zhipu: GLM models (via Global Z.ai OpenAI-compatible endpoint)
  */
 export const modelRegistry = createProviderRegistry({
   openai,
