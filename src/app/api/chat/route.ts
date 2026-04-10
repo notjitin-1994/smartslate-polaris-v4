@@ -27,22 +27,45 @@ export async function POST(req: Request) {
         description: 'Save gathered discovery data to the database.',
         inputSchema: z.object({
           starmapId: z.string().uuid(),
-          data: z.record(z.string(), z.any()),
+          data: z.record(z.string(), z.unknown()),
         }),
         execute: async ({ starmapId, data }) => {
           const { db } = await import('@/lib/db');
-          const { starmapResponses } = await import('@/lib/db/schema');
+          const { starmapResponses, starmaps } = await import('@/lib/db/schema');
+          const { eq } = await import('drizzle-orm');
 
           try {
+            // Extract a human-readable answer if present, otherwise fallback to a summary
+            const readableAnswer = data.answer || data.value || data.response || JSON.stringify(data);
+            const questionId = data.questionId || data.id || 'discovery_context';
+            
             // Insert discovery data into database
             await db.insert(starmapResponses).values({
               starmapId,
-              questionId: data.questionId as string || 'discovery_context',
-              answer: JSON.stringify(data),
+              questionId,
+              answer: String(readableAnswer),
               stage: data.stage as number || 1,
               modelMessageId: data.messageId as string,
-              metadata: data.metadata as Record<string, unknown> || {},
+              metadata: data,
             });
+
+            // If the data contains high-level context, update the starmap record
+            const contextUpdates: Record<string, unknown> = {};
+            if (data.role) contextUpdates.role = data.role;
+            if (data.goals || data.goal) contextUpdates.goals = data.goals || data.goal;
+            if (data.industry) contextUpdates.industry = data.industry;
+            if (data.organization || data.org) contextUpdates.organization = data.organization || data.org;
+            if (data.title) contextUpdates.title = data.title;
+
+            if (Object.keys(contextUpdates).length > 0) {
+              await db.update(starmaps)
+                .set({ 
+                  context: contextUpdates,
+                  // Also update title if provided
+                  ...(data.title ? { title: data.title } : {})
+                })
+                .where(eq(starmaps.id, starmapId));
+            }
 
             return { success: true, saved: true };
           } catch (error) {

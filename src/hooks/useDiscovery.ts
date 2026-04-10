@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from 'ai';
 import { useState } from 'react';
 
-export function useDiscovery(starmapId: string) {
+export function useDiscovery() {
   const [currentStage, setCurrentStage] = useState(1);
 
   const { messages, sendMessage, addToolOutput, status, error, stop } = useChat({
@@ -20,7 +20,7 @@ export function useDiscovery(starmapId: string) {
       toolCallId,
       output: { approved: true },
     });
-    setCurrentStage((prev) => Math.min(prev + 1, 7));
+    setCurrentStage((prev) => Math.min(prev + 1, 8));
   };
 
   const rejectStage = (toolCallId: string, feedback: string) => {

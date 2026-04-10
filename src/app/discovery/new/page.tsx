@@ -12,11 +12,22 @@ async function createDiscovery() {
     return redirect('/login');
   }
 
-  // TODO: Create starmap record in database
-  // For now, redirect with a temporary ID
-  const tempId = crypto.randomUUID();
+  const { db } = await import('@/lib/db');
+  const { starmaps } = await import('@/lib/db/schema');
 
-  return redirect(`/discovery/${tempId}`);
+  // Create starmap record in database
+  const [newStarmap] = await db.insert(starmaps).values({
+    userId: user.id,
+    title: 'New Discovery Session',
+    status: 'draft',
+    modelId: process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'zhipu:glm-5.1',
+  }).returning();
+
+  if (!newStarmap) {
+    throw new Error('Failed to create starmap record');
+  }
+
+  return redirect(`/discovery/${newStarmap.id}`);
 }
 
 export default async function NewDiscoveryPage() {

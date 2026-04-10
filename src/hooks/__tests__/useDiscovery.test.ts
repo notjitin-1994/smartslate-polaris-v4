@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useDiscovery } from '../useDiscovery';
 
@@ -18,27 +18,27 @@ vi.mock('@ai-sdk/react', () => ({
 
 describe('useDiscovery', () => {
   it('initializes with current stage at 1', () => {
-    const { result } = renderHook(() => useDiscovery('test-starmap-id'));
+    const { result } = renderHook(() => useDiscovery());
     expect(result.current.currentStage).toBe(1);
   });
 
   it('provides sendMessage function', () => {
-    const { result } = renderHook(() => useDiscovery('test-starmap-id'));
+    const { result } = renderHook(() => useDiscovery());
     expect(typeof result.current.sendMessage).toBe('function');
   });
 
   it('provides approveStage function', () => {
-    const { result } = renderHook(() => useDiscovery('test-starmap-id'));
+    const { result } = renderHook(() => useDiscovery());
     expect(typeof result.current.approveStage).toBe('function');
   });
 
   it('provides rejectStage function', () => {
-    const { result } = renderHook(() => useDiscovery('test-starmap-id'));
+    const { result } = renderHook(() => useDiscovery());
     expect(typeof result.current.rejectStage).toBe('function');
   });
 
   it('increments stage on approve', () => {
-    const { result } = renderHook(() => useDiscovery('test-starmap-id'));
+    const { result } = renderHook(() => useDiscovery());
 
     act(() => {
       result.current.approveStage('tool-call-id');
@@ -47,23 +47,23 @@ describe('useDiscovery', () => {
     expect(result.current.currentStage).toBe(2);
   });
 
-  it('does not increment stage beyond 7', () => {
-    const { result } = renderHook(() => useDiscovery('test-starmap-id'));
+  it('does not increment stage beyond 8', () => {
+    const { result } = renderHook(() => useDiscovery());
 
-    // Set to stage 7
+    // Set to stage 8
     act(() => {
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 7; i++) {
         result.current.approveStage(`tool-call-${i}`);
       }
     });
 
-    expect(result.current.currentStage).toBe(7);
+    expect(result.current.currentStage).toBe(8);
 
     // Try to approve again
     act(() => {
       result.current.approveStage('tool-call-final');
     });
 
-    expect(result.current.currentStage).toBe(7);
+    expect(result.current.currentStage).toBe(8);
   });
 });

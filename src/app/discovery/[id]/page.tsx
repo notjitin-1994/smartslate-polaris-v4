@@ -2,10 +2,12 @@
 
 import { useDiscovery } from '@/hooks/useDiscovery';
 import { ApprovalCard } from '@/components/Discovery/ApprovalCard';
+import { FinalizationPanel } from '@/components/Discovery/FinalizationPanel';
 import { Send, User, Bot, Sparkles, Compass, FileText, Target, Users, Zap } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createClient } from '@/lib/supabase/client';
 
 interface StarmapData {
   id: string;
@@ -51,15 +53,17 @@ const stageIcons = [
 
 export default function DiscoveryPage() {
   const { id } = useParams();
+  const queryClient = useQueryClient();
+  const supabase = createClient();
+  
   const {
     messages,
     sendMessage,
-    status,
     isLoading,
     approveStage,
     rejectStage,
     currentStage,
-  } = useDiscovery(id as string);
+  } = useDiscovery();
 
   const [input, setInput] = useState('');
 
@@ -68,14 +72,78 @@ export default function DiscoveryPage() {
     queryKey: ['starmap', id],
     queryFn: () => fetchStarmapData(id as string),
     enabled: !!id,
-    refetchInterval: 5000, // Poll for updates every 5 seconds
+    // Removed refetchInterval: 5000
   });
+
+  // Setup Supabase Realtime for instant updates
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`starmap-updates-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'starmap_responses',
+          filter: `starmap_id=eq.${id}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['starmap', id] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'starmaps',
+          filter: `id=eq.${id}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['starmap', id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, queryClient, supabase]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
     sendMessage({ text: input });
     setInput('');
+  };
+
+  const handleOverride = (stage: number, stageName: string, originalAnswer: string) => {
+    const text = `I want to override/update the information for Stage ${stage} (${stageName}).\nOriginal information: ${originalAnswer}\n\nMy update is: `;
+    setInput(text);
+    // Focus input
+    const inputEl = document.querySelector('input[name="chat-input"]') as HTMLInputElement;
+    if (inputEl) {
+      inputEl.focus();
+      // Move cursor to end
+      setTimeout(() => {
+        inputEl.setSelectionRange(text.length, text.length);
+      }, 0);
+    }
+  };
+
+  const handleDeepen = (stage: number, stageName: string, originalAnswer: string) => {
+    const text = `I want to deepen the discovery for Stage ${stage} (${stageName}) regarding: ${originalAnswer}\n\nPlease ask more specific questions about: `;
+    setInput(text);
+    // Focus input
+    const inputEl = document.querySelector('input[name="chat-input"]') as HTMLInputElement;
+    if (inputEl) {
+      inputEl.focus();
+      setTimeout(() => {
+        inputEl.setSelectionRange(text.length, text.length);
+      }, 0);
+    }
   };
 
   // Group responses by stage
@@ -90,7 +158,7 @@ export default function DiscoveryPage() {
   return (
     <div className="flex h-screen bg-brand-bg text-[#e0e0e0] overflow-hidden">
       {/* Sidebar: Navigation & Context */}
-      <aside className="w-64 border-r border-white/5 bg-white/[0.02] flex-col hidden md:flex">
+      <aside className="w-64 border-r border-white/5 bg-white/[0.02] flex-col hidden md:flex print:hidden">
         <div className="p-6 border-b border-white/5">
           <h2 className="text-sm font-heading font-bold text-white uppercase tracking-widest">Discovery Phase</h2>
           <div className="mt-4 space-y-3">
@@ -119,8 +187,13 @@ export default function DiscoveryPage() {
       {/* Main Content: Split Screen */}
       <main className="flex-1 flex flex-col md:flex-row min-w-0">
 
-        {/* Collaborative Chat */}
-        <section className="flex-1 flex flex-col min-w-0 bg-brand-bg relative">
+        {/* Phase 3 & 4: Finalization Panel */}
+        {currentStage >= 8 || starmapData?.blueprint ? (
+          <FinalizationPanel starmapId={id as string} initialBlueprint={starmapData?.blueprint} />
+        ) : (
+          <>
+            {/* Collaborative Chat */}
+            <section className="flex-1 flex flex-col min-w-0 bg-brand-bg relative print:hidden">
           {/* Chat Header */}
           <header className="h-16 flex items-center justify-between px-6 border-b border-white/5">
             <div className="flex items-center gap-3">
@@ -205,6 +278,7 @@ export default function DiscoveryPage() {
           <div className="p-6 border-t border-white/5">
             <form onSubmit={handleSubmit} className="relative max-w-3xl mx-auto">
               <input
+                name="chat-input"
                 disabled={isLoading}
                 className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 pr-16 text-sm text-white placeholder-white/20 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all disabled:opacity-50"
                 value={input}
@@ -283,20 +357,41 @@ export default function DiscoveryPage() {
                 {/* Responses by Stage */}
                 {Object.entries(responsesByStage)
                   .sort(([a], [b]) => parseInt(a) - parseInt(b))
-                  .map(([stage, responses]) => {
-                    const StageIcon = stageIcons[parseInt(stage) - 1];
+                  .map(([stageStr, responses]) => {
+                    const stage = parseInt(stageStr);
+                    const stageName = stageNames[stage - 1];
+                    const StageIcon = stageIcons[stage - 1];
                     return (
-                      <div key={stage} className="glass-card p-5 rounded-2xl">
+                      <div key={stage} className="glass-card p-5 rounded-2xl group/stage relative overflow-hidden">
                         <div className="flex items-center gap-3 mb-3">
                           <div className="w-6 h-6 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
                             <StageIcon size={14} />
                           </div>
-                          <h4 className="text-xs font-bold text-white">Stage {stage}: {stageNames[parseInt(stage) - 1]}</h4>
+                          <h4 className="text-xs font-bold text-white uppercase tracking-tight">Stage {stage}: {stageName}</h4>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-4">
                           {responses.map((response) => (
-                            <div key={response.id} className="text-xs text-white/60 leading-relaxed">
-                              {response.answer}
+                            <div key={response.id} className="group/item">
+                              <p className="text-xs text-white/60 leading-relaxed mb-2">
+                                {response.answer}
+                              </p>
+                              <div className="flex items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => handleOverride(stage, stageName, response.answer)}
+                                  className="text-[10px] font-bold text-primary-500 hover:text-primary-400 flex items-center gap-1 uppercase tracking-widest cursor-pointer"
+                                >
+                                  <Zap size={10} />
+                                  Override
+                                </button>
+                                <div className="w-1 h-1 rounded-full bg-white/10" />
+                                <button
+                                  onClick={() => handleDeepen(stage, stageName, response.answer)}
+                                  className="text-[10px] font-bold text-white/40 hover:text-white flex items-center gap-1 uppercase tracking-widest cursor-pointer"
+                                >
+                                  <Compass size={10} />
+                                  Deepen
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -316,6 +411,8 @@ export default function DiscoveryPage() {
             )}
           </div>
         </section>
+        </>
+        )}
       </main>
     </div>
   );
