@@ -11,6 +11,12 @@ export async function POST(req: Request) {
   try {
     const { messages, modelId, starmapId }: { messages: UIMessage[]; modelId?: string; starmapId?: string } = await req.json();
 
+    console.log('[Chat API] Request received:', { 
+      modelId, 
+      starmapId, 
+      messageCount: messages?.length
+    });
+
     // Check authentication
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();

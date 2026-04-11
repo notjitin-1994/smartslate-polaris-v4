@@ -1,15 +1,15 @@
 import { createProviderRegistry } from 'ai';
-import { openai, createOpenAI } from '@ai-sdk/openai';
+import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { google } from '@ai-sdk/google';
 import { moonshotai as moonshot } from '@ai-sdk/moonshotai';
+import { createZhipu } from 'zhipu-ai-provider';
 
 /**
- * Custom Zhipu Provider using OpenAI compatibility layer.
+ * Custom Zhipu Provider using official community provider.
  * For the GLM Coding Plan (Global), the dedicated coding endpoint is required.
- * Using 'https://api.z.ai/api/coding/paas/v4' ensures the plan is recognized.
  */
-const zhipu = createOpenAI({
+const zhipu = createZhipu({
   apiKey: (process.env.ZHIPU_API_KEY || '').trim(),
   baseURL: 'https://api.z.ai/api/coding/paas/v4',
 });
