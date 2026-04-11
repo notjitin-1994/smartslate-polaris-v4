@@ -43,16 +43,16 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
       </div>
 
       {/* Message Content */}
-      <div className={`max-w-[85%] space-y-2 ${isUser ? 'items-end' : ''}`}>
+      <div className={`max-w-[85%] space-y-1.5 ${isUser ? 'items-end' : ''}`}>
         {message.parts?.map((part, i) => {
           if (part.type === 'text') {
             return (
               <div
                 key={i}
-                className={`p-4 rounded-2xl text-[13px] leading-relaxed overflow-hidden ${
+                className={`p-3.5 rounded-2xl text-[12.5px] leading-relaxed overflow-hidden ${
                   isUser
                     ? 'bg-gradient-to-br from-secondary-500/15 to-secondary-500/5 border border-secondary-500/10 text-white/90 backdrop-blur-xl rounded-tr-sm'
-                    : 'bg-white/[0.02] border border-white/5 text-white/85 backdrop-blur-xl rounded-tl-sm shadow-2xl'
+                    : 'bg-white/[0.02] border border-white/5 text-white/80 backdrop-blur-xl rounded-tl-sm shadow-2xl'
                 }`}
               >
                 <div className="prose prose-invert prose-xs max-w-none prose-p:leading-relaxed prose-pre:bg-black/20 prose-pre:border prose-pre:border-white/5 prose-headings:font-heading prose-headings:text-white/90 prose-a:text-primary-400 hover:prose-a:text-primary-300">
@@ -65,12 +65,12 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
           }
 
           if (part.type === 'tool-requestApproval' || (part.type === 'dynamic-tool' && part.toolName === 'requestApproval')) {
-            const input = part.input as Record<string, unknown>;
+            const input = part.input as any;
             return (
               <ApprovalCard
                 key={part.toolCallId}
-                summary={(input?.summary as string) ?? ''}
-                nextStage={(input?.nextStage as string) ?? ''}
+                summary={input?.summary ?? ''}
+                nextStage={input?.nextStage ?? ''}
                 state={part.state}
                 onApprove={() => approveStage(part.toolCallId)}
                 onReject={(feedback: string) => rejectStage(part.toolCallId, feedback)}
@@ -79,15 +79,17 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
           }
 
           if (part.type === 'tool-askInteractiveQuestions' || (part.type === 'dynamic-tool' && part.toolName === 'askInteractiveQuestions')) {
-            const input = part.input as { questions: InteractiveQuestion[] };
+            const input = part.input as any;
             const toolCallId = part.toolCallId;
             const isSubmitted = part.state === 'output-available';
+
+            if (!input?.questions) return null;
 
             return (
               <InteractiveFormCard
                 key={toolCallId}
                 toolCallId={toolCallId}
-                questions={input.questions || []}
+                questions={input.questions}
                 isSubmitted={isSubmitted}
                 initialData={isSubmitted ? (part as any).output?.data : {}}
                 onSubmit={(data) => submitToolResult('askInteractiveQuestions', toolCallId, { status: 'submitted_via_form', data })}
@@ -97,25 +99,27 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
           }
 
           if (part.type === 'tool-setProjectParameters' || (part.type === 'dynamic-tool' && part.toolName === 'setProjectParameters')) {
-            const input = part.input as { parameterName: string; min: number; max: number; unit: string; currentValue?: number };
+            const input = part.input as any;
             const toolCallId = part.toolCallId;
 
+            if (!input) return null;
+
             return (
-              <div key={toolCallId} className="glass-card p-6 rounded-2xl border-primary-500/20 space-y-4">
-                <div className="flex items-center gap-3">
+              <div key={toolCallId} className="glass-card p-5 rounded-2xl border-white/10 space-y-3 bg-white/[0.01]">
+                <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
-                    <Sparkles size={18} />
+                    <Sparkles size={16} />
                   </div>
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Set {input.parameterName}</h3>
+                  <h3 className="text-[11px] font-bold text-white/80 uppercase tracking-wider">Set {input.parameterName}</h3>
                 </div>
                 
                 {part.state === 'output-available' ? (
-                  <div className="p-3 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-500 text-xs font-bold">
+                  <div className="p-2.5 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-500 text-[9.5px] font-bold">
                     Value set to: {(part as any).output?.value} {input.unit}
                   </div>
                 ) : (
-                  <div className="space-y-6 pt-4">
-                    <div className="flex justify-between text-[10px] font-bold text-white/40 uppercase">
+                  <div className="space-y-3.5 pt-1.5">
+                    <div className="flex justify-between text-[8.5px] font-bold text-white/25 uppercase">
                       <span>{input.min} {input.unit}</span>
                       <span>{input.max} {input.unit}</span>
                     </div>
@@ -134,7 +138,7 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
                         );
                       }}
                     />
-                    <p className="text-[10px] text-white/30 italic text-center">Adjust slider to confirm value</p>
+                    <p className="text-[8.5px] text-white/15 italic text-center">Adjust slider to confirm</p>
                   </div>
                 )}
               </div>

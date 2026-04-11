@@ -3,13 +3,17 @@ import { getModel } from '@/lib/ai/models';
 import { DISCOVERY_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
+import { db } from '@/lib/db';
+import { messages as dbMessages, starmapResponses, starmaps } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    const { messages, modelId, starmapId }: { messages: UIMessage[]; modelId?: string; starmapId?: string } = await req.json();
+    const body = await req.json();
+    const { messages, modelId, starmapId }: { messages: UIMessage[]; modelId?: string; starmapId?: string } = body;
 
     console.log('[Chat API] Request received:', { 
       modelId, 
@@ -25,30 +29,22 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    const { db } = await import('@/lib/db');
-    const { messages: dbMessages } = await import('@/lib/db/schema');
-
     // Save the latest user message if starmapId is provided
     if (starmapId) {
-      console.log('[Chat API] Attempting to save user message for starmap:', starmapId);
       const lastMessage = messages[messages.length - 1];
       if (lastMessage && lastMessage.role === 'user') {
         try {
-          const insertResult = await db.insert(dbMessages).values({
+          await db.insert(dbMessages).values({
             id: lastMessage.id,
             starmapId,
             role: lastMessage.role,
             parts: lastMessage.parts as any,
           }).onConflictDoNothing({ target: dbMessages.id });
-          console.log('[Chat API] User message save result:', insertResult);
+          console.log('[Chat API] User message persisted:', lastMessage.id);
         } catch (err) {
           console.error('[Chat API] Error saving user message:', err);
         }
-      } else {
-        console.log('[Chat API] Last message is not from user or is missing:', lastMessage?.role);
       }
-    } else {
-      console.log('[Chat API] No starmapId provided in request');
     }
 
     const result = streamText({
@@ -99,13 +95,9 @@ export async function POST(req: Request) {
             data: z.record(z.string(), z.unknown()),
           }),
           execute: async ({ starmapId: toolStarmapId, data }) => {
-            const { db: toolDb } = await import('@/lib/db');
-            const { starmapResponses, starmaps } = await import('@/lib/db/schema');
-            const { eq, and } = await import('drizzle-orm');
-
             try {
               // VERIFY OWNERSHIP before saving
-              const starmap = await toolDb.query.starmaps.findFirst({
+              const starmap = await db.query.starmaps.findFirst({
                 where: and(
                   eq(starmaps.id, toolStarmapId),
                   eq(starmaps.userId, user.id)
@@ -121,7 +113,7 @@ export async function POST(req: Request) {
               const questionId = data.questionId || data.id || 'discovery_context';
               
               // Insert discovery data into database
-              await toolDb.insert(starmapResponses).values({
+              await db.insert(starmapResponses).values({
                 starmapId: toolStarmapId,
                 questionId,
                 answer: String(readableAnswer),
@@ -139,7 +131,7 @@ export async function POST(req: Request) {
               if (data.title) contextUpdates.title = data.title;
 
               if (Object.keys(contextUpdates).length > 0) {
-                await toolDb.update(starmaps)
+                await db.update(starmaps)
                   .set({ 
                     context: { ...starmap.context, ...contextUpdates },
                     ...(data.title ? { title: data.title } : {}),
@@ -162,20 +154,17 @@ export async function POST(req: Request) {
       generateMessageId: () => generateId(),
       onFinish: async ({ responseMessage }) => {
         if (starmapId && responseMessage) {
-          console.log('[Chat API] Attempting to save assistant response:', responseMessage.id);
           try {
-            const insertResult = await db.insert(dbMessages).values({
+            await db.insert(dbMessages).values({
               id: responseMessage.id,
               starmapId,
               role: responseMessage.role,
               parts: responseMessage.parts as any,
             }).onConflictDoNothing({ target: dbMessages.id });
-            console.log('[Chat API] Assistant response save result:', insertResult);
+            console.log('[Chat API] Assistant message persisted:', responseMessage.id);
           } catch (err) {
             console.error('[Chat API] Error saving assistant response:', err);
           }
-        } else {
-          console.log('[Chat API] Skipping assistant save. starmapId:', starmapId, 'hasResponseMessage:', !!responseMessage);
         }
       }
     });
