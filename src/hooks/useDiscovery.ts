@@ -34,10 +34,18 @@ export function useDiscovery(starmapId?: string) {
     });
   };
 
+  const submitToolResult = (toolName: string, toolCallId: string, result: any) => {
+    addToolOutput({
+      tool: toolName,
+      toolCallId,
+      output: result,
+    });
+  };
+
   return {
     messages,
     sendMessage,
-    addToolOutput,
+    submitToolResult,
     status,
     error,
     stop,

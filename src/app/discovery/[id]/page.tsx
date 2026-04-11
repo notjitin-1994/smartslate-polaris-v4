@@ -2,11 +2,10 @@
 
 import { useDiscovery } from '@/hooks/useDiscovery';
 import { ChatMessage } from '@/components/Discovery/ChatMessage';
-
 import { FinalizationPanel } from '@/components/Discovery/FinalizationPanel';
-import { Send, User, Bot, Sparkles, Compass, FileText, Target, Users, Zap } from 'lucide-react';
+import { Send, User, Bot, Sparkles, Compass, FileText, Target, Users, Zap, CheckCircle2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 
@@ -56,6 +55,7 @@ export default function DiscoveryPage() {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const supabase = createClient();
+  const scrollRef = useRef<HTMLDivElement>(null);
   
   const {
     messages,
@@ -64,17 +64,24 @@ export default function DiscoveryPage() {
     error,
     approveStage,
     rejectStage,
+    submitToolResult,
     currentStage,
   } = useDiscovery(id as string);
 
   const [input, setInput] = useState('');
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
 
   // Fetch starmap data for blueprint preview
   const { data: starmapData, isLoading: isLoadingData } = useQuery({
     queryKey: ['starmap', id],
     queryFn: () => fetchStarmapData(id as string),
     enabled: !!id,
-    // Removed refetchInterval: 5000
   });
 
   // Setup Supabase Realtime for instant updates
@@ -124,11 +131,9 @@ export default function DiscoveryPage() {
   const handleOverride = (stage: number, stageName: string, originalAnswer: string) => {
     const text = `I want to override/update the information for Stage ${stage} (${stageName}).\nOriginal information: ${originalAnswer}\n\nMy update is: `;
     setInput(text);
-    // Focus input
     const inputEl = document.querySelector('input[name="chat-input"]') as HTMLInputElement;
     if (inputEl) {
       inputEl.focus();
-      // Move cursor to end
       setTimeout(() => {
         inputEl.setSelectionRange(text.length, text.length);
       }, 0);
@@ -138,7 +143,6 @@ export default function DiscoveryPage() {
   const handleDeepen = (stage: number, stageName: string, originalAnswer: string) => {
     const text = `I want to deepen the discovery for Stage ${stage} (${stageName}) regarding: ${originalAnswer}\n\nPlease ask more specific questions about: `;
     setInput(text);
-    // Focus input
     const inputEl = document.querySelector('input[name="chat-input"]') as HTMLInputElement;
     if (inputEl) {
       inputEl.focus();
@@ -148,7 +152,6 @@ export default function DiscoveryPage() {
     }
   };
 
-  // Group responses by stage
   const responsesByStage = starmapData?.responses?.reduce((acc, response) => {
     if (!acc[response.stage]) {
       acc[response.stage] = [];
@@ -158,27 +161,28 @@ export default function DiscoveryPage() {
   }, {} as Record<number, typeof starmapData.responses>) || {};
 
   return (
-    <div className="flex h-screen bg-brand-bg text-[#e0e0e0] overflow-hidden pt-[var(--nav-height-mobile)] lg:pt-[var(--nav-height-desktop)]">
+    <div className="flex h-screen bg-[#020C1B] text-[#e0e0e0] overflow-hidden pt-16 sm:pt-20">
       {/* Sidebar: Navigation & Context */}
-      <aside className="w-64 border-r border-white/5 bg-white/[0.02] flex-col hidden md:flex print:hidden">
+      <aside className="w-64 border-r border-white/5 bg-white/[0.01] flex-col hidden md:flex print:hidden">
         <div className="p-6 border-b border-white/5">
-          <h2 className="text-sm font-heading font-bold text-white uppercase tracking-widest">Discovery Phase</h2>
-          <div className="mt-4 space-y-3">
+          <h2 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-6">Discovery Phase</h2>
+          <div className="space-y-1">
             {stageNames.map((name, i) => {
               const StageIcon = stageIcons[i];
+              const isActive = currentStage === i + 1;
+              const isCompleted = currentStage > i + 1;
               return (
-                <div key={name} className="flex items-center gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border ${
-                    currentStage > i + 1 ? 'bg-primary-500 border-primary-500 text-brand-bg' :
-                    currentStage === i + 1 ? 'border-primary-500 text-primary-500 shadow-[0_0_10px_rgba(167,218,219,0.3)]' :
-                    'border-white/10 text-white/20'
+                <div key={name} className={`flex items-center gap-3 p-2 rounded-xl transition-all duration-300 ${isActive ? 'bg-primary-500/5' : ''}`}>
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold border transition-all duration-500 ${
+                    isCompleted ? 'bg-primary-500 border-primary-500 text-[#020C1B]' :
+                    isActive ? 'border-primary-500 text-primary-500 shadow-[0_0_10px_rgba(167,218,219,0.2)]' :
+                    'border-white/5 text-white/10'
                   }`}>
-                    {i + 1}
+                    {isCompleted ? <CheckCircle2 size={12} strokeWidth={3} /> : i + 1}
                   </div>
-                  <StageIcon size={14} className={`${
-                    currentStage === i + 1 ? 'text-primary-500' : 'text-white/30'
-                  }`} />
-                  <span className={`text-xs font-medium ${currentStage === i + 1 ? 'text-white' : 'text-white/30'}`}>{name}</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className={`text-[11px] font-bold truncate ${isActive ? 'text-white' : 'text-white/20'}`}>{name}</span>
+                  </div>
                 </div>
               );
             })}
@@ -195,43 +199,39 @@ export default function DiscoveryPage() {
         ) : (
           <>
             {/* Collaborative Chat */}
-            <section className="flex-1 flex flex-col min-w-0 bg-brand-bg relative print:hidden">
+            <section className="flex-1 flex flex-col min-w-0 bg-[#020C1B] relative print:hidden">
           {/* Chat Header */}
-          <header className="h-16 flex items-center justify-between px-6 border-b border-white/5">
+          <header className="h-14 flex items-center justify-between px-6 border-b border-white/5 bg-white/[0.01]">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500">
-                <Sparkles size={18} />
+              <div className="w-7 h-7 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
+                <Sparkles size={16} />
               </div>
-              <h1 className="font-heading font-bold text-white tracking-tight">AI Strategy Partner</h1>
+              <h1 className="text-xs font-bold uppercase tracking-[0.2em] text-white/50">Strategy Partner</h1>
             </div>
           </header>
 
           {/* Messages Area */}
           <div 
-            className="flex-1 overflow-y-auto p-6 space-y-6 relative"
-            style={{
-              backgroundImage: "url('/logo-swirl.png')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-            }}
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth"
           >
-            {/* Dark overlay to ensure text readability while keeping the swirl visible */}
-            <div className="absolute inset-0 bg-[#020C1B]/95 z-0" />
-
-            <div className="relative z-10 space-y-6 h-full flex flex-col">
+            <div className="max-w-3xl mx-auto space-y-8">
               {error && (
                 <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4 shrink-0">
                   Error: {error.message || 'The AI failed to respond. Please check your connection or environment variables and try again.'}
                 </div>
               )}
+              
               {messages.length === 0 && !error && (
-                <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto space-y-4 shrink-0">
-                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-primary-500 animate-pulse">
-                    <Bot size={24} />
+                <div className="py-20 flex flex-col items-center justify-center text-center space-y-6 shrink-0">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary-500/20 blur-2xl rounded-full" />
+                    <img src="/logo-swirl.png" alt="Polaris" className="w-16 h-16 opacity-20 relative z-10" />
                   </div>
-                  <h3 className="text-lg font-bold text-white">Initialize Discovery</h3>
-                  <p className="text-sm text-white/40">Type your project goals below to start the agentic discovery process.</p>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold text-white tracking-tight">Initialize Discovery</h3>
+                    <p className="text-sm text-white/30 max-w-xs mx-auto">Describe your learning goals to begin the agentic strategy mapping.</p>
+                  </div>
                 </div>
               )}
 
@@ -241,94 +241,94 @@ export default function DiscoveryPage() {
                   message={m} 
                   approveStage={approveStage} 
                   rejectStage={rejectStage} 
+                  submitToolResult={submitToolResult}
                 />
               ))}
 
               {isLoading && (
-                <div className="flex gap-4 animate-pulse shrink-0">
-                  <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 shrink-0" />
-                  <div className="glass-card h-12 w-32 rounded-2xl" />
+                <div className="flex items-center gap-4 shrink-0 px-2 py-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary-500/20 blur-xl rounded-full" />
+                    <img 
+                      src="/logo-swirl.png" 
+                      alt="AI is thinking" 
+                      className="w-8 h-8 animate-spin relative z-10 opacity-80" 
+                      style={{ animationDuration: '3s' }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary-500/40 animate-pulse">
+                    Orchestrating...
+                  </span>
                 </div>
               )}
             </div>
           </div>
 
           {/* Input Area */}
-          <div className="p-6 border-t border-white/5">
-            <form onSubmit={handleSubmit} className="relative max-w-3xl mx-auto">
+          <div className="p-6 border-t border-white/5 bg-white/[0.01]">
+            <form onSubmit={handleSubmit} className="relative max-w-3xl mx-auto group">
               <input
                 name="chat-input"
                 disabled={isLoading}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 pr-16 text-sm text-white placeholder-white/20 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all disabled:opacity-50"
+                autoComplete="off"
+                className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 pr-16 text-sm text-white placeholder-white/10 focus:ring-1 focus:ring-primary-500/50 focus:border-primary-500/50 outline-none transition-all disabled:opacity-50 font-sans font-light"
                 value={input}
-                placeholder="Ask or answer anything..."
+                placeholder="Reply to Polaris..."
                 onChange={(e) => setInput(e.target.value)}
               />
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-primary-500 text-brand-bg flex items-center justify-center hover:bg-primary-400 transition disabled:opacity-50"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-white text-[#020C1B] flex items-center justify-center hover:bg-primary-500 transition-all shadow-xl disabled:opacity-20 active:scale-95"
               >
-                <Send size={18} />
+                <Send size={18} strokeWidth={2.5} />
               </button>
             </form>
-            <div className="mt-3 text-center">
-              <p className="text-[10px] text-white/20 uppercase tracking-widest">Polaris Agentic Protocol v4.0.1</p>
+            <div className="mt-4 text-center">
+              <p className="text-[9px] text-white/10 uppercase tracking-[0.3em] font-bold">Polaris Agentic Discovery Protocol</p>
             </div>
           </div>
         </section>
 
         {/* Blueprint Preview Panel */}
-        <section className="hidden lg:flex w-[400px] border-l border-white/5 bg-white/[0.01] flex-col">
-          <header className="h-16 flex items-center px-6 border-b border-white/5 bg-white/[0.02]">
-            <h2 className="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(167,218,219,0.8)] animate-pulse" />
-              Live Blueprint Preview
+        <section className="hidden lg:flex w-[400px] border-l border-white/5 bg-white/[0.005] flex-col">
+          <header className="h-14 flex items-center px-6 border-b border-white/5 bg-white/[0.01]">
+            <h2 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(167,218,219,0.8)] animate-pulse" />
+              Manifest Preview
             </h2>
           </header>
-          <div className="flex-1 p-6 space-y-6 overflow-y-auto overflow-x-hidden">
+          <div className="flex-1 p-6 space-y-6 overflow-y-auto overflow-x-hidden scrollbar-none">
             {isLoadingData ? (
-              <div className="glass-card p-6 rounded-2xl border-dashed border-white/10 flex flex-col items-center justify-center text-center min-h-[200px]">
-                <div className="w-8 h-8 rounded-full border-2 border-primary-500 border-t-transparent animate-spin mb-4" />
-                <p className="text-xs text-white/30">Loading blueprint data...</p>
+              <div className="p-6 rounded-2xl border border-dashed border-white/5 flex flex-col items-center justify-center text-center min-h-[200px]">
+                <div className="w-6 h-6 rounded-full border border-primary-500 border-t-transparent animate-spin mb-4 opacity-30" />
+                <p className="text-[10px] text-white/20 uppercase tracking-widest">Accessing Starmap...</p>
               </div>
             ) : starmapData && Object.keys(responsesByStage).length > 0 ? (
               <>
                 {/* Strategy Blueprint Card */}
-                <div className="glass-card p-5 rounded-2xl">
-                  <div className="flex items-center gap-3 mb-4">
+                <div className="glass-card p-6 rounded-2xl border-white/5">
+                  <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
                       <FileText size={18} />
                     </div>
-                    <h3 className="text-sm font-bold text-white">Strategy Blueprint</h3>
+                    <h3 className="text-sm font-bold text-white tracking-tight">Active Context</h3>
                   </div>
 
                   {starmapData.context && (
-                    <div className="space-y-3">
-                      {(() => {
-                        const role = starmapData.context?.role;
-                        if (role && typeof role === 'string') {
-                          return (
-                            <div>
-                              <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Role</p>
-                              <p className="text-xs text-white/80">{role}</p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
-                      {(() => {
-                        const goals = starmapData.context?.goals;
-                        if (goals && typeof goals === 'string') {
-                          return (
-                            <div>
-                              <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Goals</p>
-                              <p className="text-xs text-white/80">{goals}</p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
+                    <div className="space-y-4">
+                      {!!starmapData.context.role && (
+                        <div>
+                          <p className="text-[9px] text-white/30 uppercase tracking-widest mb-1 font-bold">Primary Role</p>
+                          <p className="text-xs text-white/70 font-light leading-relaxed">{String(starmapData.context.role)}</p>
+                        </div>
+                      )}
+                      {!!starmapData.context.goals && (
+                        <div>
+                          <p className="text-[9px] text-white/30 uppercase tracking-widest mb-1 font-bold">Mission Goals</p>
+                          <p className="text-xs text-white/70 font-light leading-relaxed">{String(starmapData.context.goals)}</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -341,33 +341,33 @@ export default function DiscoveryPage() {
                     const stageName = stageNames[stage - 1];
                     const StageIcon = stageIcons[stage - 1];
                     return (
-                      <div key={stage} className="glass-card p-5 rounded-2xl group/stage relative overflow-hidden">
-                        <div className="flex items-center gap-3 mb-3">
+                      <div key={stage} className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl group/stage relative overflow-hidden transition-all hover:bg-white/[0.03]">
+                        <div className="flex items-center gap-3 mb-4">
                           <div className="w-6 h-6 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
                             <StageIcon size={14} />
                           </div>
-                          <h4 className="text-xs font-bold text-white uppercase tracking-tight">Stage {stage}: {stageName}</h4>
+                          <h4 className="text-[10px] font-bold text-white/80 uppercase tracking-wider">{stageName}</h4>
                         </div>
                         <div className="space-y-4">
                           {responses.map((response) => (
                             <div key={response.id} className="group/item">
-                              <p className="text-xs text-white/60 leading-relaxed mb-2">
-                                {response.answer}
+                              <p className="text-xs text-white/50 leading-relaxed font-light mb-3 italic">
+                                &quot;{response.answer}&quot;
                               </p>
-                              <div className="flex items-center gap-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                              <div className="flex items-center gap-3 opacity-0 group-hover/item:opacity-100 transition-all duration-300">
                                 <button
                                   onClick={() => handleOverride(stage, stageName, response.answer)}
-                                  className="text-[10px] font-bold text-primary-500 hover:text-primary-400 flex items-center gap-1 uppercase tracking-widest cursor-pointer"
+                                  className="text-[9px] font-black text-primary-500 hover:text-primary-400 flex items-center gap-1.5 uppercase tracking-[0.2em] cursor-pointer"
                                 >
-                                  <Zap size={10} />
+                                  <Zap size={10} strokeWidth={3} />
                                   Override
                                 </button>
                                 <div className="w-1 h-1 rounded-full bg-white/10" />
                                 <button
                                   onClick={() => handleDeepen(stage, stageName, response.answer)}
-                                  className="text-[10px] font-bold text-white/40 hover:text-white flex items-center gap-1 uppercase tracking-widest cursor-pointer"
+                                  className="text-[9px] font-black text-white/30 hover:text-white flex items-center gap-1.5 uppercase tracking-[0.2em] cursor-pointer"
                                 >
-                                  <Compass size={10} />
+                                  <Compass size={10} strokeWidth={3} />
                                   Deepen
                                 </button>
                               </div>
@@ -379,12 +379,12 @@ export default function DiscoveryPage() {
                   })}
               </>
             ) : (
-              <div className="glass-card p-6 rounded-2xl border-dashed border-white/10 flex flex-col items-center justify-center text-center min-h-[200px]">
-                <div className="text-white/10 mb-4">
-                  <Compass size={48} />
+              <div className="p-12 rounded-[2rem] border border-dashed border-white/5 bg-white/[0.005] flex flex-col items-center justify-center text-center min-h-[300px]">
+                <div className="text-white/5 mb-6">
+                  <Compass size={40} />
                 </div>
-                <p className="text-xs text-white/30 leading-relaxed uppercase tracking-tighter">
-                  Answer the AI&apos;s questions to begin drafting the Strategy Blueprint.
+                <p className="text-[10px] text-white/20 uppercase tracking-[0.2em] leading-relaxed">
+                  Await transmissions to begin blueprint mapping.
                 </p>
               </div>
             )}

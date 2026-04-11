@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { User, Bot } from 'lucide-react';
+import { User, Bot, Sparkles } from 'lucide-react';
 import { UIMessage } from 'ai';
 import { ApprovalCard } from './ApprovalCard';
 
@@ -12,9 +12,10 @@ interface ChatMessageProps {
   message: UIMessage;
   approveStage: (id: string) => void;
   rejectStage: (id: string, feedback: string) => void;
+  submitToolResult: (toolName: string, toolCallId: string, result: any) => void;
 }
 
-export function ChatMessage({ message, approveStage, rejectStage }: ChatMessageProps) {
+export function ChatMessage({ message, approveStage, rejectStage, submitToolResult }: ChatMessageProps) {
   const isUser = message.role === 'user';
 
   return (
@@ -68,6 +69,51 @@ export function ChatMessage({ message, approveStage, rejectStage }: ChatMessageP
                 onApprove={() => approveStage(part.toolCallId)}
                 onReject={(feedback: string) => rejectStage(part.toolCallId, feedback)}
               />
+            );
+          }
+
+          if (part.type === 'tool-setProjectParameters' || (part.type === 'dynamic-tool' && part.toolName === 'setProjectParameters')) {
+            const input = part.input as { parameterName: string; min: number; max: number; unit: string; currentValue?: number };
+            const toolCallId = part.toolCallId;
+
+            return (
+              <div key={toolCallId} className="glass-card p-6 rounded-2xl border-primary-500/20 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
+                    <Sparkles size={18} />
+                  </div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Set {input.parameterName}</h3>
+                </div>
+                
+                {part.state === 'output-available' ? (
+                  <div className="p-3 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-500 text-xs font-bold">
+                    Value set to: {(part as any).output?.value} {input.unit}
+                  </div>
+                ) : (
+                  <div className="space-y-6 pt-4">
+                    <div className="flex justify-between text-[10px] font-bold text-white/40 uppercase">
+                      <span>{input.min} {input.unit}</span>
+                      <span>{input.max} {input.unit}</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min={input.min} 
+                      max={input.max} 
+                      defaultValue={input.currentValue || (input.max + input.min) / 2}
+                      className="w-full accent-primary-500 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                      onMouseUp={(e) => {
+                        const val = parseInt((e.target as HTMLInputElement).value);
+                        submitToolResult(
+                          'setProjectParameters',
+                          toolCallId,
+                          { value: val, success: true }
+                        );
+                      }}
+                    />
+                    <p className="text-[10px] text-white/30 italic text-center">Adjust slider to confirm value</p>
+                  </div>
+                )}
+              </div>
             );
           }
           

@@ -38,6 +38,17 @@ export async function POST(req: Request) {
             nextStage: z.string().describe('The name of the next discovery stage.'),
           }),
         },
+        // Generative UI Tool: requests specific numeric/selection parameters
+        setProjectParameters: {
+          description: 'Request the user to set specific project parameters like budget and duration using a specialized UI slider.',
+          inputSchema: z.object({
+            parameterName: z.string().describe('The name of the parameter to set (e.g., budget, duration).'),
+            min: z.number().default(0),
+            max: z.number().default(100),
+            unit: z.string().describe('The unit of measurement (e.g., USD, Weeks, Hours).'),
+            currentValue: z.number().optional(),
+          }),
+        },
         // Server-side tool: persists discovery data
         saveDiscoveryContext: {
           description: 'Save gathered discovery data to the database.',
