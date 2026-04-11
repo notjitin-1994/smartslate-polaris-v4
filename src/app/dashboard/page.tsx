@@ -3,21 +3,14 @@ import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { starmaps } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
-import Link from 'next/link';
 import { 
   Plus, 
   Compass, 
-  Clock, 
-  CheckCircle2, 
-  ChevronRight, 
-  Sparkles, 
   LayoutGrid, 
   Zap, 
-  History,
-  TrendingUp,
-  Activity,
-  ArrowRight
 } from 'lucide-react';
+import { createStarmap } from '@/app/actions/starmap';
+import { StarmapList } from '@/components/Dashboard/StarmapList';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -49,7 +42,7 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="relative min-h-screen bg-[#020C1B] text-[#e0e0e0] font-sans selection:bg-primary-500/30 pb-20">
+    <div className="relative min-h-screen bg-[#020C1B] text-[#e0e0e0] font-sans selection:bg-primary-500/30 overflow-x-hidden flex flex-col pt-16 sm:pt-20">
       {/* Background Decor - Ambient Lights */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <div className="absolute top-[-20%] left-[-10%] h-[60%] w-[50%] rounded-full bg-primary-500/5 blur-[150px]" />
@@ -57,12 +50,12 @@ export default async function DashboardPage() {
         <div className="absolute bottom-[-20%] left-[20%] h-[40%] w-[60%] rounded-full bg-primary-500/5 blur-[150px]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[1400px] px-4 py-8 sm:px-6 lg:px-12 lg:py-12">
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 flex flex-col flex-1 h-[calc(100vh-80px)]">
         
-        {/* Premium Dashboard Header */}
-        <header className="mb-12 lg:mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+        {/* Premium Dashboard Header - More compact */}
+        <header className="mb-6 lg:mb-8 flex flex-col justify-end animate-in fade-in slide-in-from-bottom-4 duration-1000 shrink-0">
           <div className="space-y-2">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-2">
               <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-primary-500">
                   {today}
@@ -76,24 +69,24 @@ export default async function DashboardPage() {
               </div>
             </div>
             
-            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight">
+            <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
               Welcome back, <span className="text-primary-500 italic font-serif">{getFirstName()}</span>.
             </h1>
-            <p className="text-white/50 text-lg font-light max-w-2xl">
+            <p className="text-white/50 text-sm sm:text-base font-light max-w-2xl hidden sm:block">
               Your command center for architecting high-impact learning experiences.
             </p>
           </div>
         </header>
 
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 mb-16">
+        {/* Top Section - Designed to fit viewport without scrolling */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-6 mb-6 lg:mb-8 shrink-0">
           
           {/* Main Action Card (Spans 8 cols on desktop) */}
           <div className="md:col-span-12 lg:col-span-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
-            <div className="relative h-full overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/10 backdrop-blur-2xl p-8 sm:p-12 shadow-2xl flex flex-col justify-between group">
+            <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/10 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between group h-full min-h-[220px]">
               {/* Abstract structural graphics */}
-              <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:opacity-40 transition-opacity duration-700">
-                <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none">
+                <svg width="150" height="150" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M100 0L200 100L100 200L0 100L100 0Z" stroke="url(#paint0_linear)" strokeWidth="2" strokeDasharray="4 4"/>
                   <circle cx="100" cy="100" r="60" stroke="url(#paint1_linear)" strokeWidth="1"/>
                   <defs>
@@ -109,81 +102,83 @@ export default async function DashboardPage() {
                 </svg>
               </div>
 
-              <div className="relative z-10 mb-12">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-500 mb-6">
-                  <Compass size={16} />
+              <div className="relative z-10 mb-4 sm:mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-500 mb-3 sm:mb-4">
+                  <Compass size={14} />
                   <span className="text-[10px] font-bold uppercase tracking-widest">Polaris Engine</span>
                 </div>
-                <h2 className="font-heading text-3xl sm:text-4xl font-bold text-white mb-4 leading-tight">
-                  Design your next <br/><span className="text-primary-500 italic font-serif">masterpiece.</span>
+                <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white mb-2 leading-tight">
+                  Design your next <span className="text-primary-500 italic font-serif">masterpiece.</span>
                 </h2>
-                <p className="text-white/50 text-sm sm:text-base max-w-md font-light leading-relaxed">
+                <p className="text-white/50 text-xs sm:text-sm max-w-md font-light leading-relaxed hidden sm:block">
                   Start a new AI-guided strategy session to map out learning objectives, constraints, and full curriculum blueprints in minutes.
                 </p>
               </div>
 
               <div className="relative z-10">
-                <Link 
-                  href="/discovery/new"
-                  className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-primary-500 text-[#020C1B] font-bold transition-all hover:bg-primary-400 hover:shadow-[0_0_40px_rgba(167,218,219,0.4)] active:scale-[0.98]"
-                >
-                  <Plus size={20} strokeWidth={2.5} />
-                  <span className="tracking-wide">Start New Project</span>
-                </Link>
+                <form action={createStarmap}>
+                  <button 
+                    type="submit"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary-500 text-[#020C1B] font-bold transition-all hover:bg-primary-400 hover:shadow-[0_0_30px_rgba(167,218,219,0.4)] active:scale-[0.98] text-sm"
+                  >
+                    <Plus size={18} strokeWidth={2.5} />
+                    <span className="tracking-wide">Start New Project</span>
+                  </button>
+                </form>
               </div>
             </div>
           </div>
 
           {/* Stats Column (Spans 4 cols on desktop) */}
-          <div className="md:col-span-12 lg:col-span-4 flex flex-col gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+          <div className="md:col-span-12 lg:col-span-4 flex flex-row lg:flex-col gap-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
             
             {/* Fleet Status Card */}
-            <div className="flex-1 rounded-[2.5rem] bg-white/[0.02] border border-white/5 backdrop-blur-xl p-8 flex flex-col justify-between hover:bg-white/[0.04] transition-colors duration-500 group">
-              <div className="flex justify-between items-start mb-6">
+            <div className="flex-1 rounded-[2rem] bg-white/[0.02] border border-white/5 backdrop-blur-xl p-5 sm:p-6 flex flex-col justify-between hover:bg-white/[0.04] transition-colors duration-500 group">
+              <div className="flex justify-between items-start mb-2 sm:mb-4">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-1">Fleet Status</span>
-                  <h3 className="text-white/70 font-medium">Active Blueprints</h3>
+                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-0.5">Fleet Status</span>
+                  <h3 className="text-white/70 font-medium text-xs sm:text-sm">Active Blueprints</h3>
                 </div>
-                <div className="h-10 w-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-white/20 transition-colors">
-                  <LayoutGrid className="text-white/40 group-hover:text-white transition-colors" size={20} />
+                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-white/20 transition-colors">
+                  <LayoutGrid className="text-white/40 group-hover:text-white transition-colors" size={16} />
                 </div>
               </div>
               <div>
-                <div className="flex items-baseline gap-3">
-                  <span className="text-5xl font-heading font-bold text-white tracking-tighter">{userStarmaps.length}</span>
-                  <span className="text-sm font-medium text-white/30 uppercase tracking-widest">Total</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl sm:text-4xl font-heading font-bold text-white tracking-tighter">{userStarmaps.length}</span>
+                  <span className="text-[10px] font-medium text-white/30 uppercase tracking-widest hidden sm:inline">Total</span>
                 </div>
-                <div className="flex gap-4 mt-4 pt-4 border-t border-white/5">
+                <div className="flex gap-3 mt-2 pt-2 border-t border-white/5">
                   <div>
-                    <span className="text-white font-bold">{activeStarmaps}</span>
-                    <span className="text-xs text-white/40 ml-1.5 uppercase tracking-wider">Drafts</span>
+                    <span className="text-white font-bold text-sm">{activeStarmaps}</span>
+                    <span className="text-[10px] text-white/40 ml-1 uppercase tracking-wider">Drafts</span>
                   </div>
                   <div>
-                    <span className="text-primary-500 font-bold">{completedStarmaps}</span>
-                    <span className="text-xs text-white/40 ml-1.5 uppercase tracking-wider">Done</span>
+                    <span className="text-primary-500 font-bold text-sm">{completedStarmaps}</span>
+                    <span className="text-[10px] text-white/40 ml-1 uppercase tracking-wider">Done</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Impact/Efficiency Card */}
-            <div className="flex-1 rounded-[2.5rem] bg-gradient-to-br from-primary-500/[0.05] to-transparent border border-primary-500/10 backdrop-blur-xl p-8 flex flex-col justify-between hover:border-primary-500/30 transition-colors duration-500 group">
-              <div className="flex justify-between items-start mb-6">
+            <div className="flex-1 rounded-[2rem] bg-gradient-to-br from-primary-500/[0.05] to-transparent border border-primary-500/10 backdrop-blur-xl p-5 sm:p-6 flex flex-col justify-between hover:border-primary-500/30 transition-colors duration-500 group">
+              <div className="flex justify-between items-start mb-2 sm:mb-4">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-500/50 block mb-1">Velocity</span>
-                  <h3 className="text-white/70 font-medium">Time Saved</h3>
+                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary-500/50 block mb-0.5">Velocity</span>
+                  <h3 className="text-white/70 font-medium text-xs sm:text-sm">Time Saved</h3>
                 </div>
-                <div className="h-10 w-10 rounded-2xl bg-primary-500/10 flex items-center justify-center border border-primary-500/20 group-hover:bg-primary-500/20 transition-colors">
-                  <Zap className="text-primary-500" size={20} />
+                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-primary-500/10 flex items-center justify-center border border-primary-500/20 group-hover:bg-primary-500/20 transition-colors">
+                  <Zap className="text-primary-500" size={16} />
                 </div>
               </div>
               <div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-heading font-bold text-white tracking-tighter">15</span>
-                  <span className="text-3xl font-bold text-primary-500">x</span>
+                  <span className="text-3xl sm:text-4xl font-heading font-bold text-white tracking-tighter">15</span>
+                  <span className="text-xl sm:text-2xl font-bold text-primary-500">x</span>
                 </div>
-                <p className="text-xs text-white/40 font-light mt-3 leading-relaxed">
-                  Average acceleration in design cycle time compared to traditional workflows.
+                <p className="text-[10px] text-white/40 font-light mt-1.5 leading-relaxed hidden sm:block">
+                  Average acceleration in design cycle time.
                 </p>
               </div>
             </div>
@@ -191,98 +186,10 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Recent Starmaps Section */}
-        <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
-          <div className="flex items-center justify-between mb-8 px-2 border-b border-white/5 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
-                <History size={16} className="text-white/50" />
-              </div>
-              <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-white">Recent Sessions</h2>
-            </div>
-            {userStarmaps.length > 0 && (
-              <span className="text-xs text-white/30 font-medium bg-white/5 px-3 py-1 rounded-full border border-white/10">
-                Showing latest {Math.min(userStarmaps.length, 5)}
-              </span>
-            )}
-          </div>
-
-          {userStarmaps.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-32 rounded-[2.5rem] border border-dashed border-white/10 bg-white/[0.01]">
-              <div className="h-20 w-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
-                <Compass size={32} className="text-white/20" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">No transmissions yet.</h3>
-              <p className="text-white/40 font-light max-w-md text-center mb-8">
-                Your constellation is currently empty. Initiate your first discovery session to begin mapping your learning architecture.
-              </p>
-              <Link 
-                href="/discovery/new"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 transition-colors"
-              >
-                <Sparkles size={16} />
-                <span>Start Exploring</span>
-              </Link>
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {userStarmaps.slice(0, 5).map((starmap) => (
-                <Link
-                  key={starmap.id}
-                  href={`/discovery/${starmap.id}`}
-                  className="group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 rounded-2xl border border-white/5 bg-white/[0.02] p-5 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.04] overflow-hidden"
-                >
-                  {/* Hover Accent Line */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-500 opacity-0 transform -translate-x-full group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300" />
-                  
-                  <div className="flex items-center gap-5 min-w-0">
-                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-500 ${
-                      starmap.status === 'completed' 
-                        ? 'bg-secondary-500/10 text-secondary-500 group-hover:bg-secondary-500 group-hover:text-white shadow-[0_0_20px_rgba(79,70,229,0.0)] group-hover:shadow-[0_0_20px_rgba(79,70,229,0.3)]' 
-                        : 'bg-primary-500/10 text-primary-500 group-hover:bg-primary-500 group-hover:text-[#020C1B] shadow-[0_0_20px_rgba(167,218,219,0.0)] group-hover:shadow-[0_0_20px_rgba(167,218,219,0.3)]'
-                    }`}>
-                      {starmap.status === 'completed' ? <CheckCircle2 size={20} strokeWidth={2.5} /> : <Activity size={20} strokeWidth={2.5} />}
-                    </div>
-                    
-                    <div className="min-w-0">
-                      <h3 className="text-base font-bold text-white group-hover:text-primary-400 transition-colors truncate mb-1">
-                        {starmap.title || 'Untitled Strategy Blueprint'}
-                      </h3>
-                      <div className="flex items-center gap-3 text-xs">
-                        <span className="text-white/40 flex items-center gap-1.5 font-light">
-                          <Clock size={12} />
-                          {new Date(starmap.updatedAt).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric', 
-                            year: 'numeric' 
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-6 sm:pl-4 sm:border-l border-white/5">
-                    <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border ${
-                      starmap.status === 'completed'
-                        ? 'border-secondary-500/20 text-secondary-400 bg-secondary-500/10'
-                        : 'border-primary-500/20 text-primary-500 bg-primary-500/10'
-                    }`}>
-                      {starmap.status === 'completed' ? (
-                        <><CheckCircle2 size={10} /> Finished</>
-                      ) : (
-                        <><TrendingUp size={10} /> In Progress</>
-                      )}
-                    </span>
-                    
-                    <div className="h-8 w-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:bg-white/10 group-hover:border-white/20 transition-all duration-300">
-                      <ArrowRight size={14} className="text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
+        {/* Starmaps Section - Replaces Recent Sessions with paginated list */}
+        <div className="flex-1 min-h-0">
+          <StarmapList initialStarmaps={userStarmaps} />
+        </div>
       </div>
     </div>
   );

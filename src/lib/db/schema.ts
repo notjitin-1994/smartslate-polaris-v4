@@ -1,5 +1,22 @@
-import { pgTable, text, timestamp, uuid, jsonb, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, jsonb, integer, boolean } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+
+export const userProfiles = pgTable('user_profiles', {
+  userId: uuid('user_id').primaryKey(),
+  fullName: text('full_name'),
+  avatarUrl: text('avatar_url'),
+  preferences: jsonb('preferences').default('{}').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const notificationPreferences = pgTable('notification_preferences', {
+  userId: uuid('user_id').primaryKey(),
+  emailUpdates: boolean('email_updates').default(true).notNull(),
+  marketingEmails: boolean('marketing_emails').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
 
 export const starmaps = pgTable('starmaps', {
   id: uuid('id').defaultRandom().primaryKey(),

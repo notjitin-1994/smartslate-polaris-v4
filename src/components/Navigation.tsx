@@ -54,7 +54,6 @@ export function Navigation() {
 
   const navItems: NavItem[] = [
     { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={16} />, requiresAuth: true },
-    { href: '/discovery/new', label: 'Discovery', icon: <Compass size={16} />, requiresAuth: true },
   ];
 
   // Don't show nav on login/signup pages
@@ -75,7 +74,7 @@ export function Navigation() {
           
           {/* LEFT: Branding & Search */}
           <div className="flex items-center gap-8 lg:gap-12">
-            <Link href="/" className="flex items-center gap-2 group transition-transform active:scale-95">
+            <Link href="/dashboard" className="flex items-center gap-2 group transition-transform active:scale-95">
               <div className="flex items-baseline relative">
                 <img src="/logo.png" alt="SmartSlate" className="h-5 w-auto lg:h-6 object-contain self-center" />
                 <span className="font-heading text-lg lg:text-xl font-bold tracking-tight text-white ml-2 leading-none self-end pb-[1px]">
@@ -143,9 +142,9 @@ export function Navigation() {
                   <button className="p-2.5 rounded-xl text-white/30 hover:text-white hover:bg-white/5 transition-all duration-300">
                     <Bell size={18} />
                   </button>
-                  <button className="p-2.5 rounded-xl text-white/30 hover:text-white hover:bg-white/5 transition-all duration-300">
+                  <Link href="/settings" className="p-2.5 rounded-xl text-white/30 hover:text-white hover:bg-white/5 transition-all duration-300 inline-block">
                     <Settings size={18} />
-                  </button>
+                  </Link>
                 </div>
 
                 {/* Vertical Divider */}
@@ -192,14 +191,14 @@ export function Navigation() {
                         </div>
                         
                         <div className="py-2">
-                          <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200">
+                          <Link href="/profile" className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200">
                             <User size={16} />
                             <span>Public Profile</span>
-                          </button>
-                          <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200">
+                          </Link>
+                          <Link href="/preferences" className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200">
                             <Settings size={16} />
                             <span>Preferences</span>
-                          </button>
+                          </Link>
                         </div>
 
                         <div className="pt-2 border-t border-white/5">
