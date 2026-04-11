@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useDiscovery } from '../useDiscovery';
+import { useChat } from '@ai-sdk/react';
 
 // Mock the useChat hook
 vi.mock('@ai-sdk/react', () => ({
@@ -20,6 +21,15 @@ describe('useDiscovery', () => {
   it('initializes with current stage at 1', () => {
     const { result } = renderHook(() => useDiscovery());
     expect(result.current.currentStage).toBe(1);
+  });
+
+  it('passes initialMessages to useChat', () => {
+    const mockMessages: any[] = [{ id: '1', role: 'user', parts: [] }];
+    renderHook(() => useDiscovery('test-id', mockMessages));
+    
+    expect(useChat).toHaveBeenCalledWith(expect.objectContaining({
+      messages: mockMessages
+    }));
   });
 
   it('provides sendMessage function', () => {
