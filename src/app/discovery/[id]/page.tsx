@@ -1,7 +1,8 @@
 'use client';
 
 import { useDiscovery } from '@/hooks/useDiscovery';
-import { ApprovalCard } from '@/components/Discovery/ApprovalCard';
+import { ChatMessage } from '@/components/Discovery/ChatMessage';
+
 import { FinalizationPanel } from '@/components/Discovery/FinalizationPanel';
 import { Send, User, Bot, Sparkles, Compass, FileText, Target, Users, Zap } from 'lucide-react';
 import { useParams } from 'next/navigation';
@@ -206,78 +207,50 @@ export default function DiscoveryPage() {
           </header>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {error && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
-                Error: {error.message || 'The AI failed to respond. Please check your connection or environment variables and try again.'}
-              </div>
-            )}
-            {messages.length === 0 && !error && (
-              <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-primary-500 animate-pulse">
-                  <Bot size={24} />
-                </div>
-                <h3 className="text-lg font-bold text-white">Initialize Discovery</h3>
-                <p className="text-sm text-white/40">Type your project goals below to start the agentic discovery process.</p>
-              </div>
-            )}
+          <div 
+            className="flex-1 overflow-y-auto p-6 space-y-6 relative"
+            style={{
+              backgroundImage: "url('/logo-swirl.png')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          >
+            {/* Dark overlay to ensure text readability while keeping the swirl visible */}
+            <div className="absolute inset-0 bg-[#020C1B]/95 z-0" />
 
-            {messages.map((m) => (
-              <div key={m.id} className={`flex gap-4 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                  m.role === 'user' ? 'bg-secondary-500 text-white' : 'bg-white/5 text-primary-500 border border-white/10'
-                }`}>
-                  {m.role === 'user' ? <User size={16} /> : <Bot size={16} />}
+            <div className="relative z-10 space-y-6 h-full flex flex-col">
+              {error && (
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4 shrink-0">
+                  Error: {error.message || 'The AI failed to respond. Please check your connection or environment variables and try again.'}
                 </div>
-                <div className={`max-w-[85%] space-y-2 ${m.role === 'user' ? 'items-end' : ''}`}>
-                  {m.parts?.map((part, i) => {
-                    if (part.type === 'text') {
-                      return (
-                        <div key={i} className={`p-4 rounded-2xl text-sm leading-relaxed ${
-                          m.role === 'user'
-                            ? 'bg-secondary-500/10 border border-secondary-500/20 text-white'
-                            : 'glass-card'
-                        }`}>
-                          {part.text}
-                        </div>
-                      );
-                    }
-                    if (part.type === 'tool-requestApproval') {
-                      return (
-                        <ApprovalCard
-                          key={part.toolCallId}
-                          summary={(part.input as { summary?: string })?.summary ?? ''}
-                          nextStage={(part.input as { nextStage?: string })?.nextStage ?? ''}
-                          state={part.state}
-                          onApprove={() => approveStage(part.toolCallId)}
-                          onReject={(feedback: string) => rejectStage(part.toolCallId, feedback)}
-                        />
-                      );
-                    }
-                    if (part.type === 'dynamic-tool' && part.toolName === 'requestApproval') {
-                      return (
-                        <ApprovalCard
-                          key={part.toolCallId}
-                          summary={((part.input as Record<string, unknown>)?.summary as string) ?? ''}
-                          nextStage={((part.input as Record<string, unknown>)?.nextStage as string) ?? ''}
-                          state={part.state}
-                          onApprove={() => approveStage(part.toolCallId)}
-                          onReject={(feedback: string) => rejectStage(part.toolCallId, feedback)}
-                        />
-                      );
-                    }
-                    return null;
-                  })}
+              )}
+              {messages.length === 0 && !error && (
+                <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto space-y-4 shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-primary-500 animate-pulse">
+                    <Bot size={24} />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Initialize Discovery</h3>
+                  <p className="text-sm text-white/40">Type your project goals below to start the agentic discovery process.</p>
                 </div>
-              </div>
-            ))}
+              )}
 
-            {isLoading && (
-              <div className="flex gap-4 animate-pulse">
-                <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 shrink-0" />
-                <div className="glass-card h-12 w-32 rounded-2xl" />
-              </div>
-            )}
+              {messages.map((m) => (
+                <ChatMessage 
+                  key={m.id} 
+                  message={m} 
+                  approveStage={approveStage} 
+                  rejectStage={rejectStage} 
+                />
+              ))}
+
+              {isLoading && (
+                <div className="flex gap-4 animate-pulse shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 shrink-0" />
+                  <div className="glass-card h-12 w-32 rounded-2xl" />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Input Area */}
