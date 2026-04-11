@@ -55,9 +55,9 @@ export function Navigation() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="flex items-center">
-              <img src="/logo.png" alt="SmartSlate" className="h-5 w-auto object-contain" />
-              <span className="font-heading text-lg font-bold tracking-tight text-white ml-2 leading-none">
+            <div className="flex items-baseline">
+              <img src="/logo.png" alt="SmartSlate" className="h-5 w-auto object-contain self-center" />
+              <span className="font-heading text-lg font-bold tracking-tight text-white ml-2 leading-none self-end pb-[1px]">
                 <span className="text-primary-500">Polaris</span>
               </span>
             </div>
