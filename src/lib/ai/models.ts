@@ -6,12 +6,12 @@ import { moonshotai as moonshot } from '@ai-sdk/moonshotai';
 
 /**
  * Custom Zhipu Provider using OpenAI compatibility layer.
- * This is the recommended way to use the GLM Coding Plan (Global).
- * The 'api.z.ai/v1' endpoint is specifically optimized for this plan.
+ * For the GLM Coding Plan (Global), the dedicated coding endpoint is required.
+ * Using 'https://api.z.ai/api/coding/paas/v4' ensures the plan is recognized.
  */
 const zhipu = createOpenAI({
   apiKey: process.env.ZHIPU_API_KEY,
-  baseURL: 'https://api.z.ai/v1',
+  baseURL: 'https://api.z.ai/api/coding/paas/v4',
 });
 
 /**
