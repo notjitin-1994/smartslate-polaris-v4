@@ -126,7 +126,7 @@ export default async function SignupPage({
       </div>
 
       {/* DESKTOP VIEW - Glassmorphic Master Container */}
-      <div className="relative z-10 mx-auto hidden w-full xl:flex xl:items-center xl:justify-center xl:px-4 xl:py-6">
+      <div className="relative z-10 mx-auto hidden w-full xl:flex xl:items-center xl:justify-center xl:px-4 xl:py-6 h-full max-h-screen">
         <div
           className="relative flex w-full max-w-[1200px] overflow-hidden rounded-3xl"
           style={{
@@ -135,15 +135,15 @@ export default async function SignupPage({
             WebkitBackdropFilter: 'blur(40px)',
             border: '1px solid rgba(167, 218, 219, 0.2)',
             boxShadow: '0 24px 64px rgba(0, 0, 0, 0.5), 0 0 80px rgba(167, 218, 219, 0.1)',
-            maxHeight: 'calc(100vh - 48px)',
+            height: 'min(850px, 90vh)',
           }}
         >
           <div className="relative z-10 flex h-full w-full">
-            <aside className="w-[600px] flex-shrink-0 overflow-y-auto px-10 py-12 border-r border-white/10">
+            <aside className="w-[600px] flex-shrink-0 overflow-y-auto px-10 py-12 border-r border-white/10 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
               <LoginMarketingSection />
             </aside>
 
-            <div className="flex flex-1 items-center justify-center py-12 px-12">
+            <div className="flex flex-1 items-center justify-center py-12 px-12 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
               <div className="w-full max-w-md">
                 <div className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-8 shadow-2xl backdrop-blur-2xl">
                   <div className="relative z-10">

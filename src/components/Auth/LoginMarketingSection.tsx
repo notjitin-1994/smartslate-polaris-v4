@@ -137,22 +137,11 @@ export function LoginMarketingSection() {
 
                   {/* Two-line Label */}
                   <span
-                    className={`font-heading relative z-10 text-[11px] leading-[1.3] font-bold tracking-tight transition-all duration-200 ${
+                    className={`font-heading relative z-10 text-[10px] leading-[1.2] font-bold tracking-tight transition-all duration-200 ${
                       isActive ? 'text-[#020C1B]' : 'text-current'
                     }`}
                   >
-                    {persona.id === 'lxd-specialist' ? (
-                      <>
-                        <span className="block">Learning Experience</span>
-                        <span className="block">Designer</span>
-                      </>
-                    ) : (
-                      persona.title.split(' ').map((word, i, arr) => (
-                        <span key={i} className="block">
-                          {i === arr.length - 1 ? word : `${word} `}
-                        </span>
-                      ))
-                    )}
+                    {persona.label}
                   </span>
                 </button>
               );
