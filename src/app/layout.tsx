@@ -34,8 +34,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${quicksand.variable} ${lato.variable} ${jetbrainsMono.variable} min-h-screen antialiased`}
+        className={`${quicksand.variable} ${lato.variable} ${jetbrainsMono.variable} font-sans min-h-screen antialiased`}
       >
+        <div className="noise-overlay" />
         <Providers>
           <Navigation />
           {children}

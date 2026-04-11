@@ -28,317 +28,154 @@ export function LoginMarketingSection() {
     <div className="relative flex h-full w-full flex-col">
       {/* Ambient Background Glow - Static Teal */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-30"
+        className="pointer-events-none absolute inset-0 opacity-20"
         style={{
-          background: `radial-gradient(ellipse 80% 50% at 50% 0%, #a7dadb15, transparent 70%)`,
+          background: `radial-gradient(ellipse 80% 50% at 50% 0%, #a7dadb10, transparent 70%)`,
         }}
         aria-hidden="true"
       />
 
-      {/* Logo */}
-      <div className="relative z-10 mb-6">
-        <div className="relative inline-block">
-          <div
-            className="absolute inset-0 opacity-50 blur-lg"
-            style={{ background: 'rgba(167,218,219,0.2)' }}
-            aria-hidden="true"
-          />
-          <img src="/logo.png" alt="Smartslate" className="relative z-10 h-8 w-auto" />
+      {/* Logo Area */}
+      <div className="relative z-10 mb-12">
+        <div className="flex items-center gap-3">
+          <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-primary-500/10 flex items-center justify-center border border-primary-500/20 shadow-[0_0_20px_rgba(167,218,219,0.1)]">
+            <SparklesIcon className="h-6 w-6 text-primary-500" />
+          </div>
+          <div>
+            <h2 className="font-heading text-lg font-bold tracking-tight text-white leading-tight">
+              SmartSlate <span className="text-primary-500">Polaris</span>
+            </h2>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-bold">
+              Discovery Engine v4.0
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Enhanced Hero Section */}
-      <div className="relative z-10 mb-10 text-left">
+      {/* Hero Section */}
+      <div className="relative z-10 mb-12">
         <motion.div
-          className="relative inline-block"
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <h1 className="font-heading mb-4 text-3xl leading-tight font-bold text-white md:text-4xl lg:text-5xl">
-            Transform Learning Design
-            <span className="relative mt-2 block" style={{ color: '#a7dadb' }}>
-              from Weeks to Hours
-            </span>
+          <h1 className="font-heading mb-6 text-4xl leading-[1.1] font-bold text-white lg:text-5xl tracking-tight">
+            Design transformational
+            <span className="block text-primary-500 italic font-serif mt-1">learning experiences.</span>
           </h1>
 
-          {/* Sparkle Accent */}
-          <motion.div
-            className="text-primary absolute -top-4 -right-8"
-            animate={{
-              scale: [1, 1.2, 1],
-              rotate: [0, 15, 0],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: 'easeInOut',
-            }}
-          >
-            <SparklesIcon className="h-6 w-6" />
-          </motion.div>
+          <p className="text-lg leading-relaxed text-white/60 max-w-lg font-sans font-light">
+            Empowering professionals to bridge the gap between complex concepts and 
+            <span className="text-white/90 font-medium"> impactful instruction</span> in record time.
+          </p>
         </motion.div>
-
-        <motion.p
-          className="text-base leading-relaxed font-medium text-white/80 md:text-lg"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-        >
-          AI-assisted Learning Experience Design for professionals. Select the role that best
-          <br />
-          aligns with your needs to know how Smartslate Polaris makes your life easier:
-        </motion.p>
       </div>
 
-      {/* Top - Modern Tab Navigation */}
+      {/* Navigation Tabs */}
       <nav
         role="tablist"
         aria-label="Choose your professional role"
-        className="relative z-10 mb-10"
+        className="relative z-10 mb-12"
       >
-        {/* Tab Container with Background Track */}
-        <div className="relative rounded-xl border border-white/10 bg-white/5 p-1.5 backdrop-blur-sm">
-          <div className="scrollbar-none flex gap-1 overflow-x-auto">
-            {personasData.map((persona) => {
-              const isActive = activePersona === persona.id;
+        <div className="flex flex-wrap gap-2">
+          {personasData.map((persona) => {
+            const isActive = activePersona === persona.id;
 
-              return (
-                <button
-                  key={persona.id}
-                  role="tab"
-                  aria-selected={isActive}
-                  aria-controls={`persona-panel-${persona.id}`}
-                  id={`persona-tab-${persona.id}`}
-                  onClick={() => setActivePersona(persona.id)}
-                  className={`group focus:ring-primary/50 relative flex min-w-[110px] flex-col items-center justify-center rounded-lg px-3 py-1.5 text-center transition-all duration-200 ease-out focus:ring-2 focus:outline-none ${
-                    isActive
-                      ? 'text-white shadow-lg'
-                      : 'text-white/60 hover:bg-white/5 hover:text-white/90'
-                  }`}
-                >
-                  {/* Active Background */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 rounded-lg"
-                      style={{
-                        background: '#a7dadb',
-                        boxShadow:
-                          '0 4px 12px rgba(167, 218, 219, 0.3), 0 0 20px rgba(167, 218, 219, 0.2)',
-                      }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 500,
-                        damping: 35,
-                      }}
-                    />
-                  )}
-
-                  {/* Two-line Label */}
-                  <span
-                    className={`font-heading relative z-10 text-[10px] leading-[1.2] font-bold tracking-tight transition-all duration-200 ${
-                      isActive ? 'text-[#020C1B]' : 'text-current'
-                    }`}
-                  >
-                    {persona.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+            return (
+              <button
+                key={persona.id}
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActivePersona(persona.id)}
+                className={`group relative flex items-center justify-center rounded-full px-5 py-2 text-sm font-semibold transition-all duration-300 border ${
+                  isActive
+                    ? 'bg-primary-500 border-primary-500 text-[#020C1B] shadow-[0_4px_20px_rgba(167,218,219,0.3)]'
+                    : 'bg-white/5 border-white/10 text-white/50 hover:border-white/30 hover:text-white'
+                }`}
+              >
+                <span className="relative z-10 uppercase tracking-wider text-[10px]">
+                  {persona.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </nav>
 
-      {/* Bottom - Content Area */}
-      <div className="relative z-10 flex flex-1 flex-col">
-        {/* Tab Content - Scrollable area */}
-        <div className="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent flex-1 overflow-y-auto pr-2">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activePersona}
-              id={`persona-panel-${activePersona}`}
-              role="tabpanel"
-              aria-labelledby={`persona-tab-${activePersona}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="text-left"
-            >
-              {/* Enhanced Persona Header */}
-              <div className="mb-8">
-                <div className="flex items-start gap-4">
-                  <motion.div
-                    className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-2xl shadow-xl"
-                    style={{
-                      background: '#a7dadb30',
-                      boxShadow: '0 8px 32px #a7dadb30',
-                    }}
-                    initial={{ scale: 0.8, rotate: -10 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ duration: 0.5, type: 'spring', stiffness: 200 }}
-                  >
-                    {currentPersona.icon}
-                  </motion.div>
-                  <div className="flex-1">
-                    <h2
-                      className="font-heading mb-2 text-2xl font-bold"
-                      style={{ color: '#a7dadb' }}
-                    >
-                      {currentPersona.title}
-                    </h2>
-                    <p className="text-base font-medium text-white/80">{currentPersona.subtitle}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Two Column Layout: Benefits + Metrics */}
-              <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_auto]">
-                {/* Left: Enhanced Benefits List */}
+      {/* Content Area */}
+      <div className="relative z-10 flex-1 min-h-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activePersona}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col h-full"
+          >
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_240px]">
+              {/* Left: Persona Details */}
+              <div className="space-y-8">
                 <div>
-                  <h3
-                    className="mb-5 flex items-center gap-2 text-sm font-bold tracking-wider uppercase"
-                    style={{ color: '#a7dadb' }}
-                  >
-                    <span className="h-1 w-8 rounded-full" style={{ backgroundColor: '#a7dadb' }} />
-                    Key Benefits
-                  </h3>
-                  <ul className="space-y-3.5">
-                    {currentPersona.benefits.map((benefit, i) => (
-                      <motion.li
-                        key={i}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.05 * i, duration: 0.4, ease: 'easeOut' }}
-                        className="group flex items-start gap-3 rounded-lg p-2 transition-all duration-300 hover:bg-white/[0.03]"
-                      >
-                        <motion.div
-                          whileHover={{ scale: 1.2, rotate: 360 }}
-                          transition={{ duration: 0.5 }}
-                        >
-                          <CheckCircleIcon
-                            className="mt-0.5 h-5 w-5 flex-shrink-0 transition-all duration-300 group-hover:drop-shadow-lg"
-                            style={{
-                              color: '#a7dadb',
-                              filter: 'drop-shadow(0 0 8px #a7dadb40)',
-                            }}
-                          />
-                        </motion.div>
-                        <span className="text-sm leading-relaxed text-white/85 transition-colors duration-300 group-hover:text-white">
-                          {benefit}
-                        </span>
-                      </motion.li>
-                    ))}
-                  </ul>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="h-px w-8 bg-primary-500/50" />
+                    <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary-500">
+                      Target Role
+                    </span>
+                  </div>
+                  <h2 className="font-heading text-3xl font-bold text-white mb-3">
+                    {currentPersona.title}
+                  </h2>
+                  <p className="text-lg text-white/70 font-medium leading-snug italic">
+                    &quot;{currentPersona.subtitle}&quot;
+                  </p>
                 </div>
 
-                {/* Right: Perpetually Animated Infographic Metric Cards */}
-                {currentPersona.stats && currentPersona.stats.length > 0 && (
-                  <div className="flex flex-col gap-4 lg:w-56">
-                    <h3
-                      className="mb-2 flex items-center gap-2 text-xs font-bold tracking-wider uppercase"
-                      style={{ color: '#a7dadb' }}
+                <ul className="space-y-4">
+                  {currentPersona.benefits.slice(0, 5).map((benefit, i) => (
+                    <motion.li
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 + i * 0.05 }}
+                      className="flex items-start gap-4 group"
                     >
-                      <span
-                        className="h-1 w-6 rounded-full"
-                        style={{ backgroundColor: '#a7dadb' }}
-                      />
-                      Impact Metrics
-                    </h3>
-                    <div className="flex flex-col gap-4">
-                      {currentPersona.stats.map((stat, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                          animate={{
-                            opacity: 1,
-                            scale: 1,
-                            y: 0,
-                          }}
-                          transition={{
-                            delay: 0.1 * i,
-                            duration: 0.5,
-                            ease: 'easeOut',
-                          }}
-                          className="group relative cursor-default overflow-hidden rounded-2xl p-6"
-                          style={{
-                            background: 'rgba(255,255,255,0.08)',
-                            backdropFilter: 'blur(24px)',
-                            WebkitBackdropFilter: 'blur(24px)',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.3), 0 2px 8px #a7dadb20',
-                          }}
-                        >
-                          {/* Static Border with Subtle Glow */}
-                          <div
-                            className="absolute inset-0 rounded-2xl opacity-60"
-                            style={{
-                              background: '#a7dadb',
-                              padding: '1px',
-                              WebkitMask:
-                                'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                              WebkitMaskComposite: 'xor',
-                              maskComposite: 'exclude',
-                            }}
-                          />
-
-                          {/* Static Glow Effect */}
-                          <div
-                            className="absolute inset-0 rounded-2xl opacity-40"
-                            style={{
-                              background:
-                                'radial-gradient(circle at top right, #a7dadb40, transparent 60%)',
-                            }}
-                            aria-hidden="true"
-                          />
-
-                          {/* Subtle Shimmer Effect on Hover Only */}
-                          <div
-                            className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                            style={{
-                              background:
-                                'linear-gradient(110deg, transparent 30%, #a7dadb20 50%, transparent 70%)',
-                              backgroundSize: '200% 100%',
-                            }}
-                            aria-hidden="true"
-                          />
-
-                          <div className="relative z-10">
-                            {/* Static Counter with Hover Effect */}
-                            <div
-                              className="font-heading mb-2 text-4xl leading-none font-extrabold transition-transform duration-300 group-hover:scale-105"
-                              style={{
-                                color: '#a7dadb',
-                                textShadow: '0 4px 12px #a7dadb40',
-                              }}
-                            >
-                              {stat.value}
-                              <span className="text-2xl font-bold">{stat.suffix}</span>
-                            </div>
-
-                            {/* Label with Enhanced Typography */}
-                            <div className="text-xs leading-tight font-semibold tracking-wide text-white/80 uppercase">
-                              {stat.label}
-                            </div>
-                          </div>
-
-                          {/* 3D Corner Accent - Static */}
-                          <div
-                            className="absolute -top-2 -right-2 h-20 w-20 rounded-full opacity-40 blur-2xl"
-                            style={{
-                              background: 'radial-gradient(circle, #a7dadb, transparent 60%)',
-                            }}
-                            aria-hidden="true"
-                          />
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(167,218,219,0.8)] group-hover:scale-150 transition-transform duration-300" />
+                      <span className="text-[15px] leading-relaxed text-white/60 group-hover:text-white/90 transition-colors">
+                        {benefit}
+                      </span>
+                    </motion.li>
+                  ))}
+                </ul>
               </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+
+              {/* Right: Metrics */}
+              <div className="flex flex-col gap-6">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 px-1">
+                  Proven Impact
+                </span>
+                {currentPersona.stats.map((stat, i) => (
+                  <div
+                    key={i}
+                    className="relative overflow-hidden rounded-2xl p-6 bg-white/[0.03] border border-white/5 group hover:border-primary-500/30 transition-colors duration-500"
+                  >
+                    <div className="relative z-10">
+                      <div className="font-heading text-4xl font-extrabold text-white mb-1 tracking-tighter">
+                        {stat.value}
+                        <span className="text-primary-500 text-2xl ml-0.5">{stat.suffix}</span>
+                      </div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 group-hover:text-white/60 transition-colors">
+                        {stat.label}
+                      </div>
+                    </div>
+                    {/* Subtle internal glow */}
+                    <div className="absolute top-0 right-0 h-16 w-16 bg-primary-500/5 blur-2xl rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
