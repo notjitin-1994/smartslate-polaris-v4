@@ -46,7 +46,7 @@ export default async function SignupPage({
   const params = await searchParams;
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#020C1B] px-4 py-4 font-sans">
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#020C1B] px-4 py-2 font-sans">
       {/* Animated background */}
       <SwirlBackground />
 
@@ -60,28 +60,28 @@ export default async function SignupPage({
         {/* DESKTOP VIEW */}
         <div className="hidden xl:grid grid-cols-[1fr_0.8fr] gap-0 bg-white/[0.02] border border-white/10 rounded-[2rem] overflow-hidden backdrop-blur-3xl shadow-[0_32px_80px_rgba(0,0,0,0.6)] w-full max-h-[85vh]">
           {/* Left: Marketing */}
-          <aside className="relative flex flex-col p-10 lg:p-12 overflow-y-auto scrollbar-none border-r border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
+          <aside className="relative flex flex-col p-8 lg:p-10 overflow-y-auto scrollbar-none border-r border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent">
             <LoginMarketingSection />
           </aside>
 
           {/* Right: Signup Form */}
-          <main className="flex flex-col justify-center p-10 lg:p-12 overflow-y-auto scrollbar-none bg-black/20">
-            <div className="w-full max-w-[320px] mx-auto space-y-6">
+          <main className="flex flex-col justify-center p-8 lg:p-10 overflow-y-auto scrollbar-none bg-black/20">
+            <div className="w-full max-w-[320px] mx-auto space-y-4">
               <AuthHeader 
                 title="Create Workspace" 
                 subtitle="Join Polaris." 
               />
 
               {params.error && (
-                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 animate-in fade-in slide-in-from-top-2 duration-500">
-                  <p className="text-[12px] text-red-400 font-medium text-center">{params.error}</p>
+                <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 animate-in fade-in slide-in-from-top-2 duration-500">
+                  <p className="text-[11px] text-red-400 font-medium text-center">{params.error}</p>
                 </div>
               )}
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <GoogleButton />
 
-                <div className="relative py-1 flex items-center">
+                <div className="relative py-0.5 flex items-center">
                   <div className="flex-grow h-px bg-white/5" />
                   <span className="flex-shrink-0 px-3 text-[9px] font-bold text-white/10 uppercase tracking-[0.2em]">
                     or use email
@@ -89,7 +89,7 @@ export default async function SignupPage({
                   <div className="flex-grow h-px bg-white/5" />
                 </div>
 
-                <form action={signup} className="space-y-4">
+                <form action={signup} className="space-y-3">
                   <AuthInput 
                     name="email" 
                     type="email" 
@@ -117,8 +117,8 @@ export default async function SignupPage({
                 </form>
               </div>
 
-              <div className="pt-6 border-t border-white/5">
-                <p className="text-[12px] text-white/30 font-light">
+              <div className="pt-4 border-t border-white/5">
+                <p className="text-[11px] text-white/30 font-light">
                   Already have a workspace?{' '}
                   <Link
                     href="/login"
@@ -133,10 +133,10 @@ export default async function SignupPage({
         </div>
 
         {/* MOBILE & TABLET VIEW */}
-        <div className="xl:hidden w-full max-w-sm mx-auto space-y-6 flex flex-col items-center justify-center max-h-[95vh] overflow-y-auto scrollbar-none py-4">
+        <div className="xl:hidden w-full max-w-sm mx-auto space-y-4 flex flex-col items-center justify-center max-h-[98vh] overflow-y-auto scrollbar-none py-2">
           {/* Mobile Marketing Card */}
-          <section className="w-full p-6 rounded-[1.5rem] bg-white/[0.03] border border-white/10 backdrop-blur-2xl shadow-2xl flex-shrink-0">
-            <div className="flex items-center gap-2 mb-4">
+          <section className="w-full p-5 rounded-[1.5rem] bg-white/[0.03] border border-white/10 backdrop-blur-2xl shadow-2xl flex-shrink-0">
+            <div className="flex items-center gap-2 mb-3">
               <div className="flex items-baseline">
                 <img src="/logo.png" alt="SmartSlate" className="h-4 w-auto object-contain self-center" />
                 <h2 className="font-heading text-sm font-bold text-white tracking-tight ml-1 leading-none self-end">
@@ -145,7 +145,7 @@ export default async function SignupPage({
               </div>
             </div>
             
-            <h1 className="font-heading text-xl font-bold text-white leading-tight mb-2">
+            <h1 className="font-heading text-lg font-bold text-white leading-tight mb-2">
               Join <span className="text-primary-500 italic">Polaris.</span>
             </h1>
             
@@ -157,22 +157,22 @@ export default async function SignupPage({
           </section>
 
           {/* Mobile Signup Card */}
-          <div className="w-full p-6 rounded-[2rem] bg-black/40 border border-white/10 backdrop-blur-3xl shadow-2xl space-y-6 flex-shrink-0">
+          <div className="w-full p-5 rounded-[2rem] bg-black/40 border border-white/10 backdrop-blur-3xl shadow-2xl space-y-4 flex-shrink-0">
             <AuthHeader 
               title="Get Started" 
               subtitle="Build your blueprint." 
             />
 
             {params.error && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20">
-                <p className="text-[12px] text-red-400 font-medium text-center">{params.error}</p>
+              <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20">
+                <p className="text-[11px] text-red-400 font-medium text-center">{params.error}</p>
               </div>
             )}
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               <GoogleButton />
               
-              <form action={signup} className="space-y-4">
+              <form action={signup} className="space-y-3">
                 <AuthInput 
                   name="email" 
                   type="email" 
@@ -200,8 +200,8 @@ export default async function SignupPage({
               </form>
             </div>
 
-            <div className="pt-4 border-t border-white/5 text-center">
-              <p className="text-[12px] text-white/30 font-light">
+            <div className="pt-3 border-t border-white/5 text-center">
+              <p className="text-[11px] text-white/30 font-light">
                 Already member?{' '}
                 <Link
                   href="/login"
@@ -220,10 +220,10 @@ export default async function SignupPage({
 
 function MetricCard({ value, label, icon }: { value: string; label: string; icon: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 text-center backdrop-blur-md">
-      <div className="text-primary-500/50 mb-1 flex justify-center">{icon}</div>
-      <div className="text-base font-bold text-white tracking-tight leading-none mb-0.5">{value}</div>
-      <div className="text-[8px] font-bold text-white/10 uppercase tracking-[0.1em]">{label}</div>
+    <div className="rounded-xl border border-white/5 bg-white/[0.02] p-2 text-center backdrop-blur-md">
+      <div className="text-primary-500/50 mb-0.5 flex justify-center">{icon}</div>
+      <div className="text-sm font-bold text-white tracking-tight leading-none mb-0.5">{value}</div>
+      <div className="text-[7px] font-bold text-white/10 uppercase tracking-[0.1em]">{label}</div>
     </div>
   );
 }
