@@ -1,11 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Shield, Sparkles, Clock, ArrowRight } from 'lucide-react';
+import { Shield, Sparkles, Clock } from 'lucide-react';
 import SwirlBackground from '@/components/SwirlBackground';
 import { LoginMarketingSection } from '@/components/Auth/LoginMarketingSection';
 import { GoogleButton } from '@/components/Auth/GoogleButton';
 import { AuthHeader } from '@/components/Auth/AuthHeader';
+import { AuthInput } from '@/components/Auth/AuthInput';
+import { PasswordInput } from '@/components/Auth/PasswordInput';
+import { AuthButton } from '@/components/Auth/AuthButton';
 
 async function login(formData: FormData) {
   'use server';
@@ -67,7 +70,37 @@ export default async function LoginPage({
                 </div>
               )}
 
-              <LoginForm action={login} />
+              <div className="space-y-6">
+                <GoogleButton />
+
+                <div className="relative py-1 flex items-center">
+                  <div className="flex-grow h-px bg-white/5" />
+                  <span className="flex-shrink-0 px-3 text-[9px] font-bold text-white/10 uppercase tracking-[0.2em]">
+                    or use email
+                  </span>
+                  <div className="flex-grow h-px bg-white/5" />
+                </div>
+
+                <form action={login} className="space-y-4">
+                  <AuthInput 
+                    name="email" 
+                    type="email" 
+                    label="Professional Email" 
+                    placeholder="name@organization.com" 
+                    required 
+                  />
+                  
+                  <PasswordInput 
+                    name="password" 
+                    label="Secure Password" 
+                    placeholder="••••••••" 
+                    required 
+                    showForgot 
+                  />
+
+                  <AuthButton text="Sign In to Polaris" />
+                </form>
+              </div>
 
               <div className="pt-6 border-t border-white/5">
                 <p className="text-[12px] text-white/30 font-light">
@@ -86,7 +119,7 @@ export default async function LoginPage({
 
         {/* MOBILE & TABLET VIEW */}
         <div className="xl:hidden w-full max-w-sm mx-auto space-y-6 flex flex-col items-center justify-center max-h-[95vh] overflow-y-auto scrollbar-none py-4">
-          {/* Mobile Marketing Card - Simplified */}
+          {/* Mobile Marketing Card */}
           <section className="w-full p-6 rounded-[1.5rem] bg-white/[0.03] border border-white/10 backdrop-blur-2xl shadow-2xl flex-shrink-0">
             <div className="flex items-center gap-2 mb-4">
               <div className="h-6 w-6 rounded-md bg-primary-500/10 flex items-center justify-center border border-primary-500/20">
@@ -119,7 +152,28 @@ export default async function LoginPage({
               </div>
             )}
 
-            <LoginForm action={login} />
+            <div className="space-y-6">
+              <GoogleButton />
+              
+              <form action={login} className="space-y-4">
+                <AuthInput 
+                  name="email" 
+                  type="email" 
+                  label="Email" 
+                  placeholder="name@organization.com" 
+                  required 
+                />
+                
+                <PasswordInput 
+                  name="password" 
+                  label="Password" 
+                  placeholder="••••••••" 
+                  required 
+                />
+
+                <AuthButton text="Sign In" />
+              </form>
+            </div>
 
             <div className="pt-4 border-t border-white/5 text-center">
               <p className="text-[12px] text-white/30 font-light">
@@ -135,63 +189,6 @@ export default async function LoginPage({
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function LoginForm({ action }: { action: (formData: FormData) => Promise<void> }) {
-  return (
-    <div className="space-y-6">
-      <GoogleButton />
-
-      <div className="relative py-1 flex items-center">
-        <div className="flex-grow h-px bg-white/5" />
-        <span className="flex-shrink-0 px-3 text-[9px] font-bold text-white/10 uppercase tracking-[0.2em]">
-          or use email
-        </span>
-        <div className="flex-grow h-px bg-white/5" />
-      </div>
-
-      <form action={action} className="space-y-4">
-        <div className="space-y-1.5 group">
-          <label className="text-[9px] font-bold text-white/20 uppercase tracking-[0.15em] ml-1 group-focus-within:text-primary-500 transition-colors">
-            Email
-          </label>
-          <input
-            name="email"
-            type="email"
-            required
-            placeholder="name@organization.com"
-            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm placeholder-white/10 focus:ring-2 focus:ring-primary-500/50 outline-none transition-all font-sans font-light"
-          />
-        </div>
-        <div className="space-y-1.5 group">
-          <div className="flex justify-between items-center px-1">
-            <label className="text-[9px] font-bold text-white/20 uppercase tracking-[0.15em] group-focus-within:text-primary-500 transition-colors">
-              Password
-            </label>
-            <Link href="#" className="text-[9px] font-bold text-primary-500/30 uppercase tracking-widest hover:text-primary-500 transition-colors">
-              Forgot?
-            </Link>
-          </div>
-          <input
-            name="password"
-            type="password"
-            required
-            placeholder="••••••••"
-            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-sm placeholder-white/10 focus:ring-2 focus:ring-primary-500/50 outline-none transition-all font-sans font-light"
-          />
-        </div>
-        <button
-          type="submit"
-          className="group relative w-full overflow-hidden rounded-xl bg-primary-500 px-6 py-3.5 text-xs font-bold text-[#020C1B] transition-all hover:bg-primary-400 hover:shadow-[0_0_20px_rgba(167,218,219,0.2)] focus:ring-2 focus:ring-primary-500/50 active:scale-[0.98]"
-        >
-          <span className="relative flex items-center justify-center gap-2">
-            Sign In to Polaris
-            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-          </span>
-        </button>
-      </form>
     </div>
   );
 }
