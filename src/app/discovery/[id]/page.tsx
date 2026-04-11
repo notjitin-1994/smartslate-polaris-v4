@@ -44,13 +44,24 @@ export default async function DiscoveryPage({
     id: m.id,
     role: m.role as any,
     parts: m.parts as any,
-    createdAt: m.createdAt,
+    createdAt: m.createdAt.toISOString(), // Convert Date to string
   }));
+
+  // Ensure starmapData is also serializable
+  const serializedStarmap = {
+    ...starmapData,
+    createdAt: starmapData.createdAt.toISOString(),
+    updatedAt: starmapData.updatedAt.toISOString(),
+    starmapResponses: starmapData.starmapResponses.map(r => ({
+      ...r,
+      createdAt: r.createdAt.toISOString(),
+    })),
+  };
 
   return (
     <DiscoveryClient 
-      initialStarmap={starmapData as any} 
-      initialMessages={formattedMessages} 
+      initialStarmap={serializedStarmap as any} 
+      initialMessages={formattedMessages as any} 
     />
   );
 }
