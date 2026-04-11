@@ -83,17 +83,6 @@ export default async function DashboardPage() {
               Your command center for architecting high-impact learning experiences.
             </p>
           </div>
-
-          <div className="hidden md:flex items-center gap-4">
-             <Link 
-              href="/discovery/new"
-              className="group relative flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-white text-[#020C1B] font-bold overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)]"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <Sparkles size={18} className="relative z-10 text-[#020C1B]" />
-              <span className="relative z-10 tracking-wide">Launch Discovery</span>
-            </Link>
-          </div>
         </header>
 
         {/* Bento Grid Layout */}
