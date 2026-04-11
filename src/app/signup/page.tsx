@@ -35,7 +35,7 @@ async function signup(formData: FormData) {
     return redirect(`/signup?error=${encodeURIComponent(error.message)}`);
   }
 
-  return redirect('/login?message=Check your email to confirm your account');
+  return redirect('/dashboard');
 }
 
 export default async function SignupPage({
@@ -119,7 +119,7 @@ export default async function SignupPage({
 
               <div className="pt-6 border-t border-white/5">
                 <p className="text-[12px] text-white/30 font-light">
-                  Have a workspace?{' '}
+                  Already have a workspace?{' '}
                   <Link
                     href="/login"
                     className="text-primary-500 hover:text-primary-400 font-semibold underline underline-offset-4 decoration-primary-500/30 hover:decoration-primary-500 transition-all duration-300"
@@ -137,10 +137,10 @@ export default async function SignupPage({
           {/* Mobile Marketing Card */}
           <section className="w-full p-6 rounded-[1.5rem] bg-white/[0.03] border border-white/10 backdrop-blur-2xl shadow-2xl flex-shrink-0">
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-6 w-6 rounded-md bg-primary-500/10 flex items-center justify-center border border-primary-500/20">
-                <Sparkles size={14} className="text-primary-500" />
-              </div>
-              <h2 className="font-heading text-sm font-bold text-white tracking-tight">Polaris v4</h2>
+              <img src="/logo.png" alt="SmartSlate" className="h-4 w-auto object-contain" />
+              <h2 className="font-heading text-sm font-bold text-white tracking-tight ml-1">
+                <span className="text-primary-500">Polaris</span>
+              </h2>
             </div>
             
             <h1 className="font-heading text-xl font-bold text-white leading-tight mb-2">

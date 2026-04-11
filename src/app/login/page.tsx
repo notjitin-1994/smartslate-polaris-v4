@@ -27,7 +27,7 @@ async function login(formData: FormData) {
     return redirect('/login?error=Invalid credentials');
   }
 
-  return redirect('/discovery/new');
+  return redirect('/dashboard');
 }
 
 export default async function LoginPage({
@@ -122,10 +122,10 @@ export default async function LoginPage({
           {/* Mobile Marketing Card */}
           <section className="w-full p-6 rounded-[1.5rem] bg-white/[0.03] border border-white/10 backdrop-blur-2xl shadow-2xl flex-shrink-0">
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-6 w-6 rounded-md bg-primary-500/10 flex items-center justify-center border border-primary-500/20">
-                <Sparkles size={14} className="text-primary-500" />
-              </div>
-              <h2 className="font-heading text-sm font-bold text-white tracking-tight">Polaris v4</h2>
+              <img src="/logo.png" alt="SmartSlate" className="h-4 w-auto object-contain" />
+              <h2 className="font-heading text-sm font-bold text-white tracking-tight ml-1">
+                <span className="text-primary-500">Polaris</span>
+              </h2>
             </div>
             
             <h1 className="font-heading text-xl font-bold text-white leading-tight mb-2">

@@ -37,14 +37,12 @@ export function LoginMarketingSection() {
 
       {/* Logo Area */}
       <div className="relative z-10 mb-6 lg:mb-8">
-        <div className="flex items-center gap-2">
-          <div className="relative h-8 w-8 overflow-hidden rounded-lg bg-primary-500/10 flex items-center justify-center border border-primary-500/20">
-            <SparklesIcon className="h-5 w-5 text-primary-500" />
-          </div>
-          <div>
-            <h2 className="font-heading text-base font-bold tracking-tight text-white leading-tight">
-              SmartSlate <span className="text-primary-500">Polaris</span>
-            </h2>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center">
+            <img src="/logo.png" alt="SmartSlate" className="h-5 w-auto lg:h-6 object-contain" />
+            <span className="font-heading text-base lg:text-lg font-bold tracking-tight text-white ml-2 leading-none">
+              <span className="text-primary-500">Polaris</span>
+            </span>
           </div>
         </div>
       </div>

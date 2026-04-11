@@ -40,7 +40,7 @@ export function Navigation() {
   };
 
   const navItems: NavItem[] = [
-    { href: '/', label: 'Home', icon: <Sparkles size={18} />, requiresAuth: false },
+    { href: '/dashboard', label: 'Home', icon: <Sparkles size={18} />, requiresAuth: true },
     { href: '/discovery/new', label: 'New Discovery', icon: <Compass size={18} />, requiresAuth: true },
   ];
 
@@ -54,11 +54,13 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
-              <Sparkles size={18} />
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="flex items-center">
+              <img src="/logo.png" alt="SmartSlate" className="h-5 w-auto object-contain" />
+              <span className="font-heading text-lg font-bold tracking-tight text-white ml-2 leading-none">
+                <span className="text-primary-500">Polaris</span>
+              </span>
             </div>
-            <span className="text-lg font-bold font-heading text-white">SmartSlate Polaris</span>
           </Link>
 
           {/* Navigation Links */}

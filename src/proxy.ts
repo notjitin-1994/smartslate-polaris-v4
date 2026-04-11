@@ -33,13 +33,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from login/signup
+  // Redirect authenticated users away from root, login, signup
   const isAuthRoute = request.nextUrl.pathname === '/login' || 
-                     request.nextUrl.pathname === '/signup'
+                     request.nextUrl.pathname === '/signup' ||
+                     request.nextUrl.pathname === '/'
 
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/discovery/new'
+    url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
