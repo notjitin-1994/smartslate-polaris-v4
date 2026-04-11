@@ -1,4 +1,4 @@
-import { streamText, UIMessage, convertToModelMessages } from 'ai';
+import { streamText, UIMessage, convertToModelMessages, generateId } from 'ai';
 import { getModel } from '@/lib/ai/models';
 import { DISCOVERY_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { z } from 'zod';
@@ -23,6 +23,26 @@ export async function POST(req: Request) {
     
     if (authError || !user) {
       return new Response('Unauthorized', { status: 401 });
+    }
+
+    const { db } = await import('@/lib/db');
+    const { messages: dbMessages } = await import('@/lib/db/schema');
+
+    // Save the latest user message if starmapId is provided
+    if (starmapId) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.role === 'user') {
+        try {
+          await db.insert(dbMessages).values({
+            id: lastMessage.id,
+            starmapId,
+            role: lastMessage.role,
+            parts: lastMessage.parts as any,
+          }).onConflictDoNothing({ target: dbMessages.id }); // Prevent duplicates on retries
+        } catch (err) {
+          console.error('[Chat API] Error saving user message:', err);
+        }
+      }
     }
 
     const result = streamText({
@@ -57,13 +77,13 @@ export async function POST(req: Request) {
             data: z.record(z.string(), z.unknown()),
           }),
           execute: async ({ starmapId: toolStarmapId, data }) => {
-            const { db } = await import('@/lib/db');
+            const { db: toolDb } = await import('@/lib/db');
             const { starmapResponses, starmaps } = await import('@/lib/db/schema');
             const { eq, and } = await import('drizzle-orm');
 
             try {
               // VERIFY OWNERSHIP before saving
-              const starmap = await db.query.starmaps.findFirst({
+              const starmap = await toolDb.query.starmaps.findFirst({
                 where: and(
                   eq(starmaps.id, toolStarmapId),
                   eq(starmaps.userId, user.id)
@@ -79,7 +99,7 @@ export async function POST(req: Request) {
               const questionId = data.questionId || data.id || 'discovery_context';
               
               // Insert discovery data into database
-              await db.insert(starmapResponses).values({
+              await toolDb.insert(starmapResponses).values({
                 starmapId: toolStarmapId,
                 questionId,
                 answer: String(readableAnswer),
@@ -97,7 +117,7 @@ export async function POST(req: Request) {
               if (data.title) contextUpdates.title = data.title;
 
               if (Object.keys(contextUpdates).length > 0) {
-                await db.update(starmaps)
+                await toolDb.update(starmaps)
                   .set({ 
                     context: { ...starmap.context, ...contextUpdates },
                     ...(data.title ? { title: data.title } : {}),
@@ -116,7 +136,23 @@ export async function POST(req: Request) {
       },
     });
 
-    return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse({
+      generateMessageId: () => generateId(),
+      onFinish: async ({ responseMessage }) => {
+        if (starmapId && responseMessage) {
+          try {
+            await db.insert(dbMessages).values({
+              id: responseMessage.id,
+              starmapId,
+              role: responseMessage.role,
+              parts: responseMessage.parts as any,
+            }).onConflictDoNothing({ target: dbMessages.id });
+          } catch (err) {
+            console.error('[Chat API] Error saving assistant response:', err);
+          }
+        }
+      }
+    });
   } catch (error) {
     console.error('[Chat API] Fatal Error:', error);
     return new Response(

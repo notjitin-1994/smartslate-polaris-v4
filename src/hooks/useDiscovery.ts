@@ -1,13 +1,14 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls } from 'ai';
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from 'ai';
 import { useState } from 'react';
 
-export function useDiscovery(starmapId?: string) {
+export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[]) {
   const [currentStage, setCurrentStage] = useState(1);
 
   const { messages, sendMessage, addToolOutput, status, error, stop } = useChat({
+    messages: initialMessages,
     transport: new DefaultChatTransport({
       api: '/api/chat',
       body: {
