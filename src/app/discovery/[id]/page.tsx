@@ -10,58 +10,53 @@ export default async function DiscoveryPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  try {
+    const { id } = await params;
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (authError || !user) {
-    redirect('/auth/login');
+    if (authError || !user) {
+      redirect('/auth/login');
+    }
+
+    // Fetch starmap with responses on the server
+    const starmapData = await db.query.starmaps.findFirst({
+      where: and(
+        eq(starmaps.id, id),
+        eq(starmaps.userId, user.id)
+      ),
+      with: {
+        starmapResponses: true,
+      },
+    });
+
+    if (!starmapData) {
+      notFound();
+    }
+
+    // Fetch initial chat messages on the server
+    const chatMessages = await db.query.messages.findMany({
+      where: eq(messages.starmapId, id),
+      orderBy: [asc(messages.createdAt)],
+    });
+
+    // Use JSON.parse(JSON.stringify()) to guarantee clean serialization of all nested fields (Dates, nulls, etc.)
+    const serializedStarmap = JSON.parse(JSON.stringify(starmapData));
+    const serializedMessages = JSON.parse(JSON.stringify(chatMessages.map(m => ({
+      ...m,
+      role: m.role,
+      parts: m.parts,
+    }))));
+
+    return (
+      <DiscoveryClient 
+        initialStarmap={serializedStarmap} 
+        initialMessages={serializedMessages} 
+      />
+    );
+  } catch (error) {
+    console.error('[DiscoveryPage] Server Component Error:', error);
+    // Re-throw to let Next.js handle it, but now it's logged
+    throw error;
   }
-
-  // Fetch starmap with responses on the server
-  const starmapData = await db.query.starmaps.findFirst({
-    where: and(
-      eq(starmaps.id, id),
-      eq(starmaps.userId, user.id)
-    ),
-    with: {
-      starmapResponses: true,
-    },
-  });
-
-  if (!starmapData) {
-    notFound();
-  }
-
-  // Fetch initial chat messages on the server
-  const chatMessages = await db.query.messages.findMany({
-    where: eq(messages.starmapId, id),
-    orderBy: [asc(messages.createdAt)],
-  });
-
-  // Format messages for useChat
-  const formattedMessages = chatMessages.map((m) => ({
-    id: m.id,
-    role: m.role as any,
-    parts: m.parts as any,
-    createdAt: m.createdAt.toISOString(), // Convert Date to string
-  }));
-
-  // Ensure starmapData is also serializable
-  const serializedStarmap = {
-    ...starmapData,
-    createdAt: starmapData.createdAt.toISOString(),
-    updatedAt: starmapData.updatedAt.toISOString(),
-    starmapResponses: starmapData.starmapResponses.map(r => ({
-      ...r,
-      createdAt: r.createdAt.toISOString(),
-    })),
-  };
-
-  return (
-    <DiscoveryClient 
-      initialStarmap={serializedStarmap as any} 
-      initialMessages={formattedMessages as any} 
-    />
-  );
 }
