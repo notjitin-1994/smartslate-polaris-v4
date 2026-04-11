@@ -194,24 +194,24 @@ export function DiscoveryClient({
   return (
     <div className="flex h-screen bg-[#020C1B] text-[#e0e0e0] overflow-hidden pt-16 sm:pt-20">
       {/* Sidebar: Navigation & Context */}
-      <aside className="w-64 border-r border-white/5 bg-white/[0.01] flex-col hidden md:flex print:hidden">
-        <div className="p-6 border-b border-white/5">
-          <h2 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-6">Discovery Phase</h2>
-          <div className="space-y-1">
+      <aside className="w-60 border-r border-white/5 bg-white/[0.01] flex-col hidden md:flex print:hidden">
+        <div className="p-5 border-b border-white/5">
+          <h2 className="text-[9px] font-bold text-white/20 uppercase tracking-[0.25em] mb-5">Discovery Phase</h2>
+          <div className="space-y-0.5">
             {stageNames.map((name, i) => {
               const isActive = currentStage === i + 1;
               const isCompleted = currentStage > i + 1;
               return (
-                <div key={name} className={`flex items-center gap-3 p-2 rounded-xl transition-all duration-300 ${isActive ? 'bg-primary-500/5' : ''}`}>
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold border transition-all duration-500 ${
+                <div key={name} className={`flex items-center gap-2.5 p-2 rounded-xl transition-all duration-300 ${isActive ? 'bg-primary-500/5' : ''}`}>
+                  <div className={`w-5 h-5 rounded-lg flex items-center justify-center text-[9px] font-bold border transition-all duration-500 ${
                     isCompleted ? 'bg-primary-500 border-primary-500 text-[#020C1B]' :
-                    isActive ? 'border-primary-500 text-primary-500 shadow-[0_0_10px_rgba(167,218,219,0.2)]' :
+                    isActive ? 'border-primary-500 text-primary-500 shadow-[0_0_10px_rgba(167,218,219,0.15)]' :
                     'border-white/5 text-white/10'
                   }`}>
-                    {isCompleted ? <CheckCircle2 size={12} strokeWidth={3} /> : i + 1}
+                    {isCompleted ? <CheckCircle2 size={10} strokeWidth={3} /> : i + 1}
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className={`text-[11px] font-bold truncate ${isActive ? 'text-white' : 'text-white/20'}`}>{name}</span>
+                    <span className={`text-[10.5px] font-bold truncate tracking-tight ${isActive ? 'text-white/90' : 'text-white/15'}`}>{name}</span>
                   </div>
                 </div>
               );

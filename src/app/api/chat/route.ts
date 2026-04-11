@@ -30,19 +30,25 @@ export async function POST(req: Request) {
 
     // Save the latest user message if starmapId is provided
     if (starmapId) {
+      console.log('[Chat API] Attempting to save user message for starmap:', starmapId);
       const lastMessage = messages[messages.length - 1];
       if (lastMessage && lastMessage.role === 'user') {
         try {
-          await db.insert(dbMessages).values({
+          const insertResult = await db.insert(dbMessages).values({
             id: lastMessage.id,
             starmapId,
             role: lastMessage.role,
             parts: lastMessage.parts as any,
-          }).onConflictDoNothing({ target: dbMessages.id }); // Prevent duplicates on retries
+          }).onConflictDoNothing({ target: dbMessages.id });
+          console.log('[Chat API] User message save result:', insertResult);
         } catch (err) {
           console.error('[Chat API] Error saving user message:', err);
         }
+      } else {
+        console.log('[Chat API] Last message is not from user or is missing:', lastMessage?.role);
       }
+    } else {
+      console.log('[Chat API] No starmapId provided in request');
     }
 
     const result = streamText({
@@ -156,16 +162,20 @@ export async function POST(req: Request) {
       generateMessageId: () => generateId(),
       onFinish: async ({ responseMessage }) => {
         if (starmapId && responseMessage) {
+          console.log('[Chat API] Attempting to save assistant response:', responseMessage.id);
           try {
-            await db.insert(dbMessages).values({
+            const insertResult = await db.insert(dbMessages).values({
               id: responseMessage.id,
               starmapId,
               role: responseMessage.role,
               parts: responseMessage.parts as any,
             }).onConflictDoNothing({ target: dbMessages.id });
+            console.log('[Chat API] Assistant response save result:', insertResult);
           } catch (err) {
             console.error('[Chat API] Error saving assistant response:', err);
           }
+        } else {
+          console.log('[Chat API] Skipping assistant save. starmapId:', starmapId, 'hasResponseMessage:', !!responseMessage);
         }
       }
     });

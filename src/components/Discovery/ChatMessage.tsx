@@ -22,36 +22,40 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className={`flex gap-4 w-full ${isUser ? 'flex-row-reverse' : ''}`}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className={`flex gap-3 w-full ${isUser ? 'flex-row-reverse' : ''}`}
     >
       {/* Avatar */}
       <div
-        className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+        className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${
           isUser
-            ? 'bg-secondary-500 text-[#020C1B] shadow-[0_0_15px_rgba(79,70,229,0.3)]'
-            : 'bg-primary-500/10 text-primary-500 border border-primary-500/20 backdrop-blur-md shadow-[0_0_15px_rgba(167,218,219,0.1)]'
+            ? 'bg-secondary-500 text-[#020C1B] shadow-[0_0_15px_rgba(79,70,229,0.2)]'
+            : 'bg-white/5 border border-white/10 backdrop-blur-md shadow-[0_0_15px_rgba(255,255,255,0.05)]'
         }`}
       >
-        {isUser ? <User size={16} strokeWidth={2.5} /> : <Bot size={16} strokeWidth={2.5} />}
+        {isUser ? (
+          <User size={14} strokeWidth={2.5} />
+        ) : (
+          <img src="/logo-swirl.png" alt="Polaris" className="w-5 h-5 opacity-90" />
+        )}
       </div>
 
       {/* Message Content */}
-      <div className={`max-w-[85%] space-y-3 ${isUser ? 'items-end' : ''}`}>
+      <div className={`max-w-[85%] space-y-2 ${isUser ? 'items-end' : ''}`}>
         {message.parts?.map((part, i) => {
           if (part.type === 'text') {
             return (
               <div
                 key={i}
-                className={`p-5 rounded-2xl text-sm leading-relaxed overflow-hidden ${
+                className={`p-4 rounded-2xl text-[13px] leading-relaxed overflow-hidden ${
                   isUser
-                    ? 'bg-gradient-to-br from-secondary-500/20 to-secondary-500/5 border border-secondary-500/20 text-white backdrop-blur-xl rounded-tr-sm'
-                    : 'bg-white/[0.03] border border-white/10 text-white/90 backdrop-blur-xl rounded-tl-sm shadow-xl'
+                    ? 'bg-gradient-to-br from-secondary-500/15 to-secondary-500/5 border border-secondary-500/10 text-white/90 backdrop-blur-xl rounded-tr-sm'
+                    : 'bg-white/[0.02] border border-white/5 text-white/85 backdrop-blur-xl rounded-tl-sm shadow-2xl'
                 }`}
               >
-                <div className="prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-black/40 prose-pre:border prose-pre:border-white/10 prose-headings:font-heading prose-headings:text-white prose-a:text-primary-400 hover:prose-a:text-primary-300">
+                <div className="prose prose-invert prose-xs max-w-none prose-p:leading-relaxed prose-pre:bg-black/20 prose-pre:border prose-pre:border-white/5 prose-headings:font-heading prose-headings:text-white/90 prose-a:text-primary-400 hover:prose-a:text-primary-300">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {part.text}
                   </ReactMarkdown>
