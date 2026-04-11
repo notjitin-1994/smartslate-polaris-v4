@@ -56,6 +56,12 @@
   --color-secondary-600: #3730A3;
   --color-secondary-700: #312E81;
   --color-brand-bg: #020C1B;
+
+  /* Layout tokens */
+  --nav-height-mobile: 4rem;
+  --nav-height-desktop: 5rem;
+  --section-padding-y: 5rem;
+  --hero-padding-top: 2rem;
 }
 
 :root {

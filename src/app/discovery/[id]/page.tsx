@@ -157,7 +157,7 @@ export default function DiscoveryPage() {
   }, {} as Record<number, typeof starmapData.responses>) || {};
 
   return (
-    <div className="flex h-screen bg-brand-bg text-[#e0e0e0] overflow-hidden pt-16 sm:pt-20">
+    <div className="flex h-screen bg-brand-bg text-[#e0e0e0] overflow-hidden pt-[var(--nav-height-mobile)] lg:pt-[var(--nav-height-desktop)]">
       {/* Sidebar: Navigation & Context */}
       <aside className="w-64 border-r border-white/5 bg-white/[0.02] flex-col hidden md:flex print:hidden">
         <div className="p-6 border-b border-white/5">

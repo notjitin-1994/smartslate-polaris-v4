@@ -42,7 +42,7 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="relative min-h-screen bg-[#020C1B] text-[#e0e0e0] font-sans selection:bg-primary-500/30 overflow-x-hidden flex flex-col pt-16 sm:pt-20">
+    <div className="relative min-h-screen bg-[#020C1B] text-[#e0e0e0] font-sans selection:bg-primary-500/30 overflow-x-hidden flex flex-col pt-[var(--nav-height-mobile)] lg:pt-[var(--nav-height-desktop)]">
       {/* Background Decor - Ambient Lights */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <div className="absolute top-[-20%] left-[-10%] h-[60%] w-[50%] rounded-full bg-primary-500/5 blur-[150px]" />
@@ -50,7 +50,7 @@ export default async function DashboardPage() {
         <div className="absolute bottom-[-20%] left-[20%] h-[40%] w-[60%] rounded-full bg-primary-500/5 blur-[150px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 flex flex-col flex-1 h-[calc(100vh-80px)]">
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-[var(--hero-padding-top)] pb-6 lg:py-8 flex flex-col flex-1 h-[calc(100vh-var(--nav-height-desktop))]">
         
         {/* Premium Dashboard Header - More compact */}
         <header className="mb-6 lg:mb-8 flex flex-col justify-end animate-in fade-in slide-in-from-bottom-4 duration-1000 shrink-0">
