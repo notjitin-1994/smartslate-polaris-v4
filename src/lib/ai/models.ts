@@ -10,7 +10,7 @@ import { moonshotai as moonshot } from '@ai-sdk/moonshotai';
  * Using 'https://api.z.ai/api/coding/paas/v4' ensures the plan is recognized.
  */
 const zhipu = createOpenAI({
-  apiKey: process.env.ZHIPU_API_KEY,
+  apiKey: (process.env.ZHIPU_API_KEY || '').trim(),
   baseURL: 'https://api.z.ai/api/coding/paas/v4',
 });
 
@@ -42,7 +42,10 @@ export const modelRegistry = createProviderRegistry({
  * getModel('anthropic:claude-sonnet-4.5')
  * getModel('zhipu:glm-4')
  */
-export function getModel(modelId: string = process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'anthropic:claude-sonnet-4.5') {
+export function getModel(modelId?: string) {
+  const defaultModel = (process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'anthropic:claude-sonnet-4.5').trim();
+  const selectedModel = (modelId || defaultModel).trim();
+  
   // Type assertion needed because registry generates a union of known model IDs
-  return modelRegistry.languageModel(modelId as Parameters<typeof modelRegistry.languageModel>[0]);
+  return modelRegistry.languageModel(selectedModel as Parameters<typeof modelRegistry.languageModel>[0]);
 }
