@@ -7,15 +7,17 @@ import remarkGfm from 'remark-gfm';
 import { User, Bot, Sparkles } from 'lucide-react';
 import { UIMessage } from 'ai';
 import { ApprovalCard } from './ApprovalCard';
+import { InteractiveFormCard, InteractiveQuestion } from './InteractiveFormCard';
 
 interface ChatMessageProps {
   message: UIMessage;
   approveStage: (id: string) => void;
   rejectStage: (id: string, feedback: string) => void;
   submitToolResult: (toolName: string, toolCallId: string, result: any) => void;
+  onFormUpdate?: (toolCallId: string, data: Record<string, any>) => void;
 }
 
-export function ChatMessage({ message, approveStage, rejectStage, submitToolResult }: ChatMessageProps) {
+export function ChatMessage({ message, approveStage, rejectStage, submitToolResult, onFormUpdate }: ChatMessageProps) {
   const isUser = message.role === 'user';
 
   return (
@@ -68,6 +70,24 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
                 state={part.state}
                 onApprove={() => approveStage(part.toolCallId)}
                 onReject={(feedback: string) => rejectStage(part.toolCallId, feedback)}
+              />
+            );
+          }
+
+          if (part.type === 'tool-askInteractiveQuestions' || (part.type === 'dynamic-tool' && part.toolName === 'askInteractiveQuestions')) {
+            const input = part.input as { questions: InteractiveQuestion[] };
+            const toolCallId = part.toolCallId;
+            const isSubmitted = part.state === 'output-available';
+
+            return (
+              <InteractiveFormCard
+                key={toolCallId}
+                toolCallId={toolCallId}
+                questions={input.questions || []}
+                isSubmitted={isSubmitted}
+                initialData={isSubmitted ? (part as any).output?.data : {}}
+                onSubmit={(data) => submitToolResult('askInteractiveQuestions', toolCallId, { status: 'submitted_via_form', data })}
+                onUpdate={(id, data) => onFormUpdate && onFormUpdate(id, data)}
               />
             );
           }

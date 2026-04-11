@@ -76,6 +76,7 @@ export function DiscoveryClient({
   } = useDiscovery(id as string, initialMessages);
 
   const [input, setInput] = useState('');
+  const [unsubmittedForms, setUnsubmittedForms] = useState<Record<string, any>>({});
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -129,10 +130,32 @@ export function DiscoveryClient({
     };
   }, [id, queryClient, supabase]);
 
+  const handleFormUpdate = (toolCallId: string, data: Record<string, any>) => {
+    setUnsubmittedForms(prev => ({ ...prev, [toolCallId]: data }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
-    sendMessage({ text: input });
+    
+    const hasUnsubmittedForms = Object.keys(unsubmittedForms).length > 0;
+    if (!input.trim() && !hasUnsubmittedForms) return;
+
+    let finalMessage = input;
+
+    if (hasUnsubmittedForms) {
+      const formDataString = JSON.stringify(unsubmittedForms, null, 2);
+      finalMessage = input.trim() 
+        ? `${input}\n\n[User submitted the following form data along with this message]:\n${formDataString}`
+        : `[User submitted the following form data]:\n${formDataString}`;
+      
+      // Resolve the pending tool calls so the AI doesn't hang waiting for them
+      Object.keys(unsubmittedForms).forEach(toolCallId => {
+        submitToolResult('askInteractiveQuestions', toolCallId, { status: 'submitted_with_message', data: unsubmittedForms[toolCallId] });
+      });
+      setUnsubmittedForms({});
+    }
+
+    sendMessage({ text: finalMessage });
     setInput('');
   };
 
@@ -249,6 +272,7 @@ export function DiscoveryClient({
                   approveStage={approveStage} 
                   rejectStage={rejectStage} 
                   submitToolResult={submitToolResult}
+                  onFormUpdate={handleFormUpdate}
                 />
               ))}
 

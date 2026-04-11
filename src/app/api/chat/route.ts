@@ -50,6 +50,22 @@ export async function POST(req: Request) {
       system: `${DISCOVERY_SYSTEM_PROMPT}\n\nCURRENT STARMAP ID: ${starmapId || 'NOT_PROVIDED'}`,
       messages: await convertToModelMessages(messages as UIMessage[]),
       tools: {
+        // Generative UI Tool: asks interactive questions using forms
+        askInteractiveQuestions: {
+          description: 'Ask the user one or more structured questions using interactive UI elements (text, select, date, slider). Use this instead of asking text questions when you need specific, structured data.',
+          inputSchema: z.object({
+            questions: z.array(z.object({
+              id: z.string().describe('Unique identifier for this question.'),
+              type: z.enum(['text', 'textarea', 'select', 'slider', 'date']).describe('The type of UI input to render.'),
+              label: z.string().describe('The question or prompt to show the user.'),
+              description: z.string().optional().describe('Optional helper text.'),
+              options: z.array(z.string()).optional().describe('Required if type is "select". List of options to choose from.'),
+              min: z.number().optional().describe('Minimum value for a slider.'),
+              max: z.number().optional().describe('Maximum value for a slider.'),
+              required: z.boolean().default(true).describe('Whether the user must answer this question before submitting.'),
+            })).describe('Array of questions to present to the user.'),
+          }),
+        },
         // Client-side tool: requests user approval before transitioning stages
         requestApproval: {
           description: 'Request user approval before proceeding to the next discovery stage.',
