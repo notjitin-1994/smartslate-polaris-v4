@@ -2,15 +2,13 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage, generateId } from 'ai';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { updateStarmapStage } from '@/app/actions/chat';
 
 export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], initialStage: number = 1) {
   const [currentStage, setCurrentStage] = useState(initialStage);
 
-  console.log('[useDiscovery] Initializing hook:', { starmapId, initialMessagesCount: initialMessages?.length, initialStage });
-
-  const { messages, sendMessage: chatSendMessage, addToolOutput, status, error, stop } = useChat({
+  const { messages, setMessages, sendMessage: chatSendMessage, addToolOutput, status, error, stop, regenerate } = useChat({
     id: starmapId,
     messages: initialMessages, 
     transport: new DefaultChatTransport({
@@ -21,63 +19,50 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
     }),
   });
 
-  // Watch chat state changes for logging
-  useEffect(() => {
-    console.log('[useDiscovery] Chat status:', status);
-    if (status === 'error' && error) {
-      console.error('[useDiscovery] AI SDK Error:', error);
-    }
-  }, [status, error]);
-
   // Client-side connection health check
   const [connectionStatus, setConnectionStatus] = useState<'strong' | 'weak'>('strong');
   useEffect(() => {
-    if (status !== 'streaming') return;
+    if (status !== 'streaming') {
+      setConnectionStatus('strong');
+      return;
+    }
     
     const timeout = setTimeout(() => {
       setConnectionStatus('weak');
     }, 5000); // 5 seconds without a token = weak connection
     
-    const messageHandler = () => setConnectionStatus('strong');
-    messageHandler();
-    
     return () => clearTimeout(timeout);
   }, [status, messages.length]);
 
-  // Watch message state changes
-  useEffect(() => {
-    if (messages.length > 0) {
-      const lastMsg = messages[messages.length - 1];
-      console.log(`[useDiscovery] Messages Update (Total: ${messages.length}):`, {
-        role: lastMsg.role,
-        id: lastMsg.id,
-        partsCount: lastMsg.parts?.length
-      });
-    }
-  }, [messages]);
-
-  const sendMessage = async ({ text }: { text: string }) => {
+  const sendMessage = useCallback(async ({ text }: { text: string }) => {
     if (!starmapId) return;
-    
-    console.log('[useDiscovery] Sending user message:', text.substring(0, 50));
+
     const messageId = generateId();
-    const parts = [{ type: 'text' as const, text }];
     
-    // Trigger Chat
+    // 1. Optimistic UI Update: Manually add user message to state
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: messageId,
+        role: 'user',
+        parts: [{ type: 'text', text }],
+        createdAt: new Date(),
+      } as UIMessage,
+    ]);
+
+    // 2. Trigger Server Turn (non-blocking)
     chatSendMessage({
-      parts
+      parts: [{ type: 'text', text }]
     }, {
       body: {
         messageId 
       }
     });
-  };
+  }, [starmapId, setMessages, chatSendMessage]);
 
   const approveStage = async (toolCallId: string) => {
     if (!starmapId) return;
     
-    console.log('[useDiscovery] Approving stage:', currentStage, 'ToolCallId:', toolCallId);
-
     const result = { approved: true, stageAdvanced: true };
 
     addToolOutput({
@@ -98,8 +83,6 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
   const rejectStage = async (toolCallId: string, feedback: string) => {
     if (!starmapId) return;
 
-    console.log('[useDiscovery] Rejecting stage:', currentStage, 'Feedback:', feedback);
-
     const result = { approved: false, feedback };
 
     addToolOutput({
@@ -111,8 +94,6 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
 
   const submitToolResult = async (toolName: string, toolCallId: string, result: any) => {
     if (!starmapId) return;
-
-    console.log(`[useDiscovery] Submitting result for tool ${toolName}:`, toolCallId);
 
     addToolOutput({
       tool: toolName,
@@ -127,6 +108,7 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
     submitToolResult,
     status,
     error,
+    regenerate,
     stop,
     connectionStatus,
     isApproving: status === 'submitted' || status === 'streaming',

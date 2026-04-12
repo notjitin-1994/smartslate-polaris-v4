@@ -123,6 +123,8 @@ export function DiscoveryClient({
     isLoading: isAILoading,
     status,
     error,
+    regenerate,
+    connectionStatus,
     approveStage,
     rejectStage,
     submitToolResult,
@@ -131,6 +133,12 @@ export function DiscoveryClient({
 
   // Dynamic Deduplication Engine
   const uniqueMessages = useMemo(() => {
+    // Optimization: Skip expensive scans during active streaming to prevent UI jank.
+    // The stream is short-lived; full deduplication will re-run once the stream finishes.
+    if (status === 'streaming') {
+      return messages;
+    }
+
     const messageMap = new Map<string, UIMessage>();
     const completedToolCalls = new Set<string>();
     
@@ -653,6 +661,29 @@ export function DiscoveryClient({
                  style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
             <div className="max-w-2xl mx-auto space-y-8 md:space-y-10 relative z-10">
+              {/* Connection Status Alert */}
+              <AnimatePresence>
+                {connectionStatus === 'weak' && status === 'streaming' && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] flex items-center justify-between gap-4 mb-4"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Activity size={14} className="animate-pulse" />
+                      <span>The architectural uplink is weak. Tokens are arriving slowly.</span>
+                    </div>
+                    <button 
+                      onClick={() => regenerate()}
+                      className="px-3 py-1 rounded-lg bg-amber-500 text-[#020C1B] font-black uppercase tracking-widest active:scale-95 transition-all shrink-0"
+                    >
+                      Retry Turn
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {error && (
                 <div className="p-5 rounded-3xl bg-red-500/5 border border-red-500/10 backdrop-blur-xl animate-in fade-in zoom-in duration-500">
                   <div className="flex items-start gap-4">

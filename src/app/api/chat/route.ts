@@ -26,19 +26,20 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    // Fetch existing responses to provide as context
+    // Fetch existing responses and starmap context in parallel to minimize TTFT
     let knowledgeBaseContext = '';
     let currentStage = 1;
 
     if (starmapId) {
-      const existingResponses = await db.query.starmapResponses.findMany({
-        where: eq(starmapResponses.starmapId, starmapId),
-        orderBy: [asc(starmapResponses.stage)],
-      });
-
-      const starmap = await db.query.starmaps.findFirst({
-        where: eq(starmaps.id, starmapId)
-      });
+      const [existingResponses, starmap] = await Promise.all([
+        db.query.starmapResponses.findMany({
+          where: eq(starmapResponses.starmapId, starmapId),
+          orderBy: [asc(starmapResponses.stage)],
+        }),
+        db.query.starmaps.findFirst({
+          where: eq(starmaps.id, starmapId)
+        })
+      ]);
 
       if (starmap?.context?.currentStage) {
         currentStage = Number(starmap.context.currentStage);
@@ -169,15 +170,16 @@ export async function POST(req: Request) {
         if (!starmapId) return;
         
         try {
-          for (const msg of allMessages) {
-            await db.insert(dbMessages).values({
+          // Parallelize all inserts to prevent blocking stream cleanup
+          await Promise.all(allMessages.map(msg => 
+            db.insert(dbMessages).values({
               id: msg.id,
               starmapId,
               role: msg.role,
               parts: msg.parts as any,
-            }).onConflictDoNothing({ target: dbMessages.id });
-          }
-          console.log(`[Chat API] Persisted all ${allMessages.length} messages.`);
+            }).onConflictDoNothing({ target: dbMessages.id })
+          ));
+          console.log(`[Chat API] Persisted all ${allMessages.length} messages in parallel.`);
         } catch (err) {
           console.error('[Chat API] Persistence Error:', err);
         }
