@@ -213,13 +213,24 @@ export async function POST(req: Request) {
             const processedParts = responseMessage.parts.map(part => {
               if (part.type === 'tool-result') {
                 const toolPart = part as any;
-                const isPersisted = toolPart.result?.persisted === true;
+                // CHECK IF CLIENT ALREADY PERSISTED THIS
+                const clientResult = toolPart.result;
+                const isPersisted = typeof clientResult === 'object' && clientResult?.persisted === true;
+                
+                console.log(`  [Chat API] Tool result ${toolPart.toolName}: isPersisted=${isPersisted}`);
+                
                 const toolName = toolPart.toolName;
                 const semanticResult = `[TOOL_RESULT tool="${toolName}" stage="${currentStage}" persisted="${isPersisted}"]\n${JSON.stringify(toolPart.result)}\n[/TOOL_RESULT]`;
                 return { ...toolPart, result: semanticResult };
               }
               return part;
             });
+
+            // CRITICAL: Check if this message (or an equivalent one) was already saved by client action
+            // Actually, assistant messages are ONLY saved here. 
+            // The duplication happens when the next request includes the assistant message 
+            // AND we try to bulk-save it again. (But we removed bulk save).
+            // The other cause is the LLM seeing duplicate tool-results in the history.
 
             await db.insert(dbMessages).values({
               id: responseMessage.id,

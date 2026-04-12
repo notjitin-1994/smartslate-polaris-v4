@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { User, Sparkles } from 'lucide-react';
 import { UIMessage } from 'ai';
@@ -23,6 +23,25 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
   const isUser = message.role === 'user';
   // Stable streaming check: only stream the last assistant message if the chat is actively processing
   const isStreaming = !isUser && isLast && isChatLoading;
+
+  // Filter parts to prevent duplication (especially tool-results that might be double-persisted)
+  const renderedParts = useMemo(() => {
+    if (!message.parts) return [];
+    
+    const seenToolCalls = new Set<string>();
+    return message.parts.filter(part => {
+      const toolCallId = (part as any).toolCallId;
+      if (toolCallId) {
+        if (part.type === 'tool-result') {
+          // Always keep results, but they might supersede an invocation in the same message
+          return true;
+        }
+        if (seenToolCalls.has(toolCallId)) return false;
+        seenToolCalls.add(toolCallId);
+      }
+      return true;
+    });
+  }, [message.parts]);
 
   // Helper to remove internal semantic envelopes from the visible UI
   const cleanText = (text: string) => {
@@ -57,7 +76,7 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
 
       {/* Message Content */}
       <div className={`max-w-[82%] space-y-2 ${isUser ? 'items-end' : ''}`}>
-        {message.parts?.map((part, i) => {
+        {renderedParts.map((part, i) => {
           if (part.type === 'text') {
             const cleaned = cleanText(part.text);
             
