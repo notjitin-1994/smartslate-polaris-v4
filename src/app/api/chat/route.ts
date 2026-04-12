@@ -11,6 +11,14 @@ export const runtime = 'edge';
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
+  // Pre-flight Environment Check
+  if (!process.env.ZHIPU_API_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return new Response(JSON.stringify({ 
+      error: 'Infrastructural Configuration Missing', 
+      details: 'Critical API keys (ZHIPU_API_KEY or SUPABASE_SERVICE_ROLE_KEY) are not configured for this environment.'
+    }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+  }
+
   // Add direct performance headers to bypass all intermediate buffers
   const responseHeaders = new Headers({
     'X-Accel-Buffering': 'no',
