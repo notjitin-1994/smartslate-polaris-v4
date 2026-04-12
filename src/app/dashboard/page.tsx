@@ -1,76 +1,78 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { starmaps } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, count } from 'drizzle-orm';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 import { 
   Plus, 
   Compass, 
-  LayoutGrid, 
   Zap, 
+  LayoutGrid, 
+  Clock, 
+  CheckCircle2, 
+  ChevronRight,
+  Activity,
+  Search,
+  Star,
+  Settings,
+  Shield,
+  Layers,
+  ArrowUpRight
 } from 'lucide-react';
-import { createStarmap } from '@/app/actions/starmap';
+import Link from 'next/link';
 import { StarmapList } from '@/components/Dashboard/StarmapList';
+import { LoadingButton } from '@/components/UI/LoadingButton';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return redirect('/login');
+    redirect('/login');
   }
 
   // Fetch user's starmaps
   const userStarmaps = await db.query.starmaps.findMany({
     where: eq(starmaps.userId, user.id),
-    orderBy: [desc(starmaps.updatedAt)],
+    orderBy: [desc(starmaps.createdAt)],
+    with: {
+      starmapResponses: true
+    }
   });
 
-  const getFirstName = () => {
-    const rawName = user.user_metadata?.full_name || user.user_metadata?.name || user.email || '';
-    return rawName.split(' ')[0] || 'there';
-  };
+  const activeStarmaps = userStarmaps.filter(s => s.status === 'draft').length;
+  const completedStarmaps = userStarmaps.filter(s => s.status === 'completed').length;
 
-  const activeStarmaps = userStarmaps.filter(s => s.status !== 'completed').length;
-  const completedStarmaps = userStarmaps.length - activeStarmaps;
+  // Server Action for creating a new starmap
+  async function createStarmap() {
+    'use server';
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return;
 
-  // Format current date for the header
-  const today = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric'
-  });
+    const [newStarmap] = await db.insert(starmaps).values({
+      userId: user.id,
+      title: 'Untitled Strategy Blueprint',
+      status: 'draft',
+      context: { currentStage: 1 }
+    }).returning();
+
+    redirect(`/discovery/${newStarmap.id}`);
+  }
 
   return (
-    <div className="relative min-h-screen bg-[#020C1B] text-[#e0e0e0] font-sans selection:bg-primary-500/30 overflow-x-hidden flex flex-col pt-[var(--nav-height-mobile)] lg:pt-[var(--nav-height-desktop)]">
-      {/* Background Decor - Ambient Lights */}
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] h-[60%] w-[50%] rounded-full bg-primary-500/5 blur-[150px]" />
-        <div className="absolute top-[40%] right-[-10%] h-[50%] w-[40%] rounded-full bg-secondary-500/5 blur-[150px]" />
-        <div className="absolute bottom-[-20%] left-[20%] h-[40%] w-[60%] rounded-full bg-primary-500/5 blur-[150px]" />
-      </div>
+    <div className="min-h-screen bg-[#020611] flex flex-col">
+      {/* Main Dashboard Content */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth relative pt-16 sm:pt-20">
+        {/* Background Ambient Glows */}
+        <div className="absolute top-[-10%] -left-[10%] w-[40%] h-[40%] bg-primary-500/10 rounded-full blur-[120px] pointer-events-none opacity-50" />
+        <div className="absolute bottom-[10%] -right-[10%] w-[30%] h-[30%] bg-secondary-500/10 rounded-full blur-[120px] pointer-events-none opacity-30" />
 
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-[var(--hero-padding-top)] pb-6 lg:py-8 flex flex-col flex-1">
-        
-        {/* Premium Dashboard Header - More compact */}
-        <header className="mb-6 lg:mb-8 flex flex-col justify-end animate-in fade-in slide-in-from-bottom-4 duration-1000">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary-500">
-                  {today}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 backdrop-blur-md">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-green-400">
-                  System Online
-                </span>
-              </div>
-            </div>
-            
-            <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
-              Welcome back, <span className="text-primary-500 italic font-serif">{getFirstName()}</span>.
+        <header className="px-6 sm:px-8 lg:px-12 pt-8 sm:pt-10 pb-6 relative z-10">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-3xl sm:text-4xl font-heading font-black text-white tracking-tight uppercase">
+              Mission <span className="text-primary-500 italic font-serif lowercase tracking-normal px-1">control</span>
             </h1>
             <p className="text-white/50 text-sm sm:text-base font-light max-w-2xl hidden sm:block">
               Your command center for architecting high-impact learning experiences.
@@ -79,8 +81,8 @@ export default async function DashboardPage() {
         </header>
 
         {/* Top Section */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-6 mb-6 lg:mb-8">
-          
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-6 mb-6 lg:mb-8 px-6 sm:px-8 lg:px-12">
+
           {/* Main Action Card (Spans 8 cols on desktop) */}
           <div className="md:col-span-12 lg:col-span-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
             <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/10 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between group h-full min-h-[220px]">
@@ -117,13 +119,13 @@ export default async function DashboardPage() {
 
               <div className="relative z-10">
                 <form action={createStarmap}>
-                  <button 
+                  <LoadingButton
                     type="submit"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary-500 text-[#020C1B] font-bold transition-all hover:bg-primary-400 hover:shadow-[0_0_30px_rgba(167,218,219,0.4)] active:scale-[0.98] text-sm"
+                    loadingText="Architecting..."
+                    icon={<Plus size={18} strokeWidth={2.5} />}
                   >
-                    <Plus size={18} strokeWidth={2.5} />
-                    <span className="tracking-wide">Start New Project</span>
-                  </button>
+                    Start New Project
+                  </LoadingButton>
                 </form>
               </div>
             </div>
@@ -131,7 +133,7 @@ export default async function DashboardPage() {
 
           {/* Stats Column (Spans 4 cols on desktop) */}
           <div className="md:col-span-12 lg:col-span-4 flex flex-row lg:flex-col gap-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-            
+
             {/* Fleet Status Card */}
             <div className="flex-1 rounded-[2rem] bg-white/[0.02] border border-white/5 backdrop-blur-xl p-5 sm:p-6 flex flex-col justify-between hover:bg-white/[0.04] transition-colors duration-500 group">
               <div className="flex justify-between items-start mb-2 sm:mb-4">
@@ -173,24 +175,24 @@ export default async function DashboardPage() {
                 </div>
               </div>
               <div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl sm:text-4xl font-heading font-bold text-white tracking-tighter">15</span>
-                  <span className="text-xl sm:text-2xl font-bold text-primary-500">x</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl sm:text-4xl font-heading font-bold text-white tracking-tighter">14.5h</span>
+                  <span className="text-[10px] font-medium text-primary-500/40 uppercase tracking-widest hidden sm:inline">Saved</span>
                 </div>
-                <p className="text-[10px] text-white/40 font-light mt-1.5 leading-relaxed hidden sm:block">
-                  Average acceleration in design cycle time.
-                </p>
+                <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-2">
+                  <ArrowUpRight size={12} className="text-primary-500" />
+                  <span className="text-[10px] text-white/40 uppercase tracking-widest font-bold">24% increase vs. manual</span>
+                </div>
               </div>
             </div>
-
           </div>
         </div>
 
-        {/* Starmaps Section - Replaces Recent Sessions with paginated list */}
-        <div className="flex-1 min-h-0">
+        {/* Starmap List Section */}
+        <section className="px-6 sm:px-8 lg:px-12 pb-12 relative z-10">
           <StarmapList initialStarmaps={userStarmaps} />
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }

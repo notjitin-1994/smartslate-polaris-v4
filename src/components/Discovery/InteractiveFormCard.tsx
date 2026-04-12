@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Sparkles, ChevronDown, Calendar as CalendarIcon, ShieldCheck, Loader2 } from 'lucide-react';
+import { Check, Sparkles, ChevronDown, Calendar as CalendarIcon, ShieldCheck, Loader2, ArrowUpRight } from 'lucide-react';
+import { LoadingButton } from '../UI/LoadingButton';
 
 export type QuestionType = 'text' | 'textarea' | 'select' | 'slider' | 'date';
 
@@ -198,15 +199,17 @@ export function InteractiveFormCard({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: questions.length * 0.1, duration: 0.5 }}
-            className="mt-6 md:mt-8 flex justify-end"
+            className="mt-6 md:mt-8"
           >
-            <button
+            <LoadingButton
               onClick={handleSubmit}
-              className="px-5 md:px-6 py-2 md:py-2.5 rounded-full bg-white text-[#020611] text-[11px] md:text-[12px] font-semibold tracking-wide hover:bg-primary-100 hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] transition-all duration-300 active:scale-95 flex items-center gap-2 group/btn shadow-xl"
+              loading={isSubmitting}
+              loadingText="Transmitting..."
+              className="w-full"
+              icon={<ArrowUpRight size={16} />}
             >
               Submit Responses
-              <Check className="text-[#020611]/50 group-hover/btn:text-[#020611] transition-colors w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={2.5} />
-            </button>
+            </LoadingButton>
           </motion.div>
         )}
         

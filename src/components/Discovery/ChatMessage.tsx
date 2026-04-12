@@ -2,13 +2,12 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { User, Bot, Sparkles } from 'lucide-react';
+import { User, Sparkles } from 'lucide-react';
 import { UIMessage } from 'ai';
 import { ApprovalCard } from './ApprovalCard';
-import { InteractiveFormCard, InteractiveQuestion } from './InteractiveFormCard';
+import { InteractiveFormCard } from './InteractiveFormCard';
 import { StreamingMarkdown } from './StreamingMarkdown';
+import { LoadingButton } from '../UI/LoadingButton';
 
 interface ChatMessageProps {
   message: UIMessage;
@@ -170,22 +169,28 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
                       max={input.max} 
                       defaultValue={input.currentValue || (input.max + input.min) / 2}
                       className="w-full accent-primary-500 h-1 bg-white/10 rounded-full appearance-none cursor-pointer hover:accent-primary-400 transition-all"
-                      onMouseUp={(e) => {
-                        const val = parseInt((e.target as HTMLInputElement).value);
+                    />
+                    <LoadingButton 
+                      variant="primary"
+                      className="w-full mt-2"
+                      onClick={(e) => {
+                        const slider = e.currentTarget.parentElement?.querySelector('input[type="range"]') as HTMLInputElement;
+                        const val = parseInt(slider.value);
                         submitToolResult(
                           'setProjectParameters',
                           toolCallId,
                           { value: val, success: true }
                         );
                       }}
-                    />
-                    <p className="text-[9px] text-white/20 italic text-center font-light">Adjust slider to confirm</p>
+                    >
+                      Confirm Parameters
+                    </LoadingButton>
+                    <p className="text-[9px] text-white/20 italic text-center font-light">Adjust slider and confirm</p>
                   </div>
                 )}
               </motion.div>
             );
           }
-
           
           return null;
         })}
