@@ -8,6 +8,7 @@ import { User, Bot, Sparkles } from 'lucide-react';
 import { UIMessage } from 'ai';
 import { ApprovalCard } from './ApprovalCard';
 import { InteractiveFormCard, InteractiveQuestion } from './InteractiveFormCard';
+import { StreamingMarkdown } from './StreamingMarkdown';
 
 interface ChatMessageProps {
   message: UIMessage;
@@ -15,10 +16,14 @@ interface ChatMessageProps {
   rejectStage: (id: string, feedback: string) => void;
   submitToolResult: (toolName: string, toolCallId: string, result: any) => void;
   onFormUpdate?: (toolCallId: string, data: Record<string, any>) => void;
+  isLast?: boolean;
+  isChatLoading?: boolean;
 }
 
-export function ChatMessage({ message, approveStage, rejectStage, submitToolResult, onFormUpdate }: ChatMessageProps) {
+export function ChatMessage({ message, approveStage, rejectStage, submitToolResult, onFormUpdate, isLast, isChatLoading }: ChatMessageProps) {
   const isUser = message.role === 'user';
+  // Stable streaming check: only stream the last assistant message if the chat is actively processing
+  const isStreaming = !isUser && isLast && isChatLoading;
 
   // Helper to remove internal semantic envelopes from the visible UI
   const cleanText = (text: string) => {
@@ -70,11 +75,7 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
                     : 'bg-transparent text-white/80'
                 }`}
               >
-                <div className="prose prose-invert prose-sm max-w-none prose-p:leading-[1.8] prose-p:mb-4 last:prose-p:mb-0 prose-pre:bg-white/[0.03] prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-headings:font-heading prose-headings:font-semibold prose-headings:text-white/90 prose-headings:tracking-wide prose-a:text-primary-400 hover:prose-a:text-primary-300 prose-strong:text-white/90 prose-strong:font-semibold">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {cleaned}
-                  </ReactMarkdown>
-                </div>
+                <StreamingMarkdown content={cleaned} isStreaming={isStreaming} />
               </motion.div>
             );
           }

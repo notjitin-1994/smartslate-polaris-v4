@@ -16,11 +16,20 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { messages, modelId, starmapId }: { messages: UIMessage[]; modelId?: string; starmapId?: string } = body;
 
-    console.log('[Chat API] Request received:', { 
-      starmapId, 
-      messageCount: messages?.length,
-      lastRole: messages?.[messages.length - 1]?.role
-    });
+    console.log(`[Chat API] Turn started. Starmap: ${starmapId}, Messages: ${messages?.length}`);
+    
+    // Log the last few messages to see the state
+    if (messages && messages.length > 0) {
+      const lastFew = messages.slice(-2);
+      lastFew.forEach((m, i) => {
+        console.log(`  [Message ${i}] Role: ${m.role}, Parts: ${m.parts?.length}`);
+        m.parts?.forEach((p, pi) => {
+          if (p.type === 'text') console.log(`    [Part ${pi}] Text: ${p.text.substring(0, 50)}...`);
+          if (p.type === 'tool-invocation') console.log(`    [Part ${pi}] Tool: ${(p as any).toolName}, ID: ${(p as any).toolCallId}`);
+          if (p.type === 'tool-result') console.log(`    [Part ${pi}] Result for: ${(p as any).toolName}, ID: ${(p as any).toolCallId}`);
+        });
+      });
+    }
 
     // Check authentication
     const supabase = await createClient();
@@ -29,9 +38,6 @@ export async function POST(req: Request) {
     if (authError || !user) {
       return new Response('Unauthorized', { status: 401 });
     }
-
-    // Note: Non-assistant messages are now persisted immediately by the client via Server Actions.
-    // This prevents race conditions and ensures data integrity on mobile.
 
     // Fetch existing responses to provide as context
     let knowledgeBaseContext = '';
@@ -43,7 +49,6 @@ export async function POST(req: Request) {
         orderBy: [asc(starmapResponses.stage)],
       });
 
-      // Also check starmap context for explicit stage
       const starmap = await db.query.starmaps.findFirst({
         where: eq(starmaps.id, starmapId)
       });
@@ -55,13 +60,11 @@ export async function POST(req: Request) {
       }
 
       if (existingResponses.length > 0) {
-        // Create a structured Knowledge Base for LLM parsing
         const knowledgeBase = existingResponses.map(r => ({
           stage: r.stage,
           key: r.questionId,
           value: r.answer
         }));
-
         knowledgeBaseContext = JSON.stringify(knowledgeBase, null, 2);
       }
     }
@@ -76,76 +79,64 @@ export async function POST(req: Request) {
       model: getModel(modelId),
       system: systemPrompt,
       messages: await convertToModelMessages(messages as UIMessage[]),
-      experimental_transform: smoothStream({ chunking: 'word', delayInMs: 15 }),
+      experimental_transform: smoothStream({ chunking: 'word', delayInMs: 30 }),
       tools: {
-        // Generative UI Tool: asks interactive questions using forms
         askInteractiveQuestions: {
-          description: 'Ask the user one or more structured questions using interactive UI elements (text, select, date, slider). Use this instead of asking text questions when you need specific, structured data. During Stage 1, if you have enough info to name the project, include a "title" field in your next saveDiscoveryContext call.',
+          description: 'Ask the user one or more structured questions using interactive UI elements (text, select, date, slider). During Stage 1, if you have enough info to name the project, include a "title" field in your next saveDiscoveryContext call.',
           inputSchema: z.object({
             questions: z.array(z.object({
-              id: z.string().describe('Unique identifier for this question.'),
-              type: z.enum(['text', 'textarea', 'select', 'slider', 'date']).describe('The type of UI input to render.'),
-              label: z.string().describe('The question or prompt to show the user.'),
-              description: z.string().optional().describe('Optional helper text.'),
-              options: z.array(z.string()).optional().describe('Required if type is "select". List of options to choose from.'),
-              min: z.number().optional().describe('Minimum value for a slider.'),
-              max: z.number().optional().describe('Maximum value for a slider.'),
-              required: z.boolean().default(true).describe('Whether the user must answer this question before submitting.'),
-            })).describe('Array of questions to present to the user.'),
+              id: z.string(),
+              type: z.enum(['text', 'textarea', 'select', 'slider', 'date']),
+              label: z.string(),
+              description: z.string().optional(),
+              options: z.array(z.string()).optional(),
+              min: z.number().optional(),
+              max: z.number().optional(),
+              required: z.boolean().default(true),
+            })),
           }),
         },
-        // Client-side tool: requests user approval before transitioning stages
         requestApproval: {
-          description: 'Request user approval before proceeding to the next discovery stage. Use this to summarize findings and confirm direction.',
+          description: 'Request user approval before proceeding to the next discovery stage.',
           inputSchema: z.object({
-            stageNumber: z.number().describe('The current stage number being completed.'),
-            stageName: z.string().describe('The name of the current stage.'),
+            stageNumber: z.number(),
+            stageName: z.string(),
             keyFindings: z.array(z.object({
-              label: z.string().describe('Short label for the finding (e.g. "Primary Goal").'),
-              value: z.string().describe('The identified value or decision.'),
-              icon: z.string().optional().describe('A Lucide icon name to represent this finding (e.g. "target", "users", "zap", "file-text", "activity").'),
-            })).describe('Array of structured findings for the infographic.'),
-            insight: z.string().describe('A brief, high-level strategic insight or "Strategy Nugget".'),
-            nextStage: z.string().describe('The name of the next discovery stage.'),
+              label: z.string(),
+              value: z.string(),
+              icon: z.string().optional(),
+            })),
+            insight: z.string(),
+            nextStage: z.string(),
           }),
         },
-        // Generative UI Tool: requests specific numeric/selection parameters
         setProjectParameters: {
-          description: 'Request the user to set specific project parameters like budget and duration using a specialized UI slider.',
+          description: 'Request the user to set specific project parameters.',
           inputSchema: z.object({
-            parameterName: z.string().describe('The name of the parameter to set (e.g., budget, duration).'),
+            parameterName: z.string(),
             min: z.number().default(0),
             max: z.number().default(100),
-            unit: z.string().describe('The unit of measurement (e.g., USD, Weeks, Hours).'),
+            unit: z.string(),
             currentValue: z.number().optional(),
           }),
         },
-        // Server-side tool: persists discovery data
         saveDiscoveryContext: {
           description: 'Save gathered discovery data to the database.',
           inputSchema: z.object({
-            starmapId: z.string().uuid().describe('The ID of the starmap to save to.'),
+            starmapId: z.string().uuid(),
             data: z.record(z.string(), z.unknown()),
           }),
           execute: async ({ starmapId: toolStarmapId, data }) => {
             try {
-              // VERIFY OWNERSHIP before saving
               const starmap = await db.query.starmaps.findFirst({
-                where: and(
-                  eq(starmaps.id, toolStarmapId),
-                  eq(starmaps.userId, user.id)
-                )
+                where: and(eq(starmaps.id, toolStarmapId), eq(starmaps.userId, user.id))
               });
 
-              if (!starmap) {
-                return { success: false, error: 'Unauthorized or Starmap not found', persisted: false };
-              }
+              if (!starmap) return { success: false, error: 'Unauthorized', persisted: false };
 
-              // Extract a human-readable answer if present, otherwise fallback to a summary
               const readableAnswer = data.answer || data.value || data.response || JSON.stringify(data);
               const questionId = data.questionId || data.id || 'discovery_context';
               
-              // Insert discovery data into database
               await db.insert(starmapResponses).values({
                 starmapId: toolStarmapId,
                 questionId,
@@ -155,7 +146,6 @@ export async function POST(req: Request) {
                 metadata: data,
               });
 
-              // If the data contains high-level context, update the starmap record
               const contextUpdates: Record<string, unknown> = {};
               if (data.role) contextUpdates.role = data.role;
               if (data.goals || data.goal) contextUpdates.goals = data.goals || data.goal;
@@ -186,19 +176,15 @@ export async function POST(req: Request) {
     return result.toUIMessageStreamResponse({
       generateMessageId: () => generateId(),
       onFinish: async ({ responseMessage }) => {
+        console.log(`[Chat API] Stream finished. Message: ${responseMessage.id}, Parts: ${responseMessage.parts.length}`);
         if (starmapId && responseMessage) {
           try {
-            // Process parts to ensure structured tool results are semantic
             const processedParts = responseMessage.parts.map(part => {
               if (part.type === 'tool-result') {
                 const toolPart = part as any;
                 const isPersisted = toolPart.result?.persisted === true;
                 const toolName = toolPart.toolName;
-                const stage = currentStage;
-                
-                // Wrap in semantic envelope for LLM context on reload
-                const semanticResult = `[TOOL_RESULT tool="${toolName}" stage="${stage}" persisted="${isPersisted}"]\n${JSON.stringify(toolPart.result)}\n[/TOOL_RESULT]`;
-                
+                const semanticResult = `[TOOL_RESULT tool="${toolName}" stage="${currentStage}" persisted="${isPersisted}"]\n${JSON.stringify(toolPart.result)}\n[/TOOL_RESULT]`;
                 return { ...toolPart, result: semanticResult };
               }
               return part;
@@ -210,18 +196,15 @@ export async function POST(req: Request) {
               role: responseMessage.role,
               parts: processedParts as any,
             }).onConflictDoNothing({ target: dbMessages.id });
-            console.log('[Chat API] Assistant message persisted:', responseMessage.id);
+            console.log('[Chat API] Assistant message persisted');
           } catch (err) {
-            console.error('[Chat API] Error saving assistant response:', err);
+            console.error('[Chat API] Persistence Error:', err);
           }
         }
       }
     });
   } catch (error) {
     console.error('[Chat API] Fatal Error:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal Server Error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal Server Error' }), { status: 500 });
   }
 }

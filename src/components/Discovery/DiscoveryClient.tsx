@@ -121,12 +121,21 @@ export function DiscoveryClient({
     messages,
     sendMessage,
     isLoading: isAILoading,
+    status,
     error,
     approveStage,
     rejectStage,
     submitToolResult,
     currentStage,
   } = useDiscovery(id as string, initialMessages, initialStage);
+
+  // Client-side logging for message state
+  useEffect(() => {
+    if (messages.length > 0) {
+      const last = messages[messages.length - 1];
+      console.log(`[DiscoveryClient] Messages state updated. Count: ${messages.length}. Last role: ${last.role}, Status: ${status}`);
+    }
+  }, [messages, status]);
 
   const [input, setInput] = useState('');
   const [unsubmittedForms, setUnsubmittedForms] = useState<Record<string, any>>({});
@@ -215,10 +224,12 @@ export function DiscoveryClient({
     setUnsubmittedForms(prev => ({ ...prev, [toolCallId]: data }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const hasUnsubmittedForms = Object.keys(unsubmittedForms).length > 0;
+    console.log('[DiscoveryClient] Submitting. Input:', !!input.trim(), 'Forms:', Object.keys(unsubmittedForms).length);
+
     if (!input.trim() && !hasUnsubmittedForms) return;
 
     let finalMessage = input;
@@ -233,9 +244,11 @@ export function DiscoveryClient({
         ? `${input}\n\n${envelope}`
         : envelope;
       
-      Object.keys(unsubmittedForms).forEach(toolCallId => {
-        submitToolResult('askInteractiveQuestions', toolCallId, { status: 'submitted_with_message', data: unsubmittedForms[toolCallId] });
-      });
+      // Submit results for all pending forms
+      for (const toolCallId of Object.keys(unsubmittedForms)) {
+        console.log('[DiscoveryClient] Clearing form:', toolCallId);
+        await submitToolResult('askInteractiveQuestions', toolCallId, { status: 'submitted_with_message', data: unsubmittedForms[toolCallId] });
+      }
       setUnsubmittedForms({});
     }
 
@@ -624,7 +637,7 @@ export function DiscoveryClient({
               )}
 
               <AnimatePresence initial={false}>
-                {messages.map((m) => (
+                {messages.map((m, index) => (
                   <ChatMessage 
                     key={m.id} 
                     message={m} 
@@ -632,11 +645,13 @@ export function DiscoveryClient({
                     rejectStage={rejectStage} 
                     submitToolResult={submitToolResult}
                     onFormUpdate={handleFormUpdate}
+                    isLast={index === messages.length - 1}
+                    isChatLoading={status === 'streaming' || status === 'submitted'}
                   />
                 ))}
               </AnimatePresence>
 
-              {isAILoading && (
+              {isAILoading && (!messages.length || messages[messages.length - 1].role !== 'assistant') && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
