@@ -1,0 +1,19 @@
+Retrieving project…
+Resolving deployment "polaris.smartslate.io"
+Streaming logs for deployment dpl_HLnaAHtNnAVxUhRhXmUgLWq9ZVfS starting from 18:29:54.97
+
+waiting for new logs...
+18:30:16.73  ℹ️  GET  ---  polaris.smartslate.io  ƒ  /discovery/2fcf81dc-55ab-4de7-9227-00e2465c8076
+----------------------------------------------------------------------------------------------------
+[DiscoveryPage] Fetched 2 messages for starmap 2fcf81dc-55ab-4de7-9227-00e2465c8076
+
+waiting for new logs...
+18:30:17.09  ℹ️  GET  ---  polaris.smartslate.io  ƒ  /discovery/2fcf81dc-55ab-4de7-9227-00e2465c8076
+----------------------------------------------------------------------------------------------------
+[useDiscovery] Initializing hook: {
+  starmapId: '2fcf81dc-55ab-4de7-9227-00e2465c8076',
+  initialMessagesCount: 2,
+  initialStage: 1
+}
+
+waiting for new logs...

@@ -57,14 +57,16 @@ export default async function DiscoveryPage({
 
   // Validate messages from DB against tool schemas to catch stale/mangled parts
   // from old envelope format. Falls back to empty history on validation failure.
-  let validatedMessages: UIMessage[];
-  try {
-    validatedMessages = await validateUIMessages({
-      messages: JSON.parse(JSON.stringify(history)),
-    });
-  } catch (err) {
-    console.error('[DiscoveryPage] Message validation failed, starting fresh:', err);
-    validatedMessages = [];
+  let validatedMessages: UIMessage[] = [];
+  if (history && history.length > 0) {
+    try {
+      validatedMessages = await validateUIMessages({
+        messages: JSON.parse(JSON.stringify(history)),
+      });
+    } catch (err) {
+      console.error('[DiscoveryPage] Message validation failed, starting fresh:', err);
+      validatedMessages = [];
+    }
   }
 
   return (
