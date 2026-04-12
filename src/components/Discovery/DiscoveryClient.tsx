@@ -542,7 +542,7 @@ export function DiscoveryClient({
       </AnimatePresence>
 
       {/* Main Content: Split Screen */}
-      <main className="flex-1 flex flex-col md:flex-row min-w-0 bg-[#020611] pt-16 md:pt-20 h-full overflow-hidden">
+      <main className="flex-1 flex flex-col md:flex-row min-w-0 bg-[#020611] pt-16 md:pt-20 overflow-hidden min-h-0">
 
         {/* Phase 3 & 4: Finalization Panel */}
         {currentStage >= 8 || starmapData?.blueprint ? (
@@ -550,7 +550,7 @@ export function DiscoveryClient({
         ) : (
           <>
             {/* Collaborative Chat */}
-            <section className="flex-1 flex flex-col min-w-0 bg-[#020611] relative print:hidden">
+            <section className="flex-1 flex flex-col min-w-0 bg-[#020611] relative print:hidden min-h-0">
           {/* Chat Header (Desktop only) */}
           <header className="hidden md:flex h-12 items-center justify-between px-6 border-b border-white/5 bg-white/[0.01] backdrop-blur-md z-20">
             <div className="flex items-center gap-2.5">
