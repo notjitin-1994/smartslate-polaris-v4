@@ -4,10 +4,11 @@ const DATABASE_URL = "postgresql://postgres.hxxvxsmengeoazuywpjm:Vtvt%21123jitin
 const sql = postgres(DATABASE_URL);
 
 async function run() {
-  console.log("Creating chat_messages table...");
+  console.log("Re-creating chat_messages table...");
+  await sql`DROP TABLE IF EXISTS "chat_messages" CASCADE`;
   await sql`
     CREATE TABLE IF NOT EXISTS "chat_messages" (
-      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+      "id" text PRIMARY KEY NOT NULL,
       "starmap_id" uuid NOT NULL,
       "role" text NOT NULL,
       "parts" jsonb NOT NULL,

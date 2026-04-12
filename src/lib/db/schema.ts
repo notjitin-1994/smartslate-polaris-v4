@@ -66,7 +66,7 @@ export const starmapResponses = pgTable('starmap_responses', {
 });
 
 export const chatMessages = pgTable('chat_messages', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: text('id').primaryKey(),
   starmapId: uuid('starmap_id').references(() => starmaps.id, { onDelete: 'cascade' }).notNull(),
   role: text('role', { enum: ['system', 'user', 'assistant', 'data', 'tool'] }).notNull(),
   parts: jsonb('parts').notNull(),

@@ -29,10 +29,10 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    // Save the latest user message if starmapId is provided
-    if (starmapId) {
+    // Save the latest message if starmapId is provided and it's not assistant (assistant saved in onFinish)
+    if (starmapId && messages && messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage && lastMessage.role === 'user') {
+      if (lastMessage && lastMessage.role !== 'assistant') {
         try {
           await db.insert(dbMessages).values({
             id: lastMessage.id,
@@ -40,9 +40,9 @@ export async function POST(req: Request) {
             role: lastMessage.role,
             parts: lastMessage.parts as any,
           }).onConflictDoNothing({ target: dbMessages.id });
-          console.log('[Chat API] User message persisted:', lastMessage.id);
+          console.log(`[Chat API] ${lastMessage.role} message persisted:`, lastMessage.id);
         } catch (err) {
-          console.error('[Chat API] Error saving user message:', err);
+          console.error(`[Chat API] Error saving ${lastMessage.role} message:`, err);
         }
       }
     }

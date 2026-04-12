@@ -102,16 +102,34 @@ export function DiscoveryClient({
   const supabase = createClient();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Calculate initial stage based on starmapResponses
+  // Calculate initial stage based on starmapResponses and messages
   const initialStage = useMemo(() => {
+    // Check if we have an explicit stage in context
+    if (initialStarmap.context?.currentStage) {
+      return Number(initialStarmap.context.currentStage);
+    }
+
     if (!initialStarmap.starmapResponses || initialStarmap.starmapResponses.length === 0) {
       return 1;
     }
-    const maxStage = Math.max(...initialStarmap.starmapResponses.map(r => r.stage));
-    // If we have responses for a stage, we might still be in that stage or have progressed
-    // For now, let's assume we are at the maxStage reached
-    return maxStage;
-  }, [initialStarmap]);
+
+    const maxResponseStage = Math.max(...initialStarmap.starmapResponses.map(r => r.stage));
+    
+    // Look for stage transitions in messages (requestApproval calls)
+    // If the latest requestApproval was approved, we are in the next stage
+    const approvedStages = initialMessages
+      .filter(m => (m.role as string) === 'assistant' || (m.role as string) === 'tool')
+      .flatMap(m => m.parts)
+      .filter(p => (p.type === 'tool-requestApproval' || (p.type === 'dynamic-tool' && (p as any).toolName === 'requestApproval')) && p.state === 'output-available')
+      .filter(p => (p as any).output?.approved === true);
+    
+    if (approvedStages.length > 0) {
+      // This is a simplified heuristic, but better than just maxResponseStage
+      return Math.min(maxResponseStage + 1, 7);
+    }
+
+    return maxResponseStage;
+  }, [initialStarmap, initialMessages]);
   
   const {
     messages,
@@ -469,30 +487,39 @@ export function DiscoveryClient({
             {starmapData && (Object.keys(responsesByStage).length > 0 || starmapData.context) ? (
               <>
                 {/* Strategy Blueprint Card */}
-                <div className="bg-white/[0.02] p-5 rounded-2xl border border-white/5 relative overflow-hidden group hover:bg-white/[0.03] transition-colors duration-500">
-                  <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <Activity size={40} />
+                <div className="bg-gradient-to-br from-white/[0.03] to-transparent p-5 rounded-3xl border border-white/[0.08] relative overflow-hidden group hover:border-primary-500/20 transition-all duration-700 shadow-2xl">
+                  <div className="absolute -right-4 -top-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700 rotate-12">
+                    <Activity size={120} />
                   </div>
                   
                   <div className="flex items-center gap-3 mb-6 relative z-10">
-                    <div className="w-7 h-7 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500 border border-primary-500/20">
+                    <div className="w-8 h-8 rounded-2xl bg-primary-500/10 flex items-center justify-center text-primary-400 border border-primary-500/20 shadow-[0_0_15px_rgba(167,218,219,0.1)]">
                       <FileText size={14} />
                     </div>
-                    <h3 className="text-xs font-black text-white/90 tracking-wide uppercase">Core Context</h3>
+                    <div>
+                      <h3 className="text-[11px] font-black text-white/90 tracking-[0.15em] uppercase">Operational Context</h3>
+                      <p className="text-[8px] text-white/20 font-bold uppercase tracking-widest mt-0.5">Strategic Foundation</p>
+                    </div>
                   </div>
 
                   {starmapData.context && (
                     <div className="space-y-5 relative z-10">
                       {!!starmapData.context.role && (
-                        <div className="space-y-1">
-                          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold">Mission Specialist</p>
-                          <p className="text-[11px] text-white/70 font-light leading-relaxed">{String(starmapData.context.role)}</p>
+                        <div className="space-y-1.5 group/item">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1 h-1 rounded-full bg-primary-500/40" />
+                            <p className="text-[8px] text-white/30 uppercase tracking-[0.2em] font-bold group-hover/item:text-primary-500/50 transition-colors">Mission Specialist</p>
+                          </div>
+                          <p className="text-[11px] text-white/70 font-light leading-relaxed pl-3 border-l border-white/5 group-hover/item:border-primary-500/20 transition-colors">{String(starmapData.context.role)}</p>
                         </div>
                       )}
                       {!!starmapData.context.goals && (
-                        <div className="space-y-1">
-                          <p className="text-[8px] text-white/20 uppercase tracking-[0.2em] font-bold">Primary Objectives</p>
-                          <p className="text-[11px] text-white/70 font-light leading-relaxed">{String(starmapData.context.goals)}</p>
+                        <div className="space-y-1.5 group/item">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1 h-1 rounded-full bg-primary-500/40" />
+                            <p className="text-[8px] text-white/30 uppercase tracking-[0.2em] font-bold group-hover/item:text-primary-500/50 transition-colors">Primary Objectives</p>
+                          </div>
+                          <p className="text-[11px] text-white/70 font-light leading-relaxed pl-3 border-l border-white/5 group-hover/item:border-primary-500/20 transition-colors">{String(starmapData.context.goals)}</p>
                         </div>
                       )}
                     </div>
@@ -500,58 +527,60 @@ export function DiscoveryClient({
                 </div>
 
                 {/* Responses by Stage */}
-                {Object.entries(responsesByStage)
-                  .sort(([a], [b]) => parseInt(a) - parseInt(b))
-                  .map(([stageStr, responses]) => {
-                    const stage = parseInt(stageStr);
-                    const stageName = stageNames[stage - 1];
-                    const StageIcon = stageIcons[stage - 1];
-                    
-                    return (
-                      <motion.div 
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        key={stage} 
-                        className="bg-white/[0.01] border border-white/5 p-5 rounded-2xl group/stage relative overflow-hidden transition-all duration-500 hover:border-primary-500/20"
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-6 h-6 rounded-lg bg-primary-500/5 flex items-center justify-center text-primary-500/50 border border-white/5">
-                              <StageIcon size={12} />
-                            </div>
-                            <h4 className="text-[10px] font-black text-white/60 uppercase tracking-widest">{stageName}</h4>
-                          </div>
-                          <span className="text-[8px] font-bold text-white/10 uppercase tabular-nums tracking-tighter">0{stage}</span>
-                        </div>
-                        
-                        <div className="space-y-5">
-                          {responses.map((response) => (
-                            <div key={response.id} className="group/item relative pl-3 border-l border-white/5 hover:border-primary-500/30 transition-colors duration-500">
-                              <FormattedAnswer answer={response.answer} />
-                              
-                              <div className="flex items-center gap-3 mt-3 opacity-0 group-hover/item:opacity-100 transition-all duration-500 transform translate-y-1 group-hover/item:translate-y-0">
-                                <button
-                                  onClick={() => handleOverride(stage, stageName, response.answer)}
-                                  className="text-[8px] font-black text-primary-500 hover:text-primary-400 flex items-center gap-1 uppercase tracking-[0.2em] cursor-pointer"
-                                >
-                                  <Zap size={9} strokeWidth={3} />
-                                  Adjust
-                                </button>
-                                <div className="w-0.5 h-0.5 rounded-full bg-white/10" />
-                                <button
-                                  onClick={() => handleDeepen(stage, stageName, response.answer)}
-                                  className="text-[8px] font-black text-white/20 hover:text-white/50 flex items-center gap-1 uppercase tracking-[0.2em] cursor-pointer"
-                                >
-                                  <ChevronRight size={9} strokeWidth={3} />
-                                  Deepen
-                                </button>
+                <div className="space-y-4 pt-2">
+                  {Object.entries(responsesByStage)
+                    .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                    .map(([stageStr, responses]) => {
+                      const stage = parseInt(stageStr);
+                      const stageName = stageNames[stage - 1];
+                      const StageIcon = stageIcons[stage - 1];
+                      
+                      return (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          key={stage} 
+                          className="bg-white/[0.01] border border-white/[0.05] p-5 rounded-3xl group/stage relative overflow-hidden transition-all duration-500 hover:bg-white/[0.02] hover:border-white/[0.1]"
+                        >
+                          <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-7 h-7 rounded-xl bg-white/[0.03] flex items-center justify-center text-white/40 border border-white/[0.05] group-hover/stage:text-primary-400 group-hover/stage:border-primary-500/20 transition-all duration-500">
+                                <StageIcon size={12} />
                               </div>
+                              <h4 className="text-[10px] font-black text-white/50 uppercase tracking-[0.15em] group-hover/stage:text-white/80 transition-colors">{stageName}</h4>
                             </div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                            <span className="text-[9px] font-black text-white/5 tabular-nums tracking-tighter group-hover/stage:text-white/10 transition-colors">PHASE 0{stage}</span>
+                          </div>
+                          
+                          <div className="space-y-6">
+                            {responses.map((response) => (
+                              <div key={response.id} className="group/item relative pl-4 border-l border-white/[0.03] hover:border-primary-500/30 transition-all duration-500 py-1">
+                                <FormattedAnswer answer={response.answer} />
+                                
+                                <div className="flex items-center gap-3 mt-4 opacity-0 group-hover/item:opacity-100 transition-all duration-500 transform translate-y-1 group-hover/item:translate-y-0">
+                                  <button
+                                    onClick={() => handleOverride(stage, stageName, response.answer)}
+                                    className="text-[8px] font-black text-primary-500/80 hover:text-primary-400 flex items-center gap-1.5 uppercase tracking-[0.2em] cursor-pointer"
+                                  >
+                                    <Zap size={9} strokeWidth={3} />
+                                    Adjust
+                                  </button>
+                                  <div className="w-0.5 h-0.5 rounded-full bg-white/10" />
+                                  <button
+                                    onClick={() => handleDeepen(stage, stageName, response.answer)}
+                                    className="text-[8px] font-black text-white/20 hover:text-white/50 flex items-center gap-1.5 uppercase tracking-[0.2em] cursor-pointer"
+                                  >
+                                    <ChevronRight size={9} strokeWidth={3} />
+                                    Deepen
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                </div>
               </>
             ) : (
               <div className="p-12 rounded-[2rem] border border-dashed border-white/5 bg-white/[0.005] flex flex-col items-center justify-center text-center min-h-[400px]">
