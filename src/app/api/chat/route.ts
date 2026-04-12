@@ -68,6 +68,7 @@ export async function POST(req: Request) {
       model: getModel(modelId),
       system: systemPrompt,
       messages: modelMessages,
+      maxRetries: 5,
       tools: {
         askInteractiveQuestions: {
           description: 'Ask the user one or more structured questions using interactive UI elements (text, select, date, slider). During Stage 1, if you have enough info to name the project, include a "title" field in your next saveDiscoveryContext call.',

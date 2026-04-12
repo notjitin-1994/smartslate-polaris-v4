@@ -654,9 +654,26 @@ export function DiscoveryClient({
 
             <div className="max-w-2xl mx-auto space-y-8 md:space-y-10 relative z-10">
               {error && (
-                <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-400 text-[11px] mb-4 shrink-0 flex items-center gap-3">
-                  <ShieldCheck size={14} className="shrink-0" />
-                  <span>Protocol Error: {error.message || 'Transmission failed. Retrying...'}</span>
+                <div className="p-5 rounded-3xl bg-red-500/5 border border-red-500/10 backdrop-blur-xl animate-in fade-in zoom-in duration-500">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-400 shrink-0">
+                      <ShieldCheck size={20} />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-[13px] font-black text-white uppercase tracking-widest">Protocol Interruption</h3>
+                      <p className="text-[11px] text-white/50 leading-relaxed font-light">
+                        {error.message?.includes('overloaded') 
+                          ? 'The architectural engine is currently handling high volume. Please wait a moment and try again.'
+                          : `Transmission failure detected: ${error.message || 'Unknown protocol error.'}`}
+                      </p>
+                      <button 
+                        onClick={() => window.location.reload()}
+                        className="mt-2 px-4 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-black text-white uppercase tracking-widest transition-all active:scale-95"
+                      >
+                        Re-sync Interface
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
               
