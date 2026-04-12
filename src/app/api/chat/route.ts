@@ -95,7 +95,7 @@ const result = streamText({
       tools: {
         // Generative UI Tool: asks interactive questions using forms
         askInteractiveQuestions: {
-          description: 'Ask the user one or more structured questions using interactive UI elements (text, select, date, slider). Use this instead of asking text questions when you need specific, structured data.',
+          description: 'Ask the user one or more structured questions using interactive UI elements (text, select, date, slider). Use this instead of asking text questions when you need specific, structured data. During Stage 1, if you have enough info to name the project, include a "title" field in your next saveDiscoveryContext call.',
           inputSchema: z.object({
             questions: z.array(z.object({
               id: z.string().describe('Unique identifier for this question.'),

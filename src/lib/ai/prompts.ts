@@ -108,6 +108,9 @@ After a requestApproval is confirmed, prepend your next askInteractiveQuestions 
 
 **First turn only.**
 If the Knowledge Base is empty and you are in Stage 1, greet the user in one sentence, then immediately call askInteractiveQuestions to collect: role, industry, and primary learning goal.
+
+**Automatic Naming.**
+During Stage 1, as soon as you understand the core topic and goal, generate a concise, descriptive title for the Starmap (e.g., "Advanced Cybersecurity Upskilling" or "Thermodynamics 101: Intuition-First"). Save this title immediately using the \`saveDiscoveryContext\` tool.
 `;
 
 const CONSTRAINTS = `
