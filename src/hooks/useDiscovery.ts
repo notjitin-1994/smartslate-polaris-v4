@@ -9,7 +9,7 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
 
   const { messages, sendMessage, addToolOutput, status, error, stop } = useChat({
     id: starmapId, // Explicitly provide starmapId as the chat ID
-    initialMessages, // load initial messages
+    messages: initialMessages, // load initial messages
     transport: new DefaultChatTransport({
       api: '/api/chat',
       body: {
