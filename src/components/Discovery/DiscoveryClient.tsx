@@ -186,6 +186,24 @@ export function DiscoveryClient({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Viewport-safe keyboard handling
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+    
+    const viewport = window.visualViewport;
+    const handleResize = () => {
+      document.documentElement.style.setProperty(
+        '--viewport-height',
+        `${viewport.height}px`
+      );
+    };
+    
+    viewport.addEventListener('resize', handleResize);
+    handleResize();
+    
+    return () => viewport.removeEventListener('resize', handleResize);
+  }, []);
+
   // Auto-resize textarea
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -693,28 +711,24 @@ export function DiscoveryClient({
                     isChatLoading={status === 'streaming' || status === 'submitted'}
                   />
                 ))}
-              </AnimatePresence>
 
-              {isAILoading && (!messages.length || messages[messages.length - 1].role !== 'assistant') && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-4 shrink-0 px-2 py-6"
-                >
-                  <div className="relative w-5 h-5 md:w-6 md:h-6">
-                    <div className="absolute inset-0 bg-primary-500/30 blur-lg rounded-full" />
-                    <img 
-                      src="/logo-swirl.png" 
-                      alt="Thinking..." 
-                      className="w-full h-full animate-spin relative z-10 opacity-60" 
-                      style={{ animationDuration: '4s' }}
-                    />
-                  </div>
-                  <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.4em] text-primary-500/40 animate-pulse">
-                    Synthesizing...
-                  </span>
-                </motion.div>
-              )}
+                {status === 'submitted' && (
+                  <motion.div
+                    key="ghost-bubble"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="flex gap-4 items-start"
+                  >
+                    <div className="w-8 h-8 rounded-full border border-white/[0.08] shadow-[0_0_20px_rgba(167,218,219,0.05)] flex items-center justify-center shrink-0">
+                      <Sparkles className="w-3.5 h-3.5 text-white/40 animate-pulse" />
+                    </div>
+                    <div className="py-3.5 px-5 rounded-[20px] rounded-tl-sm bg-white/5 backdrop-blur-xl border border-white/[0.05]">
+                      <div className="h-4 w-32 bg-white/10 rounded animate-pulse" />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 

@@ -19,7 +19,7 @@ export default async function DiscoveryPage({
   }
 
   let starmapData;
-  let history;
+  let history: any[] = [];
 
   try {
     // Fetch starmap with responses on the server
@@ -35,11 +35,12 @@ export default async function DiscoveryPage({
 
     if (starmapData) {
       // Fetch initial chat messages on the server
-      history = await db.query.chatMessages.findMany({
+      const rawHistory = await db.query.chatMessages.findMany({
         where: eq(chatMessages.starmapId, id),
         orderBy: [asc(chatMessages.createdAt)],
       });
-      console.log(`[DiscoveryPage] Fetched ${history?.length ?? 0} messages for starmap ${id}`);
+      console.log(`[DiscoveryPage] Fetched ${rawHistory?.length ?? 0} messages for starmap ${id}`);
+      history = rawHistory;
     }
   } catch (error) {
     console.error('[DiscoveryPage] Data Fetch Error:', error);
@@ -52,7 +53,7 @@ export default async function DiscoveryPage({
 
   // Use JSON.parse(JSON.stringify()) to guarantee clean serialization
   const serializedStarmap = JSON.parse(JSON.stringify(starmapData));
-  const serializedMessages = JSON.parse(JSON.stringify(history || []));
+  const serializedMessages = JSON.parse(JSON.stringify(history));
 
   return (
     <DiscoveryClient 

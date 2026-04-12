@@ -7,6 +7,13 @@ afterEach(() => {
   cleanup();
 });
 
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 // Mock environment variables
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
 process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-key';
@@ -36,11 +43,28 @@ vi.mock('@/lib/supabase/server', () => ({
 // Mock Database
 vi.mock('@/lib/db', () => ({
   db: {
-    insert: vi.fn(),
+    insert: vi.fn(() => ({
+      values: vi.fn(() => ({
+        onConflictDoNothing: vi.fn(),
+        returning: vi.fn(),
+      }))
+    })),
+    update: vi.fn(() => ({
+      set: vi.fn(() => ({
+        where: vi.fn(),
+      }))
+    })),
     query: {
       starmaps: {
         findFirst: vi.fn(),
+        findMany: vi.fn(),
       },
+      starmapResponses: {
+        findMany: vi.fn(),
+      },
+      chatMessages: {
+        findMany: vi.fn(),
+      }
     },
   },
 }));

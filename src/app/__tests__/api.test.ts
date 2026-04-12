@@ -27,6 +27,6 @@ describe('Chat API Route', () => {
   it('should export maxDuration as 30', async () => {
     const mod = await import('../api/chat/route');
     // maxDuration is an export const at module level
-    expect(mod.maxDuration).toBe(30);
+    expect(mod.maxDuration).toBe(60);
   });
 });

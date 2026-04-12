@@ -47,31 +47,31 @@ describe('useDiscovery', () => {
     expect(typeof result.current.rejectStage).toBe('function');
   });
 
-  it('increments stage on approve', () => {
-    const { result } = renderHook(() => useDiscovery());
+  it('increments stage on approve', async () => {
+    const { result } = renderHook(() => useDiscovery('test-id'));
 
-    act(() => {
-      result.current.approveStage('tool-call-id');
+    await act(async () => {
+      await result.current.approveStage('tool-call-id');
     });
 
     expect(result.current.currentStage).toBe(2);
   });
 
-  it('does not increment stage beyond 8', () => {
-    const { result } = renderHook(() => useDiscovery());
+  it('does not increment stage beyond 8', async () => {
+    const { result } = renderHook(() => useDiscovery('test-id'));
 
     // Set to stage 8
-    act(() => {
+    await act(async () => {
       for (let i = 0; i < 7; i++) {
-        result.current.approveStage(`tool-call-${i}`);
+        await result.current.approveStage(`tool-call-${i}`);
       }
     });
 
     expect(result.current.currentStage).toBe(8);
 
     // Try to approve again
-    act(() => {
-      result.current.approveStage('tool-call-final');
+    await act(async () => {
+      await result.current.approveStage('tool-call-final');
     });
 
     expect(result.current.currentStage).toBe(8);

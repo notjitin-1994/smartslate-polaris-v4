@@ -18,11 +18,15 @@ vi.mock('ai', () => ({
       // Simulate onFinish callback
       if (onFinish) {
         onFinish({ 
-          responseMessage: { 
+          messages: [{ 
+            id: 'u-msg-1', 
+            role: 'user', 
+            parts: [{ type: 'text', text: 'hi' }] 
+          }, { 
             id: 'assistant-msg-1', 
             role: 'assistant', 
             parts: [{ type: 'text', text: 'hello' }] 
-          } 
+          }] 
         });
       }
       return new Response('stream');
@@ -44,9 +48,12 @@ vi.mock('@/lib/db', () => ({
       starmaps: {
         findFirst: vi.fn(),
       },
-      messages: {
+      chatMessages: {
         findMany: vi.fn(),
       },
+      starmapResponses: {
+        findMany: vi.fn().mockResolvedValue([]),
+      }
     },
   },
 }));
@@ -85,7 +92,7 @@ describe('Chat Persistence Tests', () => {
         auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } } }) }
       });
       (db.query.starmaps.findFirst as any).mockResolvedValue({ id: '123', userId: 'u1' });
-      (db.query.messages.findMany as any).mockResolvedValue([
+      (db.query.chatMessages.findMany as any).mockResolvedValue([
         { id: 'm1', role: 'user', parts: [], createdAt: new Date() }
       ]);
 

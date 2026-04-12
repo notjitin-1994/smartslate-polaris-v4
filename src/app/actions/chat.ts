@@ -69,7 +69,7 @@ export async function updateStarmapStage({
 
     if (!starmap) throw new Error('Starmap not found or unauthorized');
 
-    const nextStage = Math.min(stageNumber + 1, 7);
+    const nextStage = Math.min(stageNumber + 1, 8);
 
     await db.update(starmaps)
       .set({ 

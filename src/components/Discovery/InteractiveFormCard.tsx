@@ -37,6 +37,8 @@ export function InteractiveFormCard({
 }: InteractiveFormCardProps) {
   const [formData, setFormData] = useState<Record<string, any>>(initialData);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | null>>({});
 
   useEffect(() => {
     onUpdate(toolCallId, formData);
@@ -44,9 +46,43 @@ export function InteractiveFormCard({
 
   const handleChange = (id: string, value: any) => {
     setFormData(prev => ({ ...prev, [id]: value }));
+    // Clear error on change if they start fixing it
+    if (fieldErrors[id]) {
+      setFieldErrors(prev => ({ ...prev, [id]: null }));
+    }
+  };
+
+  const handleBlur = (id: string, required?: boolean) => {
+    setTouchedFields(prev => ({ ...prev, [id]: true }));
+    const val = formData[id];
+    if (required && (!val || (typeof val === 'string' && val.trim() === ''))) {
+      setFieldErrors(prev => ({ ...prev, [id]: 'Required' }));
+    } else {
+      setFieldErrors(prev => ({ ...prev, [id]: null }));
+    }
   };
 
   const handleSubmit = async () => {
+    // Validate all required fields before submit
+    let hasErrors = false;
+    const newErrors: Record<string, string | null> = {};
+    const newTouched: Record<string, boolean> = {};
+    
+    questions.forEach(q => {
+      const val = formData[q.id];
+      newTouched[q.id] = true;
+      if (q.required && (!val || (typeof val === 'string' && val.trim() === ''))) {
+        newErrors[q.id] = 'Required';
+        hasErrors = true;
+      }
+    });
+
+    if (hasErrors) {
+      setFieldErrors(newErrors);
+      setTouchedFields(newTouched);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await onSubmit(formData);
@@ -124,7 +160,14 @@ export function InteractiveFormCard({
                     disabled={isSubmitted}
                     value={formData[q.id] || ''}
                     onChange={(e) => handleChange(q.id, e.target.value)}
-                    className="w-full bg-white/[0.02] border border-white/[0.08] px-3.5 md:px-4 py-2.5 md:py-3 rounded-xl text-[12px] md:text-[13px] text-white/90 placeholder-white/20 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.04] transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed font-light tracking-wide shadow-inner"
+                    onBlur={() => handleBlur(q.id, q.required)}
+                    className={`w-full bg-white/[0.02] border px-3.5 md:px-4 py-2.5 md:py-3 rounded-xl text-[12px] md:text-[13px] text-white/90 placeholder-white/20 focus:outline-none transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed font-light tracking-wide shadow-inner ${
+                      fieldErrors[q.id] 
+                        ? 'border-red-500/50 focus:border-red-500/50 bg-red-500/5' 
+                        : touchedFields[q.id] && formData[q.id]
+                          ? 'border-emerald-500/50 focus:border-emerald-500/50 bg-emerald-500/5'
+                          : 'border-white/[0.08] focus:border-primary-500/50 focus:bg-white/[0.04]'
+                    }`}
                     placeholder="Type your answer..."
                   />
                 )}
@@ -134,8 +177,15 @@ export function InteractiveFormCard({
                     disabled={isSubmitted}
                     value={formData[q.id] || ''}
                     onChange={(e) => handleChange(q.id, e.target.value)}
+                    onBlur={() => handleBlur(q.id, q.required)}
                     rows={2}
-                    className="w-full bg-white/[0.02] border border-white/[0.08] px-3.5 md:px-4 py-2.5 md:py-3 rounded-xl text-[12px] md:text-[13px] text-white/90 placeholder-white/20 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.04] transition-all duration-300 resize-none disabled:opacity-40 disabled:cursor-not-allowed font-light tracking-wide shadow-inner"
+                    className={`w-full bg-white/[0.02] border px-3.5 md:px-4 py-2.5 md:py-3 rounded-xl text-[12px] md:text-[13px] text-white/90 placeholder-white/20 focus:outline-none transition-all duration-300 resize-none disabled:opacity-40 disabled:cursor-not-allowed font-light tracking-wide shadow-inner ${
+                      fieldErrors[q.id] 
+                        ? 'border-red-500/50 focus:border-red-500/50 bg-red-500/5' 
+                        : touchedFields[q.id] && formData[q.id]
+                          ? 'border-emerald-500/50 focus:border-emerald-500/50 bg-emerald-500/5'
+                          : 'border-white/[0.08] focus:border-primary-500/50 focus:bg-white/[0.04]'
+                    }`}
                     placeholder="Provide details..."
                   />
                 )}
@@ -146,7 +196,14 @@ export function InteractiveFormCard({
                       disabled={isSubmitted}
                       value={formData[q.id] || ''}
                       onChange={(e) => handleChange(q.id, e.target.value)}
-                      className="w-full bg-white/[0.02] border border-white/[0.08] px-3.5 md:px-4 py-2.5 md:py-3 rounded-xl text-[12px] md:text-[13px] text-white/90 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.04] transition-all duration-300 appearance-none disabled:opacity-40 disabled:cursor-not-allowed font-light tracking-wide shadow-inner"
+                      onBlur={() => handleBlur(q.id, q.required)}
+                      className={`w-full bg-white/[0.02] border px-3.5 md:px-4 py-2.5 md:py-3 rounded-xl text-[12px] md:text-[13px] text-white/90 focus:outline-none transition-all duration-300 appearance-none disabled:opacity-40 disabled:cursor-not-allowed font-light tracking-wide shadow-inner ${
+                        fieldErrors[q.id] 
+                          ? 'border-red-500/50 focus:border-red-500/50 bg-red-500/5' 
+                          : touchedFields[q.id] && formData[q.id]
+                            ? 'border-emerald-500/50 focus:border-emerald-500/50 bg-emerald-500/5'
+                            : 'border-white/[0.08] focus:border-primary-500/50 focus:bg-white/[0.04]'
+                      }`}
                     >
                       <option value="" disabled className="bg-[#020C1B] text-white/40">Select an option...</option>
                       {q.options?.map(opt => (
@@ -164,7 +221,14 @@ export function InteractiveFormCard({
                       disabled={isSubmitted}
                       value={formData[q.id] || ''}
                       onChange={(e) => handleChange(q.id, e.target.value)}
-                      className="w-full bg-white/[0.02] border border-white/[0.08] px-3.5 md:px-4 py-2.5 md:py-3 rounded-xl text-[12px] md:text-[13px] text-white/90 placeholder-white/20 focus:outline-none focus:border-primary-500/50 focus:bg-white/[0.04] transition-all duration-300 [color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed font-light tracking-wide shadow-inner"
+                      onBlur={() => handleBlur(q.id, q.required)}
+                      className={`w-full bg-white/[0.02] border px-3.5 md:px-4 py-2.5 md:py-3 rounded-xl text-[12px] md:text-[13px] text-white/90 placeholder-white/20 focus:outline-none transition-all duration-300 [color-scheme:dark] disabled:opacity-40 disabled:cursor-not-allowed font-light tracking-wide shadow-inner ${
+                        fieldErrors[q.id] 
+                          ? 'border-red-500/50 focus:border-red-500/50 bg-red-500/5' 
+                          : touchedFields[q.id] && formData[q.id]
+                            ? 'border-emerald-500/50 focus:border-emerald-500/50 bg-emerald-500/5'
+                            : 'border-white/[0.08] focus:border-primary-500/50 focus:bg-white/[0.04]'
+                      }`}
                     />
                     <CalendarIcon className="absolute right-3.5 md:right-4 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none transition-colors duration-300 group-focus-within/input:text-primary-500 w-3.5 h-3.5 md:w-4 md:h-4" />
                   </div>
@@ -187,6 +251,11 @@ export function InteractiveFormCard({
                       className="w-full h-1 md:h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary-500 hover:accent-primary-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                     />
                   </div>
+                )}
+                {fieldErrors[q.id] && (
+                  <p className="text-red-500 text-[10px] mt-1.5 ml-2 font-medium tracking-wide">
+                    {fieldErrors[q.id]}
+                  </p>
                 )}
               </div>
             </motion.div>

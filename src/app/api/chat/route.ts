@@ -1,4 +1,4 @@
-import { streamText, UIMessage, convertToModelMessages, generateId, smoothStream } from 'ai';
+import { streamText, UIMessage, convertToModelMessages, generateId } from 'ai';
 import { getModel } from '@/lib/ai/models';
 import { DISCOVERY_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { z } from 'zod';
@@ -8,8 +8,8 @@ import { chatMessages as dbMessages, starmapResponses, starmaps } from '@/lib/db
 import { eq, and, asc } from 'drizzle-orm';
 import { STAGE_NAMES } from '@/lib/constants';
 
-// Allow streaming responses up to 30 seconds
-export const maxDuration = 30;
+// Allow streaming responses up to 60 seconds
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
@@ -17,19 +17,6 @@ export async function POST(req: Request) {
     const { messages, modelId, starmapId }: { messages: UIMessage[]; modelId?: string; starmapId?: string } = body;
 
     console.log(`[Chat API] Turn started. Starmap: ${starmapId}, Messages: ${messages?.length}`);
-    
-    // Log the last few messages to see the state
-    if (messages && messages.length > 0) {
-      const lastFew = messages.slice(-2);
-      lastFew.forEach((m, i) => {
-        console.log(`  [Message ${i}] Role: ${m.role}, Parts: ${m.parts?.length}`);
-        m.parts?.forEach((p, pi) => {
-          if (p.type === 'text') console.log(`    [Part ${pi}] Text: ${p.text.substring(0, 50)}...`);
-          if (p.type === 'tool-invocation') console.log(`    [Part ${pi}] Tool: ${(p as any).toolName}, ID: ${(p as any).toolCallId}`);
-          if (p.type === 'tool-result') console.log(`    [Part ${pi}] Result for: ${(p as any).toolName}, ID: ${(p as any).toolCallId}`);
-        });
-      });
-    }
 
     // Check authentication
     const supabase = await createClient();
@@ -75,21 +62,12 @@ export async function POST(req: Request) {
       .replace('[STAGE_NAME]', STAGE_NAMES[currentStage - 1] || 'Unknown')
       .replace('[KNOWLEDGE_BASE_JSON]', knowledgeBaseContext || '[]');
 
-    // Compact history to prevent repetition and token bloat
-    // We keep user messages and assistant prose, but we can prune tool invocations 
-    // if the data is already confirmed in the Knowledge Base.
     const modelMessages = await convertToModelMessages(messages as UIMessage[]);
-    
-    // Only send the last 10 messages to keep it focused, but always include the latest state
-    const trimmedMessages = modelMessages.length > 12 
-      ? [modelMessages[0], ...modelMessages.slice(-11)] 
-      : modelMessages;
 
     const result = streamText({
       model: getModel(modelId),
       system: systemPrompt,
-      messages: trimmedMessages,
-      experimental_transform: smoothStream({ chunking: 'word', delayInMs: 30 }),
+      messages: modelMessages,
       tools: {
         askInteractiveQuestions: {
           description: 'Ask the user one or more structured questions using interactive UI elements (text, select, date, slider). During Stage 1, if you have enough info to name the project, include a "title" field in your next saveDiscoveryContext call.',
@@ -184,38 +162,23 @@ export async function POST(req: Request) {
     });
 
     return result.toUIMessageStreamResponse({
-      originalMessages: messages, // Crucial for ID reconciliation
+      originalMessages: messages,
       generateMessageId: () => generateId(),
-      onFinish: async ({ responseMessage }) => {
-        console.log(`[Chat API] Stream finished. Message: ${responseMessage.id}, Parts: ${responseMessage.parts.length}`);
-        if (starmapId && responseMessage) {
-          try {
-            const processedParts = responseMessage.parts.map(part => {
-              if (part.type === 'tool-result') {
-                const toolPart = part as any;
-                // CHECK IF CLIENT ALREADY PERSISTED THIS
-                const clientResult = toolPart.result;
-                const isPersisted = typeof clientResult === 'object' && clientResult?.persisted === true;
-                
-                console.log(`  [Chat API] Tool result ${toolPart.toolName}: isPersisted=${isPersisted}`);
-                
-                const toolName = toolPart.toolName;
-                const semanticResult = `[TOOL_RESULT tool="${toolName}" stage="${currentStage}" persisted="${isPersisted}"]\n${JSON.stringify(toolPart.result)}\n[/TOOL_RESULT]`;
-                return { ...toolPart, result: semanticResult };
-              }
-              return part;
-            });
-
+      onFinish: async ({ messages: allMessages }) => {
+        if (!starmapId) return;
+        
+        try {
+          for (const msg of allMessages) {
             await db.insert(dbMessages).values({
-              id: responseMessage.id,
+              id: msg.id,
               starmapId,
-              role: responseMessage.role,
-              parts: processedParts as any,
+              role: msg.role,
+              parts: msg.parts as any,
             }).onConflictDoNothing({ target: dbMessages.id });
-            console.log('[Chat API] Assistant message persisted');
-          } catch (err) {
-            console.error('[Chat API] Persistence Error:', err);
           }
+          console.log(`[Chat API] Persisted all ${allMessages.length} messages.`);
+        } catch (err) {
+          console.error('[Chat API] Persistence Error:', err);
         }
       }
     });

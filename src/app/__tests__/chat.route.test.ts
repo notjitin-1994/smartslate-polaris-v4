@@ -25,9 +25,24 @@ vi.mock('@/lib/ai/models', () => ({
   getModel: vi.fn(() => ({ type: 'mock-model' })),
 }));
 
+// Mock Database
+vi.mock('@/lib/db', () => ({
+  db: {
+    query: {
+      starmapResponses: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      starmaps: {
+        findFirst: vi.fn().mockResolvedValue({ id: 'test-starmap', context: {} }),
+      },
+    },
+    insert: vi.fn(() => ({ values: vi.fn(() => ({ onConflictDoNothing: vi.fn() })) })),
+  },
+}));
+
 // Mock Prompts
 vi.mock('@/lib/ai/prompts', () => ({
-  DISCOVERY_SYSTEM_PROMPT: 'Discovery system prompt',
+  DISCOVERY_SYSTEM_PROMPT: 'Discovery system prompt CURRENT STARMAP ID: [STARMAP_ID] [STAGE_NUMBER] [STAGE_NAME] [KNOWLEDGE_BASE_JSON]',
 }));
 
 describe('Chat API Route Integration', () => {
