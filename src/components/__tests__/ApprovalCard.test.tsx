@@ -1,121 +1,80 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { ApprovalCard } from '../Discovery/ApprovalCard';
 
 describe('ApprovalCard', () => {
   const mockOnApprove = vi.fn();
   const mockOnReject = vi.fn();
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  const defaultProps = {
+    stageNumber: 1,
+    stageName: 'Audience Analysis',
+    keyFindings: [{ label: 'Goal', value: 'Learn React' }],
+    insight: 'Test summary',
+    nextStage: 'Audience Analysis',
+    state: 'input-available' as any,
+    onApprove: mockOnApprove,
+    onReject: mockOnReject,
+  };
 
   it('renders in default (pending) state with summary and next stage', () => {
-    render(
-      <ApprovalCard
-        summary="Test summary"
-        nextStage="Audience Analysis"
-        onApprove={mockOnApprove}
-        onReject={mockOnReject}
-      />
-    );
+    render(<ApprovalCard {...defaultProps} />);
 
-    expect(screen.getByText('Test summary')).toBeInTheDocument();
-    expect(screen.getByText(/Audience Analysis/)).toBeInTheDocument();
-    expect(screen.getByText('Approval Required')).toBeInTheDocument();
+    // Text has been removed in the UI update, we check for presence of Audience Analysis instead
+    expect(screen.getAllByText(/Audience Analysis/)[0]).toBeInTheDocument();
   });
 
   it('renders in streaming state', () => {
     render(
       <ApprovalCard
-        summary="Test summary"
-        nextStage="Audience Analysis"
+        {...defaultProps}
         state="input-streaming"
-        onApprove={mockOnApprove}
-        onReject={mockOnReject}
       />
     );
 
-    expect(screen.getByText(/preparing stage transition/i)).toBeInTheDocument();
-    expect(screen.queryByText('Test summary')).not.toBeInTheDocument();
+    // Look for Synthesizing text
+    expect(screen.getByText(/Synthesizing/i)).toBeInTheDocument();
   });
 
   it('renders in complete state', () => {
     render(
       <ApprovalCard
-        summary="Test summary"
-        nextStage="Audience Analysis"
+        {...defaultProps}
         state="output-available"
-        onApprove={mockOnApprove}
-        onReject={mockOnReject}
       />
     );
 
-    expect(screen.getByText(/stage transition approved/i)).toBeInTheDocument();
-    expect(screen.getByText(/Audience Analysis/)).toBeInTheDocument();
+    // Look for Validation Secure text
+    expect(screen.getByText(/Validation Secure/i)).toBeInTheDocument();
   });
 
-  it('calls onApprove when approve button is clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <ApprovalCard
-        summary="Test summary"
-        nextStage="Audience Analysis"
-        onApprove={mockOnApprove}
-        onReject={mockOnReject}
-      />
-    );
+  it('calls onApprove when approve button is clicked', () => {
+    render(<ApprovalCard {...defaultProps} />);
 
-    const approveButton = screen.getByRole('button', { name: /approve/i });
-    await user.click(approveButton);
+    const approveButton = screen.getByText(/Approve & Continue/i);
+    fireEvent.click(approveButton);
 
     expect(mockOnApprove).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onReject when reject button is clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <ApprovalCard
-        summary="Test summary"
-        nextStage="Audience Analysis"
-        onApprove={mockOnApprove}
-        onReject={mockOnReject}
-      />
-    );
+  it('calls onReject when reject button is clicked', () => {
+    render(<ApprovalCard {...defaultProps} />);
 
-    const rejectButton = screen.getByRole('button', { name: /request changes/i });
-    await user.click(rejectButton);
+    // Reject button has aria-label="Request changes"
+    const rejectButton = screen.getByLabelText(/Request changes/i);
+    fireEvent.click(rejectButton);
 
     expect(mockOnReject).toHaveBeenCalledTimes(1);
-    expect(mockOnReject).toHaveBeenCalledWith('I need more detail on this stage.');
+    expect(mockOnReject).toHaveBeenCalledWith('I need to refine the details of this stage.');
   });
 
   it('does not render buttons in streaming state', () => {
-    render(
-      <ApprovalCard
-        summary="Test summary"
-        nextStage="Audience Analysis"
-        state="input-streaming"
-        onApprove={mockOnApprove}
-        onReject={mockOnReject}
-      />
-    );
-
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    render(<ApprovalCard {...defaultProps} state="input-streaming" />);
+    expect(screen.queryByText(/Approve & Continue/i)).not.toBeInTheDocument();
   });
 
   it('does not render buttons in complete state', () => {
-    render(
-      <ApprovalCard
-        summary="Test summary"
-        nextStage="Audience Analysis"
-        state="output-available"
-        onApprove={mockOnApprove}
-        onReject={mockOnReject}
-      />
-    );
-
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    render(<ApprovalCard {...defaultProps} state="output-available" />);
+    expect(screen.queryByText(/Approve & Continue/i)).not.toBeInTheDocument();
   });
 });

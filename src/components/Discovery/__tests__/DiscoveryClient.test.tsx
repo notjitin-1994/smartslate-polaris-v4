@@ -76,6 +76,6 @@ describe('DiscoveryClient', () => {
 
     render(<DiscoveryClient initialStarmap={mockStarmap as any} initialMessages={[]} />);
 
-    expect(screen.getByText('Initialize Discovery')).toBeDefined();
+    expect(screen.getByText('Initiate Discovery')).toBeDefined();
   });
 });
