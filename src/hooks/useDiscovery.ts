@@ -1,13 +1,14 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from 'ai';
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage, generateId } from 'ai';
 import { useState } from 'react';
+import { persistMessage } from '@/app/actions/chat';
 
 export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], initialStage: number = 1) {
   const [currentStage, setCurrentStage] = useState(initialStage);
 
-  const { messages, sendMessage, addToolOutput, status, error, stop } = useChat({
+  const { messages, sendMessage: chatSendMessage, addToolOutput, status, error, stop } = useChat({
     id: starmapId, // Explicitly provide starmapId as the chat ID
     messages: initialMessages, // load initial messages
     transport: new DefaultChatTransport({
@@ -19,27 +20,62 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   });
 
-  const approveStage = (toolCallId: string) => {
-    addToolOutput({
-      tool: 'requestApproval',
-      toolCallId,
-      output: { approved: true },
+  const sendMessage = async ({ text }: { text: string }) => {
+    if (!starmapId) return;
+    
+    const messageId = generateId();
+    const parts = [{ type: 'text' as const, text }];
+    
+    // 1. Persist to DB immediately
+    await persistMessage({
+      id: messageId,
+      starmapId,
+      role: 'user',
+      parts
     });
+
+    // 2. Trigger Chat with the same ID
+    chatSendMessage({
+      parts
+    }, {
+      body: {
+        messageId // Pass manual ID so server can match it if needed
+      }
+    });
+  };
+
+  const approveStage = async (toolCallId: string) => {
+    await submitToolResult('requestApproval', toolCallId, { approved: true });
     setCurrentStage((prev) => Math.min(prev + 1, 8));
   };
 
-  const rejectStage = (toolCallId: string, feedback: string) => {
-    addToolOutput({
-      tool: 'requestApproval',
-      toolCallId,
-      output: { approved: false, feedback },
-    });
+  const rejectStage = async (toolCallId: string, feedback: string) => {
+    await submitToolResult('requestApproval', toolCallId, { approved: false, feedback });
   };
 
-  const submitToolResult = (toolName: string, toolCallId: string, result: any) => {
+  const submitToolResult = async (toolName: string, toolCallId: string, result: any) => {
+    if (!starmapId) return;
+
     // Wrap result in the semantic TOOL_RESULT envelope
     const wrappedResult = `[TOOL_RESULT tool="${toolName}" stage="${currentStage}" persisted="false"]\n${JSON.stringify(result)}\n[/TOOL_RESULT]`;
     
+    const toolMessageId = generateId();
+    const parts = [{
+      type: 'tool-result' as const,
+      toolCallId,
+      toolName,
+      result: wrappedResult
+    }];
+
+    // 1. Persist tool message to DB
+    await persistMessage({
+      id: toolMessageId,
+      starmapId,
+      role: 'tool',
+      parts
+    });
+
+    // 2. Update UI State
     addToolOutput({
       tool: toolName,
       toolCallId,

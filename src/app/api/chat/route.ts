@@ -30,23 +30,8 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    // Save ALL non-assistant messages that aren't already persisted
-    if (starmapId && messages && messages.length > 0) {
-      try {
-        for (const m of messages) {
-          if (m.role !== 'assistant') {
-            await db.insert(dbMessages).values({
-              id: m.id,
-              starmapId,
-              role: m.role,
-              parts: m.parts as any,
-            }).onConflictDoNothing({ target: dbMessages.id });
-          }
-        }
-      } catch (err) {
-        console.error('[Chat API] Error in bulk message persistence:', err);
-      }
-    }
+    // Note: Non-assistant messages are now persisted immediately by the client via Server Actions.
+    // This prevents race conditions and ensures data integrity on mobile.
 
     // Fetch existing responses to provide as context
     let knowledgeBaseContext = '';
@@ -68,28 +53,28 @@ export async function POST(req: Request) {
       } else if (existingResponses.length > 0) {
         currentStage = Math.max(...existingResponses.map(r => r.stage));
       }
-if (existingResponses.length > 0) {
-  // Create a structured Knowledge Base for LLM parsing
-  const knowledgeBase = existingResponses.map(r => ({
-    stage: r.stage,
-    key: r.questionId,
-    value: r.answer
-  }));
 
-  knowledgeBaseContext = JSON.stringify(knowledgeBase, null, 2);
-}
-}
+      if (existingResponses.length > 0) {
+        // Create a structured Knowledge Base for LLM parsing
+        const knowledgeBase = existingResponses.map(r => ({
+          stage: r.stage,
+          key: r.questionId,
+          value: r.answer
+        }));
 
-const systemPrompt = DISCOVERY_SYSTEM_PROMPT
-  .replace('[STARMAP_ID]', starmapId || 'NOT_PROVIDED')
-  .replace('[STAGE_NUMBER]', currentStage.toString())
-  .replace('[STAGE_NAME]', STAGE_NAMES[currentStage - 1] || 'Unknown')
-  .replace('[KNOWLEDGE_BASE_JSON]', knowledgeBaseContext || '[]');
+        knowledgeBaseContext = JSON.stringify(knowledgeBase, null, 2);
+      }
+    }
 
-const result = streamText({
-  model: getModel(modelId),
-  system: systemPrompt,
+    const systemPrompt = DISCOVERY_SYSTEM_PROMPT
+      .replace('[STARMAP_ID]', starmapId || 'NOT_PROVIDED')
+      .replace('[STAGE_NUMBER]', currentStage.toString())
+      .replace('[STAGE_NAME]', STAGE_NAMES[currentStage - 1] || 'Unknown')
+      .replace('[KNOWLEDGE_BASE_JSON]', knowledgeBaseContext || '[]');
 
+    const result = streamText({
+      model: getModel(modelId),
+      system: systemPrompt,
       messages: await convertToModelMessages(messages as UIMessage[]),
       experimental_transform: smoothStream({ chunking: 'word', delayInMs: 15 }),
       tools: {
@@ -140,12 +125,12 @@ const result = streamText({
                   })
                   .where(eq(starmaps.id, starmapId));
                 
-                return `[TOOL_RESULT tool="requestApproval" stage="${stageNumber}" persisted="true"]\n${JSON.stringify({ approved: true, nextStageNumber })}\n[/TOOL_RESULT]`;
+                return { approved: true, nextStageNumber, persisted: true };
               } catch (err) {
                 console.error('[requestApproval] Persistence error:', err);
               }
             }
-            return `[TOOL_RESULT tool="requestApproval" stage="${stageNumber}" persisted="false"]\n${JSON.stringify({ approved: true })}\n[/TOOL_RESULT]`;
+            return { approved: true, persisted: false };
           }
         },
         // Generative UI Tool: requests specific numeric/selection parameters
@@ -177,7 +162,7 @@ const result = streamText({
               });
 
               if (!starmap) {
-                return `[TOOL_RESULT tool="saveDiscoveryContext" stage="${data.stage || 'unknown'}" persisted="false"]\n${JSON.stringify({ success: false, error: 'Unauthorized or Starmap not found' })}\n[/TOOL_RESULT]`;
+                return { success: false, error: 'Unauthorized or Starmap not found', persisted: false };
               }
 
               // Extract a human-readable answer if present, otherwise fallback to a summary
@@ -212,10 +197,10 @@ const result = streamText({
                   .where(eq(starmaps.id, toolStarmapId));
               }
 
-              return `[TOOL_RESULT tool="saveDiscoveryContext" stage="${data.stage || 1}" persisted="true"]\n${JSON.stringify({ success: true, saved: true })}\n[/TOOL_RESULT]`;
+              return { success: true, saved: true, persisted: true };
             } catch (error) {
               console.error('[saveDiscoveryContext] Error:', error);
-              return `[TOOL_RESULT tool="saveDiscoveryContext" stage="${data.stage || 1}" persisted="false"]\n${JSON.stringify({ success: false, error: String(error) })}\n[/TOOL_RESULT]`;
+              return { success: false, error: String(error), persisted: false };
             }
           },
         },
@@ -227,11 +212,27 @@ const result = streamText({
       onFinish: async ({ responseMessage }) => {
         if (starmapId && responseMessage) {
           try {
+            // Process parts to ensure structured tool results are semantic
+            const processedParts = responseMessage.parts.map(part => {
+              if (part.type === 'tool-result') {
+                const toolPart = part as any;
+                const isPersisted = toolPart.result?.persisted === true;
+                const toolName = toolPart.toolName;
+                const stage = currentStage;
+                
+                // Wrap in semantic envelope for LLM context on reload
+                const semanticResult = `[TOOL_RESULT tool="${toolName}" stage="${stage}" persisted="${isPersisted}"]\n${JSON.stringify(toolPart.result)}\n[/TOOL_RESULT]`;
+                
+                return { ...toolPart, result: semanticResult };
+              }
+              return part;
+            });
+
             await db.insert(dbMessages).values({
               id: responseMessage.id,
               starmapId,
               role: responseMessage.role,
-              parts: responseMessage.parts as any,
+              parts: processedParts as any,
             }).onConflictDoNothing({ target: dbMessages.id });
             console.log('[Chat API] Assistant message persisted:', responseMessage.id);
           } catch (err) {
