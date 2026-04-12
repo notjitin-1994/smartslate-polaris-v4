@@ -134,12 +134,11 @@ export function DiscoveryClient({
   // Dynamic Deduplication Engine
   const lastUniqueMessagesRef = useRef<UIMessage[]>([]);
   const uniqueMessages = useMemo(() => {
-    // Optimization: During active streaming, we return the previous stable unique list 
-    // concatenated with the current streaming message to maintain a stable reference
-    // for the majority of the message tree.
-    if (status === 'streaming') {
-      const otherMessages = lastUniqueMessagesRef.current.filter(m => m.id !== messages[messages.length - 1]?.id);
-      return [...otherMessages, messages[messages.length - 1]].filter(Boolean);
+    // Optimization: During active turns, return the raw messages array.
+    // This is fast and ensures the latest user message is visible instantly.
+    // Full deduplication will re-run once the turn finishes.
+    if (status === 'streaming' || status === 'submitted') {
+      return messages;
     }
 
     const messageMap = new Map<string, UIMessage>();

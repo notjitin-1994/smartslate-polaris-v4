@@ -39,18 +39,8 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
 
     const messageId = generateId();
     
-    // 1. Optimistic UI Update: Manually add user message to state
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: messageId,
-        role: 'user',
-        parts: [{ type: 'text', text }],
-        createdAt: new Date(),
-      } as UIMessage,
-    ]);
-
-    // 2. Trigger Server Turn (non-blocking)
+    // Trigger Server Turn (non-blocking)
+    // The AI SDK's sendMessage adds the user message to the state automatically.
     chatSendMessage({
       parts: [{ type: 'text', text }]
     }, {
@@ -58,7 +48,7 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
         messageId 
       }
     });
-  }, [starmapId, setMessages, chatSendMessage]);
+  }, [starmapId, chatSendMessage]);
 
   const approveStage = async (toolCallId: string) => {
     if (!starmapId) return;
