@@ -68,34 +68,28 @@ export async function POST(req: Request) {
       } else if (existingResponses.length > 0) {
         currentStage = Math.max(...existingResponses.map(r => r.stage));
       }
+if (existingResponses.length > 0) {
+  // Create a structured Knowledge Base for LLM parsing
+  const knowledgeBase = existingResponses.map(r => ({
+    stage: r.stage,
+    key: r.questionId,
+    value: r.answer
+  }));
 
-      if (existingResponses.length > 0) {
-        // Group by stage for cleaner prompt
-        const grouped = existingResponses.reduce((acc, r) => {
-          if (!acc[r.stage]) acc[r.stage] = [];
-          acc[r.stage].push(`${r.questionId}: ${r.answer}`);
-          return acc;
-        }, {} as Record<number, string[]>);
+  knowledgeBaseContext = JSON.stringify(knowledgeBase, null, 2);
+}
+}
 
-        knowledgeBaseContext = Object.entries(grouped)
-          .map(([stage, responses]) => `STAGE ${stage}:\n- ${responses.join('\n- ')}`)
-          .join('\n\n');
-      }
-    }
-
-    const systemPrompt = `
+const systemPrompt = `
 ${DISCOVERY_SYSTEM_PROMPT}
 
-### CURRENT OPERATIONAL STATUS
-- **Starmap ID:** ${starmapId || 'NOT_PROVIDED'}
-- **Current Stage:** ${currentStage} (${STAGE_NAMES[currentStage - 1] || 'Unknown'})
-- **Knowledge Base (Already Saved):**
-${knowledgeBaseContext || 'No data gathered yet.'}
+---
 
-### CRITICAL INSTRUCTION
-You MUST NOT re-ask questions for data already present in the Knowledge Base above. 
-If a stage is complete, use the \`requestApproval\` tool to move to the next stage immediately. 
-Your goal is to progress, not repeat.
+## RUNTIME STATE
+- **Starmap ID:** ${starmapId || 'NOT_PROVIDED'}
+- **Current Stage:** ${currentStage} — ${STAGE_NAMES[currentStage - 1] || 'Unknown'}
+- **Knowledge Base:**
+${knowledgeBaseContext || '[]'}
 `;
 
     const result = streamText({
