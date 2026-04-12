@@ -80,21 +80,16 @@ if (existingResponses.length > 0) {
 }
 }
 
-const systemPrompt = `
-${DISCOVERY_SYSTEM_PROMPT}
+const systemPrompt = DISCOVERY_SYSTEM_PROMPT
+  .replace('[STARMAP_ID]', starmapId || 'NOT_PROVIDED')
+  .replace('[STAGE_NUMBER]', currentStage.toString())
+  .replace('[STAGE_NAME]', STAGE_NAMES[currentStage - 1] || 'Unknown')
+  .replace('[KNOWLEDGE_BASE_JSON]', knowledgeBaseContext || '[]');
 
----
+const result = streamText({
+  model: getModel(modelId),
+  system: systemPrompt,
 
-## RUNTIME STATE
-- **Starmap ID:** ${starmapId || 'NOT_PROVIDED'}
-- **Current Stage:** ${currentStage} — ${STAGE_NAMES[currentStage - 1] || 'Unknown'}
-- **Knowledge Base:**
-${knowledgeBaseContext || '[]'}
-`;
-
-    const result = streamText({
-      model: getModel(modelId),
-      system: systemPrompt,
       messages: await convertToModelMessages(messages as UIMessage[]),
       experimental_transform: smoothStream({ chunking: 'word', delayInMs: 15 }),
       tools: {
@@ -145,12 +140,12 @@ ${knowledgeBaseContext || '[]'}
                   })
                   .where(eq(starmaps.id, starmapId));
                 
-                return { approved: true, nextStageNumber };
+                return `[TOOL_RESULT tool="requestApproval" stage="${stageNumber}" persisted="true"]\n${JSON.stringify({ approved: true, nextStageNumber })}\n[/TOOL_RESULT]`;
               } catch (err) {
                 console.error('[requestApproval] Persistence error:', err);
               }
             }
-            return { approved: true };
+            return `[TOOL_RESULT tool="requestApproval" stage="${stageNumber}" persisted="false"]\n${JSON.stringify({ approved: true })}\n[/TOOL_RESULT]`;
           }
         },
         // Generative UI Tool: requests specific numeric/selection parameters
@@ -182,7 +177,7 @@ ${knowledgeBaseContext || '[]'}
               });
 
               if (!starmap) {
-                return { success: false, saved: false, error: 'Unauthorized or Starmap not found' };
+                return `[TOOL_RESULT tool="saveDiscoveryContext" stage="${data.stage || 'unknown'}" persisted="false"]\n${JSON.stringify({ success: false, error: 'Unauthorized or Starmap not found' })}\n[/TOOL_RESULT]`;
               }
 
               // Extract a human-readable answer if present, otherwise fallback to a summary
@@ -217,10 +212,10 @@ ${knowledgeBaseContext || '[]'}
                   .where(eq(starmaps.id, toolStarmapId));
               }
 
-              return { success: true, saved: true };
+              return `[TOOL_RESULT tool="saveDiscoveryContext" stage="${data.stage || 1}" persisted="true"]\n${JSON.stringify({ success: true, saved: true })}\n[/TOOL_RESULT]`;
             } catch (error) {
               console.error('[saveDiscoveryContext] Error:', error);
-              return { success: false, saved: false, error: String(error) };
+              return `[TOOL_RESULT tool="saveDiscoveryContext" stage="${data.stage || 1}" persisted="false"]\n${JSON.stringify({ success: false, error: String(error) })}\n[/TOOL_RESULT]`;
             }
           },
         },

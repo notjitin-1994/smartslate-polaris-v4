@@ -211,9 +211,13 @@ export function DiscoveryClient({
 
     if (hasUnsubmittedForms) {
       const formDataString = JSON.stringify(unsubmittedForms, null, 2);
+      const fields = Object.keys(unsubmittedForms).join(',');
+      
+      const envelope = `[FORM_SUBMISSION stage="${currentStage}" fields="${fields}"]\n${formDataString}\n[/FORM_SUBMISSION]`;
+      
       finalMessage = input.trim() 
-        ? `${input}\n\n[User submitted the following form data along with this message]:\n${formDataString}`
-        : `[User submitted the following form data]:\n${formDataString}`;
+        ? `${input}\n\n${envelope}`
+        : envelope;
       
       // Resolve the pending tool calls
       Object.keys(unsubmittedForms).forEach(toolCallId => {

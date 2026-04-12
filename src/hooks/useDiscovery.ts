@@ -37,10 +37,13 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
   };
 
   const submitToolResult = (toolName: string, toolCallId: string, result: any) => {
+    // Wrap result in the semantic TOOL_RESULT envelope
+    const wrappedResult = `[TOOL_RESULT tool="${toolName}" stage="${currentStage}" persisted="false"]\n${JSON.stringify(result)}\n[/TOOL_RESULT]`;
+    
     addToolOutput({
       tool: toolName,
       toolCallId,
-      output: result,
+      output: wrappedResult,
     });
   };
 
