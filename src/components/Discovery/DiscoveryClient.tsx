@@ -297,24 +297,19 @@ export function DiscoveryClient({
     let finalMessage = input;
 
     if (hasUnsubmittedForms) {
-      const formDataString = JSON.stringify(unsubmittedForms, null, 2);
-      const fields = Object.keys(unsubmittedForms).join(',');
-      
-      const envelope = `[FORM_SUBMISSION stage="${currentStage}" fields="${fields}"]\n${formDataString}\n[/FORM_SUBMISSION]`;
-      
-      finalMessage = input.trim() 
-        ? `${input}\n\n${envelope}`
-        : envelope;
-      
-      // Submit results for all pending forms
-      for (const toolCallId of Object.keys(unsubmittedForms)) {
-        console.log('[DiscoveryClient] Clearing form:', toolCallId);
-        await submitToolResult('askInteractiveQuestions', toolCallId, { status: 'submitted_with_message', data: unsubmittedForms[toolCallId] });
+      // Submit results for all pending forms via native addToolOutput
+      for (const [toolCallId, formData] of Object.entries(unsubmittedForms)) {
+        console.log('[DiscoveryClient] Submitting form:', toolCallId);
+        await submitToolResult('askInteractiveQuestions', toolCallId, formData);
       }
       setUnsubmittedForms({});
     }
 
-    sendMessage({ text: finalMessage });
+    // Only send a text message if the user typed something
+    // Form data is handled via addToolOutput above — no need for text envelopes
+    if (finalMessage.trim()) {
+      sendMessage({ text: finalMessage });
+    }
     setInput('');
   };
 

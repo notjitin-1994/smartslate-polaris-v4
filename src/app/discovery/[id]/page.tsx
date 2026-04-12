@@ -3,6 +3,7 @@ import { starmaps, chatMessages } from '@/lib/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
+import { validateUIMessages, type UIMessage } from 'ai';
 import { DiscoveryClient } from '@/components/Discovery/DiscoveryClient';
 
 export default async function DiscoveryPage({
@@ -53,12 +54,23 @@ export default async function DiscoveryPage({
 
   // Use JSON.parse(JSON.stringify()) to guarantee clean serialization
   const serializedStarmap = JSON.parse(JSON.stringify(starmapData));
-  const serializedMessages = JSON.parse(JSON.stringify(history));
+
+  // Validate messages from DB against tool schemas to catch stale/mangled parts
+  // from old envelope format. Falls back to empty history on validation failure.
+  let validatedMessages: UIMessage[];
+  try {
+    validatedMessages = await validateUIMessages({
+      messages: JSON.parse(JSON.stringify(history)),
+    });
+  } catch (err) {
+    console.error('[DiscoveryPage] Message validation failed, starting fresh:', err);
+    validatedMessages = [];
+  }
 
   return (
     <DiscoveryClient 
       initialStarmap={serializedStarmap} 
-      initialMessages={serializedMessages} 
+      initialMessages={validatedMessages} 
     />
   );
 }
