@@ -50,10 +50,10 @@ export default async function DashboardPage() {
         <div className="absolute bottom-[-20%] left-[20%] h-[40%] w-[60%] rounded-full bg-primary-500/5 blur-[150px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-[var(--hero-padding-top)] pb-6 lg:py-8 flex flex-col flex-1 h-[calc(100vh-var(--nav-height-desktop))]">
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pt-[var(--hero-padding-top)] pb-6 lg:py-8 flex flex-col flex-1">
         
         {/* Premium Dashboard Header - More compact */}
-        <header className="mb-6 lg:mb-8 flex flex-col justify-end animate-in fade-in slide-in-from-bottom-4 duration-1000 shrink-0">
+        <header className="mb-6 lg:mb-8 flex flex-col justify-end animate-in fade-in slide-in-from-bottom-4 duration-1000">
           <div className="space-y-2">
             <div className="flex items-center gap-3 mb-2">
               <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
@@ -78,8 +78,8 @@ export default async function DashboardPage() {
           </div>
         </header>
 
-        {/* Top Section - Designed to fit viewport without scrolling */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-6 mb-6 lg:mb-8 shrink-0">
+        {/* Top Section */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-6 mb-6 lg:mb-8">
           
           {/* Main Action Card (Spans 8 cols on desktop) */}
           <div className="md:col-span-12 lg:col-span-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
