@@ -69,6 +69,37 @@ export async function POST(req: Request) {
       }
     }
 
+    // Sanitize messages to fix "Tool result is missing" protocol error
+    // If a tool-invocation doesn't have a corresponding tool-result, we append a dummy one 
+    // or filter it out to prevent the LLM provider from throwing an error.
+    const sanitizedMessages = messages.map(msg => {
+      if (msg.role === 'assistant' && msg.parts) {
+        const hasInvocations = msg.parts.some(p => p.type === 'tool-invocation');
+        if (hasInvocations) {
+          // Check if there's a subsequent message with the tool results
+          const resultMsg = messages.find(m => 
+            (m.role === 'assistant') && 
+            m.parts?.some(p => p.type === 'tool-result' && msg.parts?.some(inv => inv.type === 'tool-invocation' && inv.toolCallId === (p as any).toolCallId))
+          );
+          
+          // Alternatively, since AI SDK 5.0+, tool results are stored in the 'assistant' or 'tool' role.
+          // The easiest way to fix dangling tool calls is to filter out tool invocations that don't have a result in the entire message chain.
+          const allToolResults = messages.flatMap(m => m.parts?.filter(p => p.type === 'tool-result') || []);
+          
+          const validParts = msg.parts.filter(p => {
+            if (p.type === 'tool-invocation') {
+              const hasResult = allToolResults.some((res: any) => res.toolCallId === p.toolCallId);
+              return hasResult; // Only keep invocations that have a result
+            }
+            return true;
+          });
+          
+          return { ...msg, parts: validParts };
+        }
+      }
+      return msg;
+    }).filter(msg => !(msg.role === 'assistant' && msg.parts && msg.parts.length === 0)); // remove empty assistant messages
+
     const systemPrompt = DISCOVERY_SYSTEM_PROMPT
       .replace('[STARMAP_ID]', starmapId || 'NOT_PROVIDED')
       .replace('[STAGE_NUMBER]', currentStage.toString())
@@ -78,7 +109,7 @@ export async function POST(req: Request) {
     const result = streamText({
       model: getModel(modelId),
       system: systemPrompt,
-      messages: await convertToModelMessages(messages as UIMessage[]),
+      messages: await convertToModelMessages(sanitizedMessages as UIMessage[]),
       experimental_transform: smoothStream({ chunking: 'word', delayInMs: 30 }),
       tools: {
         askInteractiveQuestions: {

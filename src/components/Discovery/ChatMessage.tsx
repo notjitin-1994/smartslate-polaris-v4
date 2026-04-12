@@ -80,27 +80,47 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
             );
           }
 
-          if (part.type === 'tool-requestApproval' || (part.type === 'dynamic-tool' && part.toolName === 'requestApproval')) {
-            const input = part.input as any;
+          if (part.type === 'tool-requestApproval' || (part.type as any) === 'tool-invocation' && (part as any).toolName === 'requestApproval' || part.type === 'dynamic-tool' && part.toolName === 'requestApproval') {
+            const input = (part as any).args || (part as any).input;
             return (
               <ApprovalCard
-                key={part.toolCallId}
+                key={(part as any).toolCallId}
                 stageNumber={input?.stageNumber ?? 1}
                 stageName={input?.stageName ?? ''}
                 keyFindings={input?.keyFindings ?? []}
                 insight={input?.insight ?? ''}
                 nextStage={input?.nextStage ?? ''}
-                state={part.state}
-                onApprove={() => approveStage(part.toolCallId)}
-                onReject={(feedback: string) => rejectStage(part.toolCallId, feedback)}
+                state={(part as any).state}
+                onApprove={() => approveStage((part as any).toolCallId)}
+                onReject={(feedback: string) => rejectStage((part as any).toolCallId, feedback)}
               />
             );
           }
 
-          if (part.type === 'tool-askInteractiveQuestions' || (part.type === 'dynamic-tool' && part.toolName === 'askInteractiveQuestions')) {
-            const input = part.input as any;
-            const toolCallId = part.toolCallId;
-            const isSubmitted = part.state === 'output-available';
+          if (part.type === 'tool-askInteractiveQuestions' || (part.type as any) === 'tool-invocation' && (part as any).toolName === 'askInteractiveQuestions' || part.type === 'dynamic-tool' && part.toolName === 'askInteractiveQuestions') {
+            const input = (part as any).args || (part as any).input;
+            const toolCallId = (part as any).toolCallId;
+            const state = (part as any).state;
+            const isSubmitted = state === 'result' || state === 'output-available';
+
+            // Show a skeleton or loading state if the tool is streaming and questions aren't fully parsed yet
+            if (!input?.questions && state === 'input-streaming') {
+              return (
+                <div key={toolCallId} className="p-5 md:p-6 bg-[#020611]/40 border border-white/[0.08] rounded-[22.5px] md:rounded-[31px] my-2 md:my-4 max-w-2xl w-full animate-pulse">
+                   <div className="flex items-center gap-3 mb-6">
+                     <div className="w-10 h-10 rounded-full bg-white/5" />
+                     <div className="space-y-2">
+                       <div className="h-3 w-32 bg-white/5 rounded" />
+                       <div className="h-2 w-48 bg-white/5 rounded" />
+                     </div>
+                   </div>
+                   <div className="space-y-4">
+                     <div className="h-10 bg-white/5 rounded-xl" />
+                     <div className="h-10 bg-white/5 rounded-xl" />
+                   </div>
+                </div>
+              );
+            }
 
             if (!input?.questions) return null;
 
@@ -110,16 +130,18 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
                 toolCallId={toolCallId}
                 questions={input.questions}
                 isSubmitted={isSubmitted}
-                initialData={isSubmitted ? (part as any).output?.data : {}}
+                initialData={isSubmitted ? (part as any).result?.data || (part as any).output?.data : {}}
                 onSubmit={(data) => submitToolResult('askInteractiveQuestions', toolCallId, { status: 'submitted_via_form', data })}
                 onUpdate={(id, data) => onFormUpdate && onFormUpdate(id, data)}
               />
             );
           }
 
-          if (part.type === 'tool-setProjectParameters' || (part.type === 'dynamic-tool' && part.toolName === 'setProjectParameters')) {
-            const input = part.input as any;
-            const toolCallId = part.toolCallId;
+          if (part.type === 'tool-setProjectParameters' || (part.type as any) === 'tool-invocation' && (part as any).toolName === 'setProjectParameters' || part.type === 'dynamic-tool' && part.toolName === 'setProjectParameters') {
+            const input = (part as any).args || (part as any).input;
+            const toolCallId = (part as any).toolCallId;
+            const state = (part as any).state;
+            const isSubmitted = state === 'result' || state === 'output-available';
 
             if (!input) return null;
 
@@ -132,9 +154,9 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
                   <h3 className="text-[11px] font-semibold text-white/80 uppercase tracking-widest">Set {input.parameterName}</h3>
                 </div>
                 
-                {part.state === 'output-available' ? (
+                {isSubmitted ? (
                   <div className="p-3 rounded-xl bg-primary-500/5 border border-primary-500/10 text-primary-400 text-[11px] font-medium tracking-wide">
-                    Value set to: {(part as any).output?.value} {input.unit}
+                    Value set to: {(part as any).result?.value || (part as any).output?.value} {input.unit}
                   </div>
                 ) : (
                   <div className="space-y-4 pt-2">
@@ -163,6 +185,7 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
               </motion.div>
             );
           }
+
           
           return null;
         })}
