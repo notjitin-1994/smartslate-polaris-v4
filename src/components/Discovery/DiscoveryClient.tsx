@@ -542,7 +542,7 @@ export function DiscoveryClient({
       </AnimatePresence>
 
       {/* Main Content: Split Screen */}
-      <main className="flex-1 flex flex-col md:flex-row min-w-0 bg-[#020611] pt-16 md:pt-20">
+      <main className="flex-1 flex flex-col md:flex-row min-w-0 bg-[#020611] pt-16 md:pt-20 h-full overflow-hidden">
 
         {/* Phase 3 & 4: Finalization Panel */}
         {currentStage >= 8 || starmapData?.blueprint ? (
@@ -603,7 +603,7 @@ export function DiscoveryClient({
                 </div>
               )}
 
-              <AnimatePresence initial={false} mode="popLayout">
+              <AnimatePresence initial={false}>
                 {messages.map((m) => (
                   <ChatMessage 
                     key={m.id} 
