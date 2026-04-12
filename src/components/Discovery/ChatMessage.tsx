@@ -86,7 +86,7 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
 
             return (
               <motion.div
-                layout
+                layout={isStreaming ? false : "position"}
                 key={i}
                 className={`py-3.5 px-5 rounded-[20px] text-[13px] leading-[1.7] overflow-hidden tracking-wide font-light ${
                   isUser

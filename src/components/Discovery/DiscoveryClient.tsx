@@ -132,11 +132,14 @@ export function DiscoveryClient({
   } = useDiscovery(id as string, initialMessages, initialStage);
 
   // Dynamic Deduplication Engine
+  const lastUniqueMessagesRef = useRef<UIMessage[]>([]);
   const uniqueMessages = useMemo(() => {
-    // Optimization: Skip expensive scans during active streaming to prevent UI jank.
-    // The stream is short-lived; full deduplication will re-run once the stream finishes.
+    // Optimization: During active streaming, we return the previous stable unique list 
+    // concatenated with the current streaming message to maintain a stable reference
+    // for the majority of the message tree.
     if (status === 'streaming') {
-      return messages;
+      const otherMessages = lastUniqueMessagesRef.current.filter(m => m.id !== messages[messages.length - 1]?.id);
+      return [...otherMessages, messages[messages.length - 1]].filter(Boolean);
     }
 
     const messageMap = new Map<string, UIMessage>();
@@ -178,11 +181,15 @@ export function DiscoveryClient({
       }
     });
     
-    return Array.from(messageMap.values());
-  }, [messages]);
+    const result = Array.from(messageMap.values());
+    lastUniqueMessagesRef.current = result;
+    return result;
+  }, [messages, status]);
 
   // Client-side logging for message state
   useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
+    
     if (uniqueMessages.length > 0) {
       const last = uniqueMessages[uniqueMessages.length - 1];
       console.log(`[DiscoveryClient] State Synced. Unique: ${uniqueMessages.length}. Latest: ${last.role}, Status: ${status}`);
