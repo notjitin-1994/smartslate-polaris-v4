@@ -4,12 +4,12 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from 'ai';
 import { useState } from 'react';
 
-export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[]) {
-  const [currentStage, setCurrentStage] = useState(1);
+export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], initialStage: number = 1) {
+  const [currentStage, setCurrentStage] = useState(initialStage);
 
   const { messages, sendMessage, addToolOutput, status, error, stop } = useChat({
     id: starmapId, // Explicitly provide starmapId as the chat ID
-    messages: initialMessages,
+    initialMessages, // load initial messages
     transport: new DefaultChatTransport({
       api: '/api/chat',
       body: {

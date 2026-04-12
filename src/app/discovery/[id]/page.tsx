@@ -39,6 +39,7 @@ export default async function DiscoveryPage({
         where: eq(messages.starmapId, id),
         orderBy: [asc(messages.createdAt)],
       });
+      console.log(`[DiscoveryPage] Fetched ${chatMessages?.length ?? 0} messages for starmap ${id}`);
     }
   } catch (error) {
     console.error('[DiscoveryPage] Data Fetch Error:', error);
