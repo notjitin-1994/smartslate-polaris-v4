@@ -129,13 +129,57 @@ export function DiscoveryClient({
     currentStage,
   } = useDiscovery(id as string, initialMessages, initialStage);
 
+  // Dynamic Deduplication Engine
+  const uniqueMessages = useMemo(() => {
+    const messageMap = new Map<string, UIMessage>();
+    const completedToolCalls = new Set<string>();
+    
+    // First pass: Identify all completed tool results in the history
+    messages.forEach(msg => {
+      msg.parts?.forEach(part => {
+        if (part.type === 'tool-result' || (part as any).state === 'result') {
+          completedToolCalls.add((part as any).toolCallId);
+        }
+      });
+    });
+
+    // Second pass: Filter messages and parts
+    messages.forEach(msg => {
+      const existing = messageMap.get(msg.id);
+      
+      // Filter out parts that are redundant tool invocations for already completed calls
+      const cleanParts = msg.parts?.filter(part => {
+        const toolCallId = (part as any).toolCallId;
+        if (toolCallId && part.type === 'tool-invocation' && completedToolCalls.has(toolCallId)) {
+          // If we have a result for this elsewhere, we don't need the 'pending' invocation part
+          return false;
+        }
+        return true;
+      });
+
+      if (cleanParts && cleanParts.length === 0) return; // Skip empty messages
+
+      if (!existing) {
+        messageMap.set(msg.id, { ...msg, parts: cleanParts });
+      } else {
+        const existingParts = existing.parts?.length || 0;
+        const newParts = cleanParts?.length || 0;
+        if (newParts > existingParts) {
+          messageMap.set(msg.id, { ...msg, parts: cleanParts });
+        }
+      }
+    });
+    
+    return Array.from(messageMap.values());
+  }, [messages]);
+
   // Client-side logging for message state
   useEffect(() => {
-    if (messages.length > 0) {
-      const last = messages[messages.length - 1];
-      console.log(`[DiscoveryClient] Messages state updated. Count: ${messages.length}. Last role: ${last.role}, Status: ${status}`);
+    if (uniqueMessages.length > 0) {
+      const last = uniqueMessages[uniqueMessages.length - 1];
+      console.log(`[DiscoveryClient] State Synced. Unique: ${uniqueMessages.length}. Latest: ${last.role}, Status: ${status}`);
     }
-  }, [messages, status]);
+  }, [uniqueMessages, status]);
 
   const [input, setInput] = useState('');
   const [unsubmittedForms, setUnsubmittedForms] = useState<Record<string, any>>({});
@@ -637,7 +681,7 @@ export function DiscoveryClient({
               )}
 
               <AnimatePresence initial={false}>
-                {messages.map((m, index) => (
+                {uniqueMessages.map((m, index) => (
                   <ChatMessage 
                     key={m.id} 
                     message={m} 
@@ -645,7 +689,7 @@ export function DiscoveryClient({
                     rejectStage={rejectStage} 
                     submitToolResult={submitToolResult}
                     onFormUpdate={handleFormUpdate}
-                    isLast={index === messages.length - 1}
+                    isLast={index === uniqueMessages.length - 1}
                     isChatLoading={status === 'streaming' || status === 'submitted'}
                   />
                 ))}
