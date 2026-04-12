@@ -108,30 +108,6 @@ export async function POST(req: Request) {
             insight: z.string().describe('A brief, high-level strategic insight or "Strategy Nugget".'),
             nextStage: z.string().describe('The name of the next discovery stage.'),
           }),
-          // Persistence logic for the stage transition
-          execute: async ({ stageNumber, nextStage }) => {
-            if (starmapId) {
-              try {
-                // Pre-emptively update context with the new stage
-                const nextStageNumber = Math.min(stageNumber + 1, 7);
-                const starmap = await db.query.starmaps.findFirst({
-                  where: eq(starmaps.id, starmapId)
-                });
-                
-                await db.update(starmaps)
-                  .set({ 
-                    context: { ...starmap?.context, currentStage: nextStageNumber },
-                    updatedAt: new Date()
-                  })
-                  .where(eq(starmaps.id, starmapId));
-                
-                return { approved: true, nextStageNumber, persisted: true };
-              } catch (err) {
-                console.error('[requestApproval] Persistence error:', err);
-              }
-            }
-            return { approved: true, persisted: false };
-          }
         },
         // Generative UI Tool: requests specific numeric/selection parameters
         setProjectParameters: {

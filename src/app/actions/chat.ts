@@ -46,3 +46,41 @@ export async function persistMessage({
     return { success: false, error: String(error) };
   }
 }
+
+export async function updateStarmapStage({
+  starmapId,
+  stageNumber,
+}: {
+  starmapId: string;
+  stageNumber: number;
+}) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error('Unauthorized');
+
+    const starmap = await db.query.starmaps.findFirst({
+      where: and(
+        eq(starmaps.id, starmapId),
+        eq(starmaps.userId, user.id)
+      ),
+    });
+
+    if (!starmap) throw new Error('Starmap not found or unauthorized');
+
+    const nextStage = Math.min(stageNumber + 1, 7);
+
+    await db.update(starmaps)
+      .set({ 
+        context: { ...starmap.context, currentStage: nextStage },
+        updatedAt: new Date()
+      })
+      .where(eq(starmaps.id, starmapId));
+
+    return { success: true, nextStage };
+  } catch (error) {
+    console.error('[UpdateStarmapStage Action] Error:', error);
+    return { success: false, error: String(error) };
+  }
+}
