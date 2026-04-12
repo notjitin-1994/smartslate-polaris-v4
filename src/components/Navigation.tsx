@@ -3,27 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  Sparkles, 
-  Compass, 
   LogOut, 
   User, 
-  LayoutDashboard, 
   ChevronDown, 
   Settings, 
-  Bell,
-  Search,
-  Plus
+  Bell
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface NavItem {
-  href: string;
-  label: string;
-  icon: React.ReactNode;
-  requiresAuth: boolean;
-}
 
 export function Navigation() {
   const pathname = usePathname();
@@ -52,10 +40,6 @@ export function Navigation() {
     window.location.href = '/login';
   };
 
-  const navItems: NavItem[] = [
-    { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={16} />, requiresAuth: true },
-  ];
-
   // Don't show nav on login/signup pages
   if (pathname === '/login' || pathname === '/signup') {
     return null;
@@ -72,8 +56,8 @@ export function Navigation() {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
         <div className="flex items-center justify-between h-16 sm:h-20">
           
-          {/* LEFT: Branding & Search */}
-          <div className="flex items-center gap-8 lg:gap-12">
+          {/* LEFT: Branding */}
+          <div className="flex items-center">
             <Link href="/dashboard" className="flex items-center gap-2 group transition-transform active:scale-95">
               <div className="flex items-baseline relative">
                 <img src="/logo.png" alt="SmartSlate" className="h-5 w-auto lg:h-6 object-contain self-center" />
@@ -85,48 +69,10 @@ export function Navigation() {
               </div>
             </Link>
 
-            {/* Subtle Search Bar (Industry Standard for 2026) */}
-            <div className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-full bg-white/[0.03] border border-white/5 text-white/20 group focus-within:border-primary-500/30 focus-within:bg-white/[0.05] transition-all duration-300 w-[280px]">
-              <Search size={14} className="group-focus-within:text-primary-500 transition-colors" />
-              <input 
-                type="text" 
-                placeholder="Jump to blueprint..." 
-                className="bg-transparent border-none outline-none text-xs text-white placeholder-white/20 w-full font-sans font-light"
-              />
-              <span className="text-[10px] font-bold text-white/10 px-1.5 py-0.5 rounded border border-white/5 uppercase">⌘K</span>
-            </div>
+
           </div>
 
-          {/* CENTER: Navigation Links */}
-          <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
-              if (item.requiresAuth && !user) return null;
 
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`relative flex items-center gap-2.5 px-5 py-2 rounded-full text-[13px] font-bold tracking-wide uppercase transition-all duration-300 ${
-                    isActive
-                      ? 'text-primary-500'
-                      : 'text-white/40 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div 
-                      layoutId="nav-active"
-                      className="absolute inset-0 bg-primary-500/10 rounded-full border border-primary-500/20 shadow-[0_0_20px_rgba(167,218,219,0.1)]"
-                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  <span className="relative z-10">{item.icon}</span>
-                  <span className="relative z-10">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
 
           {/* RIGHT: Actions & Profile */}
           <div className="flex items-center gap-3 sm:gap-6">
