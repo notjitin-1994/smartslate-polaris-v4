@@ -68,7 +68,7 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
     await persistMessage({
       id: toolMessageId,
       starmapId,
-      role: 'tool',
+      role: 'assistant',
       parts
     });
 
@@ -99,7 +99,7 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
     await persistMessage({
       id: toolMessageId,
       starmapId,
-      role: 'tool',
+      role: 'assistant',
       parts
     });
 
@@ -128,7 +128,7 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
     await persistMessage({
       id: toolMessageId,
       starmapId,
-      role: 'tool',
+      role: 'assistant', // Map tool results to assistant role for UIMessage compatibility
       parts
     });
 
