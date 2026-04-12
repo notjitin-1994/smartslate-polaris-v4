@@ -65,7 +65,7 @@ export const starmapResponses = pgTable('starmap_responses', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-export const messages = pgTable('messages', {
+export const chatMessages = pgTable('chat_messages', {
   id: uuid('id').defaultRandom().primaryKey(),
   starmapId: uuid('starmap_id').references(() => starmaps.id, { onDelete: 'cascade' }).notNull(),
   role: text('role', { enum: ['system', 'user', 'assistant', 'data', 'tool'] }).notNull(),
@@ -76,7 +76,7 @@ export const messages = pgTable('messages', {
 
 export const starmapsRelations = relations(starmaps, ({ many }) => ({
   starmapResponses: many(starmapResponses),
-  messages: many(messages),
+  chatMessages: many(chatMessages),
 }));
 
 export const starmapResponsesRelations = relations(starmapResponses, ({ one }) => ({
@@ -86,9 +86,9 @@ export const starmapResponsesRelations = relations(starmapResponses, ({ one }) =
   }),
 }));
 
-export const messagesRelations = relations(messages, ({ one }) => ({
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
   starmap: one(starmaps, {
-    fields: [messages.starmapId],
+    fields: [chatMessages.starmapId],
     references: [starmaps.id],
   }),
 }));

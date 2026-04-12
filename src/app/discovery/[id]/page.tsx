@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { starmaps, messages } from '@/lib/db/schema';
+import { starmaps, chatMessages } from '@/lib/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
@@ -19,7 +19,7 @@ export default async function DiscoveryPage({
   }
 
   let starmapData;
-  let chatMessages;
+  let history;
 
   try {
     // Fetch starmap with responses on the server
@@ -35,11 +35,11 @@ export default async function DiscoveryPage({
 
     if (starmapData) {
       // Fetch initial chat messages on the server
-      chatMessages = await db.query.messages.findMany({
-        where: eq(messages.starmapId, id),
-        orderBy: [asc(messages.createdAt)],
+      history = await db.query.chatMessages.findMany({
+        where: eq(chatMessages.starmapId, id),
+        orderBy: [asc(chatMessages.createdAt)],
       });
-      console.log(`[DiscoveryPage] Fetched ${chatMessages?.length ?? 0} messages for starmap ${id}`);
+      console.log(`[DiscoveryPage] Fetched ${history?.length ?? 0} messages for starmap ${id}`);
     }
   } catch (error) {
     console.error('[DiscoveryPage] Data Fetch Error:', error);
@@ -52,7 +52,7 @@ export default async function DiscoveryPage({
 
   // Use JSON.parse(JSON.stringify()) to guarantee clean serialization
   const serializedStarmap = JSON.parse(JSON.stringify(starmapData));
-  const serializedMessages = JSON.parse(JSON.stringify(chatMessages || []));
+  const serializedMessages = JSON.parse(JSON.stringify(history || []));
 
   return (
     <DiscoveryClient 

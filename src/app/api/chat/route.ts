@@ -4,7 +4,7 @@ import { DISCOVERY_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/lib/db';
-import { messages as dbMessages, starmapResponses, starmaps } from '@/lib/db/schema';
+import { chatMessages as dbMessages, starmapResponses, starmaps } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 // Allow streaming responses up to 30 seconds

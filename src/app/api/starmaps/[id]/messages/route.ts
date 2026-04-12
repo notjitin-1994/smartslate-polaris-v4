@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { messages, starmaps } from '@/lib/db/schema';
+import { chatMessages, starmaps } from '@/lib/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
@@ -30,13 +30,13 @@ export async function GET(
     }
 
     // Fetch messages
-    const chatMessages = await db.query.messages.findMany({
-      where: eq(messages.starmapId, id),
-      orderBy: [asc(messages.createdAt)],
+    const chatHistory = await db.query.chatMessages.findMany({
+      where: eq(chatMessages.starmapId, id),
+      orderBy: [asc(chatMessages.createdAt)],
     });
 
     // Format for useChat initialMessages
-    const formattedMessages = chatMessages.map((m) => ({
+    const formattedMessages = chatHistory.map((m) => ({
       id: m.id,
       role: m.role,
       parts: m.parts,
