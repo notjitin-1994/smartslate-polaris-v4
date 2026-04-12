@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient as createBaseClient } from '@supabase/supabase-js';
 
 /**
  * Administrative Supabase Client (HTTP/3)
@@ -8,17 +8,16 @@ export function createAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  // Safety for Preview/Development environments where secrets might be missing
   if (!supabaseUrl || !serviceRoleKey) {
-    console.warn('[Supabase Admin] Missing credentials. Using placeholder client.');
-    return createClient(
-      'https://placeholder.supabase.co', 
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy', // Valid format JWT dummy
-      { auth: { persistSession: false } }
-    );
+    console.warn('[Supabase Admin] Missing credentials. Returning safe proxy.');
+    return new Proxy({} as any, {
+      get: (_, prop) => {
+        return () => Promise.resolve({ data: null, error: new Error('Admin client not configured') });
+      }
+    });
   }
 
-  return createClient(supabaseUrl, serviceRoleKey, {
+  return createBaseClient(supabaseUrl, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

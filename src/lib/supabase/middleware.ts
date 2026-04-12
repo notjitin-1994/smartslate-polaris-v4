@@ -1,6 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * Resilient Middleware Session Handler
+ * Skips initialization gracefully if environment variables are missing.
+ */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -9,7 +13,8 @@ export async function updateSession(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  // Build-time safety for middleware: prevent crashes if envs are missing
+  // Final Resilience: If keys are missing, just pass through the response
+  // rather than attempting to initialize the SDK and crashing.
   if (!supabaseUrl || !supabaseKey) {
     return supabaseResponse;
   }
