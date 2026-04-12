@@ -26,34 +26,31 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
     const messageId = generateId();
     const parts = [{ type: 'text' as const, text }];
     
-    // 1. Persist to DB immediately
-    await persistMessage({
-      id: messageId,
-      starmapId,
-      role: 'user',
-      parts
-    });
-
-    // 2. Trigger Chat with the same ID
+    // 1. TRIGGER UI IMMEDIATELY (Optimistic Update)
     chatSendMessage({
       parts
     }, {
       body: {
-        messageId // Pass manual ID so server can match it if needed
+        messageId // Pass manual ID so server can match it
       }
+    });
+
+    // 2. Persist to DB in background
+    persistMessage({
+      id: messageId,
+      starmapId,
+      role: 'user',
+      parts
+    }).catch(err => {
+      console.error('[Optimistic Update] User message persistence failed:', err);
+      // Here you could trigger a toast or notification to inform the user
     });
   };
 
   const approveStage = async (toolCallId: string) => {
     if (!starmapId) return;
     
-    // 1. Persist the stage update to database context
-    await updateStarmapStage({
-      starmapId,
-      stageNumber: currentStage
-    });
-
-    // 2. Submit the tool result (marked as persisted=true since we just saved the stage)
+    // 1. UPDATE UI IMMEDIATELY
     const result = { approved: true, stageAdvanced: true };
     const wrappedResult = `[TOOL_RESULT tool="requestApproval" stage="${currentStage}" persisted="true"]\n${JSON.stringify(result)}\n[/TOOL_RESULT]`;
     
@@ -65,14 +62,6 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
       result: wrappedResult
     }];
 
-    await persistMessage({
-      id: toolMessageId,
-      starmapId,
-      role: 'assistant',
-      parts
-    });
-
-    // 3. Update UI
     addToolOutput({
       tool: 'requestApproval',
       toolCallId,
@@ -80,11 +69,25 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
     });
     
     setCurrentStage((prev) => Math.min(prev + 1, 8));
+
+    // 2. PERSIST IN BACKGROUND
+    updateStarmapStage({
+      starmapId,
+      stageNumber: currentStage
+    }).catch(err => console.error('[Optimistic Update] Stage update failed:', err));
+
+    persistMessage({
+      id: toolMessageId,
+      starmapId,
+      role: 'assistant',
+      parts
+    }).catch(err => console.error('[Optimistic Update] Approval persistence failed:', err));
   };
 
   const rejectStage = async (toolCallId: string, feedback: string) => {
     if (!starmapId) return;
 
+    // 1. UPDATE UI IMMEDIATELY
     const result = { approved: false, feedback };
     const wrappedResult = `[TOOL_RESULT tool="requestApproval" stage="${currentStage}" persisted="false"]\n${JSON.stringify(result)}\n[/TOOL_RESULT]`;
     
@@ -96,24 +99,25 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
       result: wrappedResult
     }];
 
-    await persistMessage({
-      id: toolMessageId,
-      starmapId,
-      role: 'assistant',
-      parts
-    });
-
     addToolOutput({
       tool: 'requestApproval',
       toolCallId,
       output: wrappedResult,
     });
+
+    // 2. PERSIST IN BACKGROUND
+    persistMessage({
+      id: toolMessageId,
+      starmapId,
+      role: 'assistant',
+      parts
+    }).catch(err => console.error('[Optimistic Update] Rejection persistence failed:', err));
   };
 
   const submitToolResult = async (toolName: string, toolCallId: string, result: any) => {
     if (!starmapId) return;
 
-    // Wrap result in the semantic TOOL_RESULT envelope
+    // 1. UPDATE UI IMMEDIATELY
     const wrappedResult = `[TOOL_RESULT tool="${toolName}" stage="${currentStage}" persisted="false"]\n${JSON.stringify(result)}\n[/TOOL_RESULT]`;
     
     const toolMessageId = generateId();
@@ -124,20 +128,19 @@ export function useDiscovery(starmapId?: string, initialMessages?: UIMessage[], 
       result: wrappedResult
     }];
 
-    // 1. Persist tool message to DB
-    await persistMessage({
-      id: toolMessageId,
-      starmapId,
-      role: 'assistant', // Map tool results to assistant role for UIMessage compatibility
-      parts
-    });
-
-    // 2. Update UI State
     addToolOutput({
       tool: toolName,
       toolCallId,
       output: wrappedResult,
     });
+
+    // 2. PERSIST IN BACKGROUND
+    persistMessage({
+      id: toolMessageId,
+      starmapId,
+      role: 'assistant',
+      parts
+    }).catch(err => console.error('[Optimistic Update] Tool result persistence failed:', err));
   };
 
   return {
