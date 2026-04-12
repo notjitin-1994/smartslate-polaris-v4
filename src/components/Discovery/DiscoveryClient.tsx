@@ -218,6 +218,22 @@ export function DiscoveryClient({
     return () => viewport.removeEventListener('resize', handleResize);
   }, []);
 
+  // Intelligent Scroll Anchoring
+  useEffect(() => {
+    const container = messagesEndRef.current?.closest('.overflow-y-auto');
+    if (!container) return;
+
+    // Check if user is near the bottom (within 150px)
+    const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
+    
+    if (isAtBottom || status === 'submitted') {
+      messagesEndRef.current?.scrollIntoView({ 
+        behavior: status === 'streaming' ? 'auto' : 'smooth',
+        block: 'end'
+      });
+    }
+  }, [uniqueMessages, status]);
+
   // Auto-resize textarea
   useEffect(() => {
     const textarea = textareaRef.current;

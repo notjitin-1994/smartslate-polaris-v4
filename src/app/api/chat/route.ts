@@ -3,12 +3,10 @@ import { getModel } from '@/lib/ai/models';
 import { DISCOVERY_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import { db } from '@/lib/db';
-import { chatMessages as dbMessages, starmapResponses, starmaps } from '@/lib/db/schema';
-import { eq, and, asc } from 'drizzle-orm';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { STAGE_NAMES } from '@/lib/constants';
 
-// Vercel Edge Runtime for sub-millisecond cold starts and proximity
+// Vercel Edge Runtime for absolute speed and proximity
 export const runtime = 'edge';
 
 // Allow streaming responses up to 60 seconds
@@ -19,7 +17,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { messages, modelId, starmapId }: { messages: UIMessage[]; modelId?: string; starmapId?: string } = body;
 
-    // Check authentication
+    // 1. Initial Handshake & Auth (Parallelized)
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -27,20 +25,20 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    // Parallelize everything: DB Reads and Context Building
-    const [existingResponses, starmap] = await Promise.all([
+    // 2. Fetch Context using Edge-Safe HTTP Client (Admin for speed and bypassing RLS complexity)
+    const admin = createAdminClient();
+    
+    const [responsesData, starmapData] = await Promise.all([
       starmapId 
-        ? db.query.starmapResponses.findMany({
-            where: eq(starmapResponses.starmapId, starmapId),
-            orderBy: [asc(starmapResponses.stage)],
-          })
-        : Promise.resolve([]),
+        ? admin.from('starmap_responses').select('*').eq('starmap_id', starmapId).order('stage', { ascending: true })
+        : Promise.resolve({ data: [] }),
       starmapId
-        ? db.query.starmaps.findFirst({
-            where: eq(starmaps.id, starmapId)
-          })
-        : Promise.resolve(null)
+        ? admin.from('starmaps').select('*').eq('id', starmapId).single()
+        : Promise.resolve({ data: null })
     ]);
+
+    const existingResponses = responsesData.data || [];
+    const starmap = starmapData.data;
 
     let currentStage = 1;
     let knowledgeBaseContext = '[]';
@@ -54,7 +52,7 @@ export async function POST(req: Request) {
     if (existingResponses.length > 0) {
       const knowledgeBase = existingResponses.map(r => ({
         stage: r.stage,
-        key: r.questionId,
+        key: r.question_id, // Map database snake_case to KB camelCase if needed
         value: r.answer
       }));
       knowledgeBaseContext = JSON.stringify(knowledgeBase, null, 2);
@@ -66,7 +64,6 @@ export async function POST(req: Request) {
       .replace('[STAGE_NAME]', STAGE_NAMES[currentStage - 1] || 'Unknown')
       .replace('[KNOWLEDGE_BASE_JSON]', knowledgeBaseContext);
 
-    // Convert history once
     const modelMessages = await convertToModelMessages(messages as UIMessage[]);
 
     const result = streamText({
@@ -74,7 +71,6 @@ export async function POST(req: Request) {
       system: systemPrompt,
       messages: modelMessages,
       maxRetries: 5,
-      // NO smoothStream here - handled on client for Claude-like feel
       tools: {
         askInteractiveQuestions: {
           description: 'Ask the user structured questions using interactive UI. ZERO prose preambles.',
@@ -106,7 +102,7 @@ export async function POST(req: Request) {
           }),
         },
         setProjectParameters: {
-          description: 'Set project parameters. ZERO prose preambles.',
+          description: 'Request the user to set specific project parameters.',
           inputSchema: z.object({
             parameterName: z.string(),
             min: z.number().default(0),
@@ -123,24 +119,25 @@ export async function POST(req: Request) {
           }),
           execute: async ({ starmapId: toolStarmapId, data }) => {
             try {
-              const starmapRef = await db.query.starmaps.findFirst({
-                where: and(eq(starmaps.id, toolStarmapId), eq(starmaps.userId, user.id))
-              });
+              // Verify ownership via admin client
+              const { data: starmapRef } = await admin.from('starmaps').select('*').eq('id', toolStarmapId).eq('user_id', user.id).single();
 
               if (!starmapRef) return { success: false, error: 'Unauthorized', persisted: false };
 
               const readableAnswer = data.answer || data.value || data.response || JSON.stringify(data);
               const questionId = data.questionId || data.id || 'discovery_context';
               
-              await db.insert(starmapResponses).values({
-                starmapId: toolStarmapId,
-                questionId,
+              // Persist response
+              await admin.from('starmap_responses').insert({
+                starmap_id: toolStarmapId,
+                question_id: questionId,
                 answer: String(readableAnswer),
                 stage: data.stage as number || 1,
-                modelMessageId: data.messageId as string,
+                model_message_id: data.messageId as string,
                 metadata: data,
               });
 
+              // Update context
               const contextUpdates: Record<string, unknown> = {};
               if (data.role) contextUpdates.role = data.role;
               if (data.goals || data.goal) contextUpdates.goals = data.goals || data.goal;
@@ -149,13 +146,11 @@ export async function POST(req: Request) {
               if (data.title) contextUpdates.title = data.title;
 
               if (Object.keys(contextUpdates).length > 0) {
-                await db.update(starmaps)
-                  .set({ 
-                    context: { ...starmapRef.context, ...contextUpdates },
-                    ...(data.title ? { title: data.title } : {}),
-                    updatedAt: new Date()
-                  })
-                  .where(eq(starmaps.id, toolStarmapId));
+                await admin.from('starmaps').update({ 
+                  context: { ...starmapRef.context, ...contextUpdates },
+                  ...(data.title ? { title: data.title } : {}),
+                  updated_at: new Date().toISOString()
+                }).eq('id', toolStarmapId);
               }
 
               return { success: true, saved: true, persisted: true };
@@ -173,13 +168,14 @@ export async function POST(req: Request) {
       onFinish: async ({ messages: allMessages }) => {
         if (!starmapId) return;
         try {
+          // Parallelized Edge-Safe Persistence
           await Promise.all(allMessages.map(msg => 
-            db.insert(dbMessages).values({
+            admin.from('chat_messages').upsert({
               id: msg.id,
-              starmapId,
+              starmap_id: starmapId,
               role: msg.role,
               parts: msg.parts as any,
-            }).onConflictDoNothing({ target: dbMessages.id })
+            })
           ));
         } catch (err) {
           console.error('[Chat API] Persistence Error:', err);

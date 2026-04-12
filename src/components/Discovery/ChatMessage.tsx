@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, memo } from 'react';
 import { motion } from 'framer-motion';
 import { User, Sparkles } from 'lucide-react';
 import { UIMessage } from 'ai';
@@ -20,7 +20,7 @@ interface ChatMessageProps {
   isChatLoading?: boolean;
 }
 
-export function ChatMessage({ message, approveStage, rejectStage, submitToolResult, onFormUpdate, isLast, isChatLoading }: ChatMessageProps) {
+export const ChatMessage = memo(function ChatMessage({ message, approveStage, rejectStage, submitToolResult, onFormUpdate, isLast, isChatLoading }: ChatMessageProps) {
   const isUser = message.role === 'user';
   // Stable streaming check: only stream the last assistant message if the chat is actively processing
   const isStreaming = !isUser && isLast && isChatLoading;
@@ -214,4 +214,4 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
       </div>
     </motion.div>
   );
-}
+});
