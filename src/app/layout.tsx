@@ -24,6 +24,9 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "SmartSlate Polaris — Agentic Discovery Workspace",
   description: "Human-in-the-loop AI-powered strategy discovery platform",
+  icons: {
+    icon: "/logo-swirl.png",
+  },
 };
 
 export default function RootLayout({
