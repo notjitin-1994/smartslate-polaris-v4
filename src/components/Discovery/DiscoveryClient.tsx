@@ -683,31 +683,35 @@ export function DiscoveryClient({
                   )}
                 </AnimatePresence>
 
-                <textarea
-                  ref={textareaRef}
-                  name="chat-input"
-                  rows={1}
-                  disabled={isAILoading}
-                  autoComplete="off"
-                  className="w-full bg-transparent px-5 md:px-6 py-3.5 md:py-4 pr-14 md:pr-16 text-[13px] text-white placeholder-white/10 outline-none transition-all disabled:opacity-50 font-sans font-light resize-none scrollbar-none"
-                  value={input}
-                  placeholder="Reply to Polaris interface..."
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit(e as any);
-                    }
-                  }}
-                />
-                
-                <button
-                  type="submit"
-                  disabled={isAILoading || (!input.trim() && !hasPendingData)}
-                  className="absolute right-2 md:right-3 bottom-2.5 md:bottom-3 w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white text-[#020C1B] flex items-center justify-center hover:bg-primary-500 transition-all shadow-xl disabled:opacity-10 active:scale-95 z-20"
-                >
-                  <Send className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={3} />
-                </button>
+                <div className="flex items-center relative">
+                  <textarea
+                    ref={textareaRef}
+                    name="chat-input"
+                    rows={1}
+                    disabled={isAILoading}
+                    autoComplete="off"
+                    className="w-full bg-transparent px-5 md:px-6 py-3.5 md:py-4 pr-14 md:pr-16 text-[13px] text-white placeholder-white/10 outline-none transition-all disabled:opacity-50 font-sans font-light resize-none scrollbar-none"
+                    value={input}
+                    placeholder="Reply to Polaris interface..."
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit(e as any);
+                      }
+                    }}
+                  />
+                  
+                  <div className="absolute right-2 md:right-3 flex items-center h-full">
+                    <button
+                      type="submit"
+                      disabled={isAILoading || (!input.trim() && !hasPendingData)}
+                      className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white text-[#020C1B] flex items-center justify-center hover:bg-primary-500 transition-all shadow-xl disabled:opacity-10 active:scale-95"
+                    >
+                      <Send className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={3} />
+                    </button>
+                  </div>
+                </div>
               </div>
             </form>
             <div className="mt-3 md:mt-4 text-center">
