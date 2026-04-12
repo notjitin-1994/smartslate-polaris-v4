@@ -17,9 +17,9 @@ export async function POST(req: Request) {
     const { messages, modelId, starmapId }: { messages: UIMessage[]; modelId?: string; starmapId?: string } = body;
 
     console.log('[Chat API] Request received:', { 
-      modelId, 
       starmapId, 
-      messageCount: messages?.length
+      messageCount: messages?.length,
+      lastRole: messages?.[messages.length - 1]?.role
     });
 
     // Check authentication
@@ -30,21 +30,21 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    // Save the latest message if starmapId is provided and it's not assistant (assistant saved in onFinish)
+    // Save ALL non-assistant messages that aren't already persisted
     if (starmapId && messages && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage && lastMessage.role !== 'assistant') {
-        try {
-          await db.insert(dbMessages).values({
-            id: lastMessage.id,
-            starmapId,
-            role: lastMessage.role,
-            parts: lastMessage.parts as any,
-          }).onConflictDoNothing({ target: dbMessages.id });
-          console.log(`[Chat API] ${lastMessage.role} message persisted:`, lastMessage.id);
-        } catch (err) {
-          console.error(`[Chat API] Error saving ${lastMessage.role} message:`, err);
+      try {
+        for (const m of messages) {
+          if (m.role !== 'assistant') {
+            await db.insert(dbMessages).values({
+              id: m.id,
+              starmapId,
+              role: m.role,
+              parts: m.parts as any,
+            }).onConflictDoNothing({ target: dbMessages.id });
+          }
         }
+      } catch (err) {
+        console.error('[Chat API] Error in bulk message persistence:', err);
       }
     }
 
@@ -58,9 +58,18 @@ export async function POST(req: Request) {
         orderBy: [asc(starmapResponses.stage)],
       });
 
-      if (existingResponses.length > 0) {
+      // Also check starmap context for explicit stage
+      const starmap = await db.query.starmaps.findFirst({
+        where: eq(starmaps.id, starmapId)
+      });
+
+      if (starmap?.context?.currentStage) {
+        currentStage = Number(starmap.context.currentStage);
+      } else if (existingResponses.length > 0) {
         currentStage = Math.max(...existingResponses.map(r => r.stage));
-        
+      }
+
+      if (existingResponses.length > 0) {
         // Group by stage for cleaner prompt
         const grouped = existingResponses.reduce((acc, r) => {
           if (!acc[r.stage]) acc[r.stage] = [];
@@ -125,6 +134,30 @@ Your goal is to progress, not repeat.
             insight: z.string().describe('A brief, high-level strategic insight or "Strategy Nugget".'),
             nextStage: z.string().describe('The name of the next discovery stage.'),
           }),
+          // Persistence logic for the stage transition
+          execute: async ({ stageNumber, nextStage }) => {
+            if (starmapId) {
+              try {
+                // Pre-emptively update context with the new stage
+                const nextStageNumber = Math.min(stageNumber + 1, 7);
+                const starmap = await db.query.starmaps.findFirst({
+                  where: eq(starmaps.id, starmapId)
+                });
+                
+                await db.update(starmaps)
+                  .set({ 
+                    context: { ...starmap?.context, currentStage: nextStageNumber },
+                    updatedAt: new Date()
+                  })
+                  .where(eq(starmaps.id, starmapId));
+                
+                return { approved: true, nextStageNumber };
+              } catch (err) {
+                console.error('[requestApproval] Persistence error:', err);
+              }
+            }
+            return { approved: true };
+          }
         },
         // Generative UI Tool: requests specific numeric/selection parameters
         setProjectParameters: {
