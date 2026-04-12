@@ -56,7 +56,9 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
         {message.parts?.map((part, i) => {
           if (part.type === 'text') {
             const cleaned = cleanText(part.text);
-            if (!cleaned && isUser) return null; // Don't render empty user bubbles
+            
+            // Fix: Don't render empty text bubbles (happens when AI only sends tool calls)
+            if (!cleaned) return null;
 
             return (
               <motion.div

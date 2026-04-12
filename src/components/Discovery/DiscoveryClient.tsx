@@ -130,21 +130,41 @@ export function DiscoveryClient({
 
   const [input, setInput] = useState('');
   const [unsubmittedForms, setUnsubmittedForms] = useState<Record<string, any>>({});
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when messages change
+  // Auto-resize textarea
   useEffect(() => {
-    if (scrollRef.current) {
-      const timer = setTimeout(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTo({
-            top: scrollRef.current.scrollHeight,
-            behavior: 'smooth'
-          });
-        }
-      }, 100);
-      return () => clearTimeout(timer);
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
     }
+  }, [input]);
+
+  // Intelligent Scroll Anchoring
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(() => {
+      // Stay at bottom if we were already close to the bottom
+      const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
+      if (isAtBottom || isAILoading) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: isAILoading ? 'auto' : 'smooth'
+        });
+      }
+    });
+
+    const scrollContent = container.firstElementChild;
+    if (scrollContent) observer.observe(scrollContent);
+
+    return () => observer.disconnect();
   }, [messages, isAILoading]);
+
+  const hasPendingData = Object.keys(unsubmittedForms).length > 0;
 
   // Fetch starmap data for blueprint preview (with initial data)
   const { data: starmapData } = useQuery({
@@ -644,22 +664,51 @@ export function DiscoveryClient({
             <form onSubmit={handleSubmit} className="relative max-w-2xl mx-auto group">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/20 via-transparent to-secondary-500/20 rounded-[2rem] opacity-0 group-focus-within:opacity-100 transition-opacity duration-700 blur-xl pointer-events-none" />
               
-              <input
-                name="chat-input"
-                disabled={isAILoading}
-                autoComplete="off"
-                className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 md:px-6 py-3.5 md:py-4 pr-14 md:pr-16 text-[13px] text-white placeholder-white/10 focus:ring-1 focus:ring-primary-500/30 focus:border-primary-500/30 outline-none transition-all disabled:opacity-50 font-sans font-light relative z-10 shadow-inner"
-                value={input}
-                placeholder="Reply to Polaris interface..."
-                onChange={(e) => setInput(e.target.value)}
-              />
-              <button
-                type="submit"
-                disabled={isAILoading || (!input.trim() && Object.keys(unsubmittedForms).length === 0)}
-                className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white text-[#020C1B] flex items-center justify-center hover:bg-primary-500 transition-all shadow-xl disabled:opacity-10 active:scale-95 z-20"
-              >
-                <Send className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={3} />
-              </button>
+              <div className="relative z-10 flex flex-col w-full bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden focus-within:border-primary-500/30 focus-within:ring-1 focus-within:ring-primary-500/30 transition-all">
+                {/* Pending Data Indicator */}
+                <AnimatePresence>
+                  {hasPendingData && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="bg-primary-500/10 border-b border-primary-500/20 px-4 py-2 flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-1 h-1 rounded-full bg-primary-500 animate-pulse" />
+                        <span className="text-[9px] font-black text-primary-400 uppercase tracking-widest">Active Data Uplink</span>
+                      </div>
+                      <span className="text-[8px] text-primary-500/60 font-bold uppercase tracking-tighter">Will be sent with next message</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <textarea
+                  ref={textareaRef}
+                  name="chat-input"
+                  rows={1}
+                  disabled={isAILoading}
+                  autoComplete="off"
+                  className="w-full bg-transparent px-5 md:px-6 py-3.5 md:py-4 pr-14 md:pr-16 text-[13px] text-white placeholder-white/10 outline-none transition-all disabled:opacity-50 font-sans font-light resize-none scrollbar-none"
+                  value={input}
+                  placeholder="Reply to Polaris interface..."
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit(e as any);
+                    }
+                  }}
+                />
+                
+                <button
+                  type="submit"
+                  disabled={isAILoading || (!input.trim() && !hasPendingData)}
+                  className="absolute right-2 md:right-3 bottom-2.5 md:bottom-3 w-9 h-9 md:w-10 md:h-10 rounded-xl bg-white text-[#020C1B] flex items-center justify-center hover:bg-primary-500 transition-all shadow-xl disabled:opacity-10 active:scale-95 z-20"
+                >
+                  <Send className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={3} />
+                </button>
+              </div>
             </form>
             <div className="mt-3 md:mt-4 text-center">
               <p className="text-[7px] md:text-[8px] text-white/10 uppercase tracking-[0.4em] font-black">Quantum Discovery Protocol v4.0</p>

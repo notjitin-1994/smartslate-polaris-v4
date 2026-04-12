@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Sparkles, ChevronDown, Calendar as CalendarIcon } from 'lucide-react';
+import { Check, Sparkles, ChevronDown, Calendar as CalendarIcon, ShieldCheck, Loader2 } from 'lucide-react';
 
 export type QuestionType = 'text' | 'textarea' | 'select' | 'slider' | 'date';
 
@@ -35,38 +35,65 @@ export function InteractiveFormCard({
   initialData = {}
 }: InteractiveFormCardProps) {
   const [formData, setFormData] = useState<Record<string, any>>(initialData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     onUpdate(toolCallId, formData);
-  }, [formData, toolCallId]); // Removed onUpdate from dependency array to prevent infinite loops
+  }, [formData, toolCallId]);
 
   const handleChange = (id: string, value: any) => {
     setFormData(prev => ({ ...prev, [id]: value }));
   };
 
-  const handleSubmit = () => {
-    onSubmit(formData);
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Glassmorphic high-tech styling
   return (
-    <motion.div layout className="glass-card p-[1.5px] rounded-[24px] md:rounded-[32px] border border-white/[0.08] bg-[#020611]/80 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] w-full max-w-2xl relative overflow-hidden group my-2 md:my-4">
+    <motion.div 
+      layout 
+      className={`glass-card p-[1.5px] rounded-[24px] md:rounded-[32px] border transition-all duration-500 ${
+        isSubmitted 
+          ? 'border-primary-500/20 bg-primary-500/[0.02]' 
+          : 'border-white/[0.08] bg-[#020611]/80'
+      } backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] w-full max-w-2xl relative overflow-hidden group my-2 md:my-4`}
+    >
       {/* Decorative gradient orb */}
       <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary-500/10 rounded-full blur-[60px] pointer-events-none transition-opacity duration-700 opacity-50 group-hover:opacity-100" />
-      <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-secondary-500/10 rounded-full blur-[60px] pointer-events-none transition-opacity duration-700 opacity-50 group-hover:opacity-100" />
-
+      
       <div className="p-5 md:p-6 relative z-10 bg-[#020611]/40 rounded-[22.5px] md:rounded-[31px] h-full">
-        <div className="flex items-center gap-2.5 md:gap-3 mb-5 md:mb-6">
-          <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-primary-400 shadow-[0_0_20px_rgba(167,218,219,0.05)]">
-            <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={2} />
+        <div className="flex items-center justify-between mb-5 md:mb-6">
+          <div className="flex items-center gap-2.5 md:gap-3">
+            <div className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
+              isSubmitted ? 'bg-primary-500/20 text-primary-400' : 'bg-white/[0.03] text-primary-400'
+            } border border-white/[0.08] shadow-[0_0_20px_rgba(167,218,219,0.05)]`}>
+              {isSubmitted ? <ShieldCheck size={16} /> : <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={2} />}
+            </div>
+            <div>
+              <h3 className="text-[13px] md:text-[14px] font-heading font-semibold text-white/95 tracking-wide leading-tight">
+                {isSubmitted ? 'Protocol Synced' : 'Information Request'}
+              </h3>
+              <p className="text-[10px] md:text-[11px] text-white/40 font-light tracking-wide mt-0.5">
+                {isSubmitted ? 'Data verified and logged to Starmap' : 'Please provide details to proceed'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-[13px] md:text-[14px] font-heading font-semibold text-white/95 tracking-wide leading-tight">Information Request</h3>
-            <p className="text-[10px] md:text-[11px] text-white/40 font-light tracking-wide mt-0.5">Please provide details to proceed</p>
-          </div>
+          
+          {isSubmitting && (
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary-500/10 border border-primary-500/20">
+              <Loader2 size={10} className="animate-spin text-primary-500" />
+              <span className="text-[8px] font-black text-primary-500 uppercase tracking-widest">Transmitting</span>
+            </div>
+          )}
         </div>
 
-        <div className="space-y-5 md:space-y-6">
+        <div className={`space-y-5 md:space-y-6 transition-opacity duration-500 ${isSubmitting ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
           {questions.map((q, idx) => (
             <motion.div 
               layout
