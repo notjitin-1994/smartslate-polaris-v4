@@ -71,7 +71,10 @@ export function ChatMessage({ message, approveStage, rejectStage, submitToolResu
             return (
               <ApprovalCard
                 key={part.toolCallId}
-                summary={input?.summary ?? ''}
+                stageNumber={input?.stageNumber ?? 1}
+                stageName={input?.stageName ?? ''}
+                keyFindings={input?.keyFindings ?? []}
+                insight={input?.insight ?? ''}
                 nextStage={input?.nextStage ?? ''}
                 state={part.state}
                 onApprove={() => approveStage(part.toolCallId)}

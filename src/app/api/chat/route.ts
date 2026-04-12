@@ -113,9 +113,16 @@ Your goal is to progress, not repeat.
         },
         // Client-side tool: requests user approval before transitioning stages
         requestApproval: {
-          description: 'Request user approval before proceeding to the next discovery stage.',
+          description: 'Request user approval before proceeding to the next discovery stage. Use this to summarize findings and confirm direction.',
           inputSchema: z.object({
-            summary: z.string().describe('A summary of what has been learned in the current stage.'),
+            stageNumber: z.number().describe('The current stage number being completed.'),
+            stageName: z.string().describe('The name of the current stage.'),
+            keyFindings: z.array(z.object({
+              label: z.string().describe('Short label for the finding (e.g. "Primary Goal").'),
+              value: z.string().describe('The identified value or decision.'),
+              icon: z.string().optional().describe('A Lucide icon name to represent this finding (e.g. "target", "users", "zap", "file-text", "activity").'),
+            })).describe('Array of structured findings for the infographic.'),
+            insight: z.string().describe('A brief, high-level strategic insight or "Strategy Nugget".'),
             nextStage: z.string().describe('The name of the next discovery stage.'),
           }),
         },
