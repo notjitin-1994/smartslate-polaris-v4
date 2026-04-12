@@ -34,6 +34,7 @@ export const starmaps = pgTable('starmaps', {
     goals?: string;
     industry?: string;
     organization?: string;
+    currentStage?: number;
   }>(),
 
   // The generated blueprint content
