@@ -8,6 +8,9 @@ import { chatMessages as dbMessages, starmapResponses, starmaps } from '@/lib/db
 import { eq, and, asc } from 'drizzle-orm';
 import { STAGE_NAMES } from '@/lib/constants';
 
+// Vercel Edge Runtime for sub-millisecond cold starts and proximity
+export const runtime = 'edge';
+
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
 
@@ -15,8 +18,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { messages, modelId, starmapId }: { messages: UIMessage[]; modelId?: string; starmapId?: string } = body;
-
-    console.log(`[Chat API] Turn started. Starmap: ${starmapId}, Messages: ${messages?.length}`);
 
     // Check authentication
     const supabase = await createClient();
@@ -26,43 +27,46 @@ export async function POST(req: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    // Fetch existing responses and starmap context in parallel to minimize TTFT
-    let knowledgeBaseContext = '';
+    // Parallelize everything: DB Reads and Context Building
+    const [existingResponses, starmap] = await Promise.all([
+      starmapId 
+        ? db.query.starmapResponses.findMany({
+            where: eq(starmapResponses.starmapId, starmapId),
+            orderBy: [asc(starmapResponses.stage)],
+          })
+        : Promise.resolve([]),
+      starmapId
+        ? db.query.starmaps.findFirst({
+            where: eq(starmaps.id, starmapId)
+          })
+        : Promise.resolve(null)
+    ]);
+
     let currentStage = 1;
+    let knowledgeBaseContext = '[]';
 
-    if (starmapId) {
-      const [existingResponses, starmap] = await Promise.all([
-        db.query.starmapResponses.findMany({
-          where: eq(starmapResponses.starmapId, starmapId),
-          orderBy: [asc(starmapResponses.stage)],
-        }),
-        db.query.starmaps.findFirst({
-          where: eq(starmaps.id, starmapId)
-        })
-      ]);
+    if (starmap?.context?.currentStage) {
+      currentStage = Number(starmap.context.currentStage);
+    } else if (existingResponses.length > 0) {
+      currentStage = Math.max(...existingResponses.map(r => r.stage));
+    }
 
-      if (starmap?.context?.currentStage) {
-        currentStage = Number(starmap.context.currentStage);
-      } else if (existingResponses.length > 0) {
-        currentStage = Math.max(...existingResponses.map(r => r.stage));
-      }
-
-      if (existingResponses.length > 0) {
-        const knowledgeBase = existingResponses.map(r => ({
-          stage: r.stage,
-          key: r.questionId,
-          value: r.answer
-        }));
-        knowledgeBaseContext = JSON.stringify(knowledgeBase, null, 2);
-      }
+    if (existingResponses.length > 0) {
+      const knowledgeBase = existingResponses.map(r => ({
+        stage: r.stage,
+        key: r.questionId,
+        value: r.answer
+      }));
+      knowledgeBaseContext = JSON.stringify(knowledgeBase, null, 2);
     }
 
     const systemPrompt = DISCOVERY_SYSTEM_PROMPT
       .replace('[STARMAP_ID]', starmapId || 'NOT_PROVIDED')
       .replace('[STAGE_NUMBER]', currentStage.toString())
       .replace('[STAGE_NAME]', STAGE_NAMES[currentStage - 1] || 'Unknown')
-      .replace('[KNOWLEDGE_BASE_JSON]', knowledgeBaseContext || '[]');
+      .replace('[KNOWLEDGE_BASE_JSON]', knowledgeBaseContext);
 
+    // Convert history once
     const modelMessages = await convertToModelMessages(messages as UIMessage[]);
 
     const result = streamText({
@@ -70,9 +74,10 @@ export async function POST(req: Request) {
       system: systemPrompt,
       messages: modelMessages,
       maxRetries: 5,
+      // NO smoothStream here - handled on client for Claude-like feel
       tools: {
         askInteractiveQuestions: {
-          description: 'Ask the user one or more structured questions using interactive UI elements (text, select, date, slider). During Stage 1, if you have enough info to name the project, include a "title" field in your next saveDiscoveryContext call.',
+          description: 'Ask the user structured questions using interactive UI. ZERO prose preambles.',
           inputSchema: z.object({
             questions: z.array(z.object({
               id: z.string(),
@@ -87,7 +92,7 @@ export async function POST(req: Request) {
           }),
         },
         requestApproval: {
-          description: 'Request user approval before proceeding to the next discovery stage.',
+          description: 'Request approval for stage transition. ZERO prose preambles.',
           inputSchema: z.object({
             stageNumber: z.number(),
             stageName: z.string(),
@@ -101,7 +106,7 @@ export async function POST(req: Request) {
           }),
         },
         setProjectParameters: {
-          description: 'Request the user to set specific project parameters.',
+          description: 'Set project parameters. ZERO prose preambles.',
           inputSchema: z.object({
             parameterName: z.string(),
             min: z.number().default(0),
@@ -111,18 +116,18 @@ export async function POST(req: Request) {
           }),
         },
         saveDiscoveryContext: {
-          description: 'Save gathered discovery data to the database.',
+          description: 'Save gathered discovery data.',
           inputSchema: z.object({
             starmapId: z.string().uuid(),
             data: z.record(z.string(), z.unknown()),
           }),
           execute: async ({ starmapId: toolStarmapId, data }) => {
             try {
-              const starmap = await db.query.starmaps.findFirst({
+              const starmapRef = await db.query.starmaps.findFirst({
                 where: and(eq(starmaps.id, toolStarmapId), eq(starmaps.userId, user.id))
               });
 
-              if (!starmap) return { success: false, error: 'Unauthorized', persisted: false };
+              if (!starmapRef) return { success: false, error: 'Unauthorized', persisted: false };
 
               const readableAnswer = data.answer || data.value || data.response || JSON.stringify(data);
               const questionId = data.questionId || data.id || 'discovery_context';
@@ -146,7 +151,7 @@ export async function POST(req: Request) {
               if (Object.keys(contextUpdates).length > 0) {
                 await db.update(starmaps)
                   .set({ 
-                    context: { ...starmap.context, ...contextUpdates },
+                    context: { ...starmapRef.context, ...contextUpdates },
                     ...(data.title ? { title: data.title } : {}),
                     updatedAt: new Date()
                   })
@@ -155,7 +160,6 @@ export async function POST(req: Request) {
 
               return { success: true, saved: true, persisted: true };
             } catch (error) {
-              console.error('[saveDiscoveryContext] Error:', error);
               return { success: false, error: String(error), persisted: false };
             }
           },
@@ -168,9 +172,7 @@ export async function POST(req: Request) {
       generateMessageId: () => generateId(),
       onFinish: async ({ messages: allMessages }) => {
         if (!starmapId) return;
-        
         try {
-          // Parallelize all inserts to prevent blocking stream cleanup
           await Promise.all(allMessages.map(msg => 
             db.insert(dbMessages).values({
               id: msg.id,
@@ -179,14 +181,12 @@ export async function POST(req: Request) {
               parts: msg.parts as any,
             }).onConflictDoNothing({ target: dbMessages.id })
           ));
-          console.log(`[Chat API] Persisted all ${allMessages.length} messages in parallel.`);
         } catch (err) {
           console.error('[Chat API] Persistence Error:', err);
         }
       }
     });
   } catch (error) {
-    console.error('[Chat API] Fatal Error:', error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Internal Server Error' }), { status: 500 });
   }
 }

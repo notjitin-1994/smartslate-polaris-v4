@@ -125,4 +125,14 @@ const CONSTRAINTS = `
 - If message history exceeds 12 turns, treat all turns older than the last requestApproval confirmation as ARCHIVED. Reference the KB instead of re-reading archived turns. Never summarize archived turns aloud.
 `;
 
-export const DISCOVERY_SYSTEM_PROMPT = IDENTITY + RUNTIME_STATE + CONTEXT_HIERARCHY + TOOLS + PIPELINE + RULES + CONSTRAINTS;
+const SPEED_RULES = `
+---
+
+## LATENCY & CONCISION RULES (CRITICAL)
+- **Zero Preambles:** Never start responses with "Certainly," "Okay," "I understand," or "Based on the context." 
+- **Direct Execution:** Go straight to the tool call or the core nugget. 
+- **Lightning Output:** Keep prose strictly under 25 words. Every extra word delays the user experience.
+- **Immediate Value:** Prioritize the tool call. The UI will handle the framing.
+`;
+
+export const DISCOVERY_SYSTEM_PROMPT = IDENTITY + RUNTIME_STATE + CONTEXT_HIERARCHY + TOOLS + PIPELINE + RULES + CONSTRAINTS + SPEED_RULES;

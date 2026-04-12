@@ -46,8 +46,8 @@ export const modelRegistry = createProviderRegistry({
  * getModel('gateway:anthropic/claude-sonnet-4.5')
  */
 export function getModel(modelId?: string) {
-  // Use gateway as default for all supported models if provided
-  const defaultModel = (process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'gateway:anthropic/claude-sonnet-4.5').trim();
+  // Use gateway:zhipu/glm-4-air as default for lightning speed
+  const defaultModel = (process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'gateway:zhipu/glm-4-air').trim();
   const selectedModel = (modelId || defaultModel).trim();
   
   return modelRegistry.languageModel(selectedModel as Parameters<typeof modelRegistry.languageModel>[0]);
