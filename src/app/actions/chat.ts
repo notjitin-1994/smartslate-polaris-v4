@@ -1,23 +1,17 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
-import { db } from '@/lib/db';
-import { starmaps } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { getSafeAdminClient } from '@/lib/supabase/registry';
 
+/**
+ * Resilient Stage Metadata Update
+ * Uses the registry client to prevent constructor crashes.
+ */
 export async function updateStarmapStage({ starmapId, stageNumber }: { starmapId: string, stageNumber: number }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Unauthorized');
-
-  // Direct DB update for metadata
-  await db.update(starmaps)
-    .set({ 
-      context: sql`jsonb_set(context, '{currentStage}', ${stageNumber}::text::jsonb)`,
-      updatedAt: new Date() 
-    })
-    .where(eq(starmaps.id, starmapId));
+  const admin = getSafeAdminClient();
+  
+  // Use snake_case for direct Supabase/PostgREST interaction
+  await admin.from('starmaps').update({ 
+    context: { currentStage: stageNumber },
+    updated_at: new Date().toISOString() 
+  }).eq('id', starmapId);
 }
-
-// Helper for SQL fragment since we're using Drizzle
-import { sql } from 'drizzle-orm';
