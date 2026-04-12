@@ -748,7 +748,7 @@ export function DiscoveryClient({
                   />
                 ))}
 
-                {status === 'submitted' && (
+                {(status === 'submitted' || (status === 'streaming' && messages[messages.length - 1]?.role !== 'assistant')) && (
                   <motion.div
                     key="ghost-bubble"
                     initial={{ opacity: 0, y: 10 }}

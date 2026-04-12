@@ -18,6 +18,10 @@ export function StreamingMarkdown({ content, isStreaming = false }: StreamingMar
       >
         {content}
       </Streamdown>
+      
+      {isStreaming && (
+        <span className="inline-block w-[2px] h-[1.1em] bg-primary-500/80 ml-1 animate-pulse align-middle shadow-[0_0_8px_rgba(167,218,219,0.5)]" />
+      )}
     </div>
   );
 }
