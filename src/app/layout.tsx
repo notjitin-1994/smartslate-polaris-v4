@@ -35,9 +35,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark h-dvh overflow-hidden">
       <body
-        className={`${quicksand.variable} ${lato.variable} ${jetbrainsMono.variable} font-sans min-h-screen antialiased`}
+        className={`${quicksand.variable} ${lato.variable} ${jetbrainsMono.variable} font-sans h-dvh overflow-hidden antialiased bg-[#020C1B]`}
       >
         <div className="noise-overlay" />
         <Providers>

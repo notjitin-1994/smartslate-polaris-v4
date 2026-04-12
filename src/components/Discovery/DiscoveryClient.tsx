@@ -441,7 +441,7 @@ export function DiscoveryClient({
   );
 
   return (
-    <div className="flex h-screen bg-[#020611] text-[#e0e0e0] overflow-hidden">
+    <div className="flex h-full bg-[#020611] text-[#e0e0e0] overflow-hidden">
       {/* Mobile Top Header */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-[#020611]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-4 z-[100] md:hidden">
         <div className="flex items-center gap-3">
