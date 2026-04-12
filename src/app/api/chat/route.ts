@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { db } from '@/lib/db';
 import { chatMessages as dbMessages, starmapResponses, starmaps } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
+import { STAGE_NAMES } from '@/lib/constants';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -47,9 +48,50 @@ export async function POST(req: Request) {
       }
     }
 
+    // Fetch existing responses to provide as context
+    let knowledgeBaseContext = '';
+    let currentStage = 1;
+
+    if (starmapId) {
+      const existingResponses = await db.query.starmapResponses.findMany({
+        where: eq(starmapResponses.starmapId, starmapId),
+        orderBy: [asc(starmapResponses.stage)],
+      });
+
+      if (existingResponses.length > 0) {
+        currentStage = Math.max(...existingResponses.map(r => r.stage));
+        
+        // Group by stage for cleaner prompt
+        const grouped = existingResponses.reduce((acc, r) => {
+          if (!acc[r.stage]) acc[r.stage] = [];
+          acc[r.stage].push(`${r.questionId}: ${r.answer}`);
+          return acc;
+        }, {} as Record<number, string[]>);
+
+        knowledgeBaseContext = Object.entries(grouped)
+          .map(([stage, responses]) => `STAGE ${stage}:\n- ${responses.join('\n- ')}`)
+          .join('\n\n');
+      }
+    }
+
+    const systemPrompt = `
+${DISCOVERY_SYSTEM_PROMPT}
+
+### CURRENT OPERATIONAL STATUS
+- **Starmap ID:** ${starmapId || 'NOT_PROVIDED'}
+- **Current Stage:** ${currentStage} (${STAGE_NAMES[currentStage - 1] || 'Unknown'})
+- **Knowledge Base (Already Saved):**
+${knowledgeBaseContext || 'No data gathered yet.'}
+
+### CRITICAL INSTRUCTION
+You MUST NOT re-ask questions for data already present in the Knowledge Base above. 
+If a stage is complete, use the \`requestApproval\` tool to move to the next stage immediately. 
+Your goal is to progress, not repeat.
+`;
+
     const result = streamText({
       model: getModel(modelId),
-      system: `${DISCOVERY_SYSTEM_PROMPT}\n\nCURRENT STARMAP ID: ${starmapId || 'NOT_PROVIDED'}`,
+      system: systemPrompt,
       messages: await convertToModelMessages(messages as UIMessage[]),
       experimental_transform: smoothStream({ chunking: 'word', delayInMs: 15 }),
       tools: {

@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { type UIMessage } from 'ai';
 import { motion, AnimatePresence } from 'framer-motion';
+import { STAGE_NAMES } from '@/lib/constants';
 
 interface StarmapData {
   id: string;
@@ -24,16 +25,6 @@ interface StarmapData {
     stage: number;
   }>;
 }
-
-const stageNames = [
-  'Discovery & Goals',
-  'Audience Analysis',
-  'Constraints & Resources',
-  'Content Strategy',
-  'Delivery Channels',
-  'Assessment Methods',
-  'Success Metrics',
-];
 
 const stageIcons = [
   Target,
@@ -283,7 +274,7 @@ export function DiscoveryClient({
           </div>
 
           <div className="space-y-1">
-            {stageNames.map((name, i) => {
+            {STAGE_NAMES.map((name, i) => {
               const isActive = currentStage === i + 1;
               const isCompleted = currentStage > i + 1;
               const isLocked = currentStage < i + 1;
@@ -337,7 +328,7 @@ export function DiscoveryClient({
             <motion.div 
               className="h-full bg-primary-500 shadow-[0_0_10px_rgba(167,218,219,0.5)]"
               initial={{ width: 0 }}
-              animate={{ width: `${(currentStage / stageNames.length) * 100}%` }}
+              animate={{ width: `${(currentStage / STAGE_NAMES.length) * 100}%` }}
               transition={{ duration: 1, ease: "circOut" }}
             />
           </div>
@@ -532,7 +523,7 @@ export function DiscoveryClient({
                     .sort(([a], [b]) => parseInt(a) - parseInt(b))
                     .map(([stageStr, responses]) => {
                       const stage = parseInt(stageStr);
-                      const stageName = stageNames[stage - 1];
+                      const stageName = STAGE_NAMES[stage - 1];
                       const StageIcon = stageIcons[stage - 1];
                       
                       return (
