@@ -1,4 +1,4 @@
-import { streamText, UIMessage, convertToModelMessages, generateId } from 'ai';
+import { streamText, UIMessage, convertToModelMessages, generateId, smoothStream } from 'ai';
 import { getModel } from '@/lib/ai/models';
 import { DISCOVERY_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { z } from 'zod';
@@ -51,6 +51,7 @@ export async function POST(req: Request) {
       model: getModel(modelId),
       system: `${DISCOVERY_SYSTEM_PROMPT}\n\nCURRENT STARMAP ID: ${starmapId || 'NOT_PROVIDED'}`,
       messages: await convertToModelMessages(messages as UIMessage[]),
+      experimental_transform: smoothStream({ chunking: 'word', delayInMs: 15 }),
       tools: {
         // Generative UI Tool: asks interactive questions using forms
         askInteractiveQuestions: {
