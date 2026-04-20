@@ -240,56 +240,230 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
 
   return (
     <>
-      {/* Desktop Sidebar - Revamped with Framer Motion */}
       <motion.aside
         initial={false}
         animate={{ 
-          width: sidebarCollapsed ? 64 : 320,
+          width: sidebarCollapsed ? 64 : 288, // 72 * 4 = 288px (w-72)
           transition: { type: 'spring', stiffness: 300, damping: 35 }
         }}
-        className="fixed top-0 left-0 z-[999] hidden h-[100dvh] flex-col overflow-hidden border-r border-white/5 bg-surface shadow-xl backdrop-blur-xl md:flex"
+        className="fixed top-0 left-0 z-[999] hidden h-[100dvh] flex-col overflow-hidden transition-all duration-300 ease-out glass-sidebar md:flex"
         aria-label="Main navigation"
         role="navigation"
       >
         {/* Header with Brand & Toggle */}
         <div
-          className={`flex items-center bg-surface/80 sticky top-0 z-20 backdrop-blur-sm ${
-            sidebarCollapsed ? 'justify-center px-2 py-4' : 'justify-between px-6 py-5'
+          className={`flex items-center sticky top-0 z-20 ${
+            sidebarCollapsed ? 'justify-center px-2 py-3' : 'justify-between px-6 py-5'
           }`}
         >
-          <AnimatePresence mode="wait">
-            {!sidebarCollapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2 }}
-                className="flex-shrink-0"
-              >
-                <Brand />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {!sidebarCollapsed && (
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.3 }}
+              className="flex-shrink-0"
+            >
+              <Brand />
+            </motion.div>
+          )}
           
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
             type="button"
             onClick={() => setSidebarCollapsed((v) => !v)}
             aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="group relative flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-secondary/50"
+            className={`text-text-secondary hover:text-foreground hover:bg-foreground/5 p-2 rounded-lg transition-all ${
+              sidebarCollapsed ? 'h-8 w-8' : 'h-9 w-9'
+            }`}
             title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             <IconSidebarToggle
-              className={`h-5 w-5 transition-transform duration-500 ${sidebarCollapsed ? 'rotate-180' : ''}`}
+              className={`h-5 w-5 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`}
             />
-          </motion.button>
+          </button>
         </div>
 
         {/* Navigation Content Area */}
-        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto scrollbar-thin">
-          {sidebarCollapsed ? (
-            /* COLLAPSED VIEW: Icon-only optimized navigation */
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto custom-scrollbar relative z-10">
+          {!sidebarCollapsed && (
+            <div className="px-4 py-4 space-y-6">
+              {isActiveBlueprintPage && blueprintData ? (
+                <BlueprintSidebarContent {...blueprintData} />
+              ) : isSettingsPage ? (
+                <SettingsSidebarContent />
+              ) : isFeaturesPage ? (
+                <DocumentationSidebarContent />
+              ) : (
+                <nav className="space-y-6" aria-label="Primary navigation">
+                  {/* Quick Access Section */}
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setQuickAccessExpanded(!quickAccessExpanded)}
+                      className="w-full flex items-center justify-between px-3 py-1 text-primary hover:text-foreground transition-colors group"
+                    >
+                      <h2 className="font-heading text-xs font-bold tracking-wider uppercase">
+                        Quick Access
+                      </h2>
+                      <svg
+                        className={`h-3.5 w-3.5 transition-transform duration-300 ${quickAccessExpanded ? 'rotate-90' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+
+                    <AnimatePresence initial={false}>
+                      {quickAccessExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3, ease: 'easeInOut' }}
+                          className="overflow-hidden space-y-1"
+                        >
+                          {collapsedQuickItems.map(
+                            ({ title, icon: Icon, path, badge, badgeType, disabled, isExternal }) => {
+                              const isActive = pathname === path;
+                              const content = (
+                                <>
+                                  <Icon className="h-5 w-5 shrink-0" />
+                                  <span className="flex-1 truncate text-left">{title}</span>
+                                  {badge && (
+                                    <span
+                                      className={`inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase transition-all duration-200 ${
+                                        badgeType === 'admin'
+                                          ? 'border-indigo-500/40 bg-indigo-500/10 text-indigo-400 shadow-indigo-500/20'
+                                          : 'border-primary/40 bg-primary/10 text-primary shadow-primary/20 shadow'
+                                      }`}
+                                    >
+                                      {badge}
+                                    </span>
+                                  )}
+                                </>
+                              );
+
+                              const className = `group focus-visible:ring-secondary/50 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-base font-medium transition-all duration-200 relative ${
+                                isActive
+                                  ? 'bg-primary/10 text-primary shadow-sm font-bold'
+                                  : disabled
+                                    ? 'text-text-disabled cursor-not-allowed'
+                                    : 'text-text-secondary hover:text-foreground hover:bg-white/5 active:scale-[0.98]'
+                              }`;
+
+                              return isExternal ? (
+                                <a
+                                  key={title}
+                                  href={path}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={className}
+                                >
+                                  {content}
+                                </a>
+                              ) : (
+                                <button
+                                  key={title}
+                                  type="button"
+                                  onClick={() => !disabled && router.push(path)}
+                                  disabled={disabled}
+                                  className={className}
+                                >
+                                  {content}
+                                </button>
+                              );
+                            }
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Explore Suite Section */}
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setExploreSuiteExpanded(!exploreSuiteExpanded)}
+                      className="w-full flex items-center justify-between px-3 py-1 text-primary hover:text-foreground transition-colors group"
+                    >
+                      <h2 className="font-heading text-xs font-bold tracking-wider uppercase">
+                        Explore Suite
+                      </h2>
+                      <svg
+                        className={`h-3.5 w-3.5 transition-transform duration-300 ${exploreSuiteExpanded ? 'rotate-90' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+
+                    <AnimatePresence initial={false}>
+                      {exploreSuiteExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3, ease: 'easeInOut' }}
+                          className="overflow-hidden space-y-1"
+                        >
+                          {productLinks.map(({ name, path, badge, badgeType, isExternal }) => {
+                            const isActive = pathname === path;
+                            const content = (
+                              <>
+                                <span className="flex-1 truncate text-left">{name}</span>
+                                <span
+                                  className={`inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase transition-all duration-200 ${
+                                    badgeType === 'soon'
+                                      ? 'text-text-disabled border-neutral-700 bg-neutral-800'
+                                      : 'border-primary/40 bg-primary/10 text-primary shadow-primary/20 shadow'
+                                  }`}
+                                >
+                                  {badge}
+                                </span>
+                              </>
+                            );
+
+                            const className = `group flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-base font-medium transition-all duration-200 active:scale-[0.98] ${
+                              isActive
+                                ? 'bg-primary/10 text-primary shadow-sm font-bold'
+                                : 'text-text-secondary hover:text-foreground hover:bg-white/5'
+                            }`;
+
+                            return isExternal ? (
+                              <a
+                                key={name}
+                                href={path}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={className}
+                              >
+                                {content}
+                              </a>
+                            ) : (
+                              <button
+                                key={name}
+                                type="button"
+                                onClick={() => router.push(path)}
+                                className={className}
+                              >
+                                {content}
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </nav>
+              )}
+            </div>
+          )}
+
+          {sidebarCollapsed && (
             <nav className="flex flex-col items-center space-y-4 py-6" aria-label="Collapsed navigation">
               {collapsedQuickItems.map(({ title, icon: Icon, path, isExternal, disabled }) => {
                 const isActive = pathname === path;
@@ -311,284 +485,28 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
                 );
               })}
             </nav>
-          ) : (
-            /* EXPANDED VIEW: Full rich navigation */
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="px-4 py-4"
-            >
-              {isActiveBlueprintPage && blueprintData ? (
-                <BlueprintSidebarContent {...blueprintData} />
-              ) : isSettingsPage ? (
-                <SettingsSidebarContent />
-              ) : isFeaturesPage ? (
-                <DocumentationSidebarContent />
-              ) : (
-                <nav className="space-y-6" aria-label="Primary navigation">
-                  {/* Quick Access Section */}
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => setQuickAccessExpanded(!quickAccessExpanded)}
-                      className="text-primary hover:bg-foreground/5 font-quicksand flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold tracking-wide uppercase transition-all duration-200"
-                    >
-                      <span className="flex-1 text-left">Quick Access</span>
-                      <svg
-                        className={`h-4 w-4 flex-shrink-0 transition-transform duration-300 ${quickAccessExpanded ? 'rotate-180' : ''}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </button>
-
-                {quickAccessExpanded && (
-                  <div className="animate-in slide-in-from-top-2 fade-in space-y-1.5 duration-200">
-                    {collapsedQuickItems.map(
-                      ({ title, icon: Icon, path, badge, badgeType, disabled, isExternal }) => {
-                        const isActive = pathname === path;
-                        const content = (
-                          <>
-                            <Icon className="h-5 w-5 shrink-0" />
-                            <span className="flex-1 truncate text-left">{title}</span>
-                            {badge && (
-                              <span
-                                className={`inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase shadow transition-all duration-200 ${
-                                  badgeType === 'admin'
-                                    ? 'border-indigo-500/40 bg-indigo-500/10 text-indigo-400 shadow-indigo-500/20'
-                                    : 'border-primary/40 bg-primary/10 text-primary shadow-primary/20'
-                                }`}
-                              >
-                                {badge}
-                              </span>
-                            )}
-                            {isActive && !disabled && (
-                              <div className="bg-primary absolute top-1/2 right-0 h-8 w-1 -translate-y-1/2 rounded-l-full" />
-                            )}
-                          </>
-                        );
-
-                        const className = `group focus-visible:ring-secondary/50 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                          isActive
-                            ? 'bg-primary/10 text-primary shadow-sm'
-                            : disabled
-                              ? 'text-text-disabled cursor-not-allowed'
-                              : 'text-text-secondary hover:text-foreground hover:bg-foreground/5 active:scale-[0.98]'
-                        }`;
-
-                        return isExternal ? (
-                          <a
-                            key={title}
-                            href={path}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={className}
-                          >
-                            {content}
-                          </a>
-                        ) : (
-                          <button
-                            key={title}
-                            type="button"
-                            onClick={() => !disabled && router.push(path)}
-                            disabled={disabled}
-                            className={className}
-                          >
-                            {content}
-                          </button>
-                        );
-                      }
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Product Links */}
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  onClick={() => setExploreSuiteExpanded(!exploreSuiteExpanded)}
-                  className="text-primary hover:bg-foreground/5 font-quicksand flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold tracking-wide uppercase transition-all duration-200"
-                >
-                  <span className="flex-1 text-left">Explore Suite</span>
-                  <svg
-                    className={`h-4 w-4 flex-shrink-0 transition-transform duration-300 ${exploreSuiteExpanded ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-
-                {exploreSuiteExpanded && (
-                  <div className="animate-in slide-in-from-top-2 fade-in space-y-1.5 duration-200">
-                    {productLinks.map(({ name, path, badge, badgeType, isExternal }) => {
-                      const isActive = pathname === path;
-                      const content = (
-                        <>
-                          <span className="flex-1 truncate text-left">{name}</span>
-                          <span
-                            className={`inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase transition-all duration-200 ${
-                              badgeType === 'soon'
-                                ? 'border-primary/40 bg-primary/10 text-primary shadow-primary/20 shadow'
-                                : 'text-text-disabled border-neutral-300 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800'
-                            }`}
-                          >
-                            {badge}
-                          </span>
-                        </>
-                      );
-
-                      const className = `group flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer ${
-                        isActive
-                          ? 'bg-primary/10 text-primary shadow-sm'
-                          : 'text-text-secondary hover:text-foreground hover:bg-foreground/5 focus-visible:ring-secondary/50 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98]'
-                      }`;
-
-                      return isExternal ? (
-                        <a
-                          key={name}
-                          href={path}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={className}
-                        >
-                          {content}
-                        </a>
-                      ) : (
-                        <button
-                          key={name}
-                          type="button"
-                          onClick={() => router.push(path)}
-                          className={className}
-                        >
-                          {content}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Documentation Section - Only show on features-related pages */}
-              {isFeaturesPage && (
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setDocumentationExpanded(!documentationExpanded)}
-                    className="text-primary hover:bg-foreground/5 font-quicksand flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold tracking-wide uppercase transition-all duration-200"
-                  >
-                    <span className="flex-1 text-left">Documentation</span>
-                    <svg
-                      className={`h-4 w-4 flex-shrink-0 transition-transform duration-300 ${documentationExpanded ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
-
-                  {documentationExpanded && (
-                    <div className="animate-in slide-in-from-top-2 fade-in space-y-1.5 duration-200">
-                      <button
-                        type="button"
-                        onClick={() => router.push('/features')}
-                        className={`group focus-visible:ring-secondary/50 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98] ${
-                          pathname === '/features'
-                            ? 'bg-primary/10 text-primary shadow-sm'
-                            : 'text-text-secondary hover:text-foreground hover:bg-foreground/5'
-                        }`}
-                      >
-                        <FileText className="h-5 w-5 shrink-0" />
-                        <span className="flex-1 truncate text-left">Features</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => router.push('/best-practices')}
-                        className={`group focus-visible:ring-secondary/50 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98] ${
-                          pathname === '/best-practices'
-                            ? 'bg-primary/10 text-primary shadow-sm'
-                            : 'text-text-secondary hover:text-foreground hover:bg-foreground/5'
-                        }`}
-                      >
-                        <Lightbulb className="h-5 w-5 shrink-0" />
-                        <span className="flex-1 truncate text-left">Best Practices</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => router.push('/recommended-workflow')}
-                        className={`group focus-visible:ring-secondary/50 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98] ${
-                          pathname === '/recommended-workflow'
-                            ? 'bg-primary/10 text-primary shadow-sm'
-                            : 'text-text-secondary hover:text-foreground hover:bg-foreground/5'
-                        }`}
-                      >
-                        <GitBranch className="h-5 w-5 shrink-0" />
-                        <span className="flex-1 truncate text-left">Recommended Workflow</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </nav>
           )}
-        </motion.div>
-      )}
-      </div>
+        </div>
 
         {/* Footer Section */}
-        <div className="bg-surface/50 mt-auto w-full flex-shrink-0 backdrop-blur-sm">
+        <div className="mt-auto w-full relative z-10 border-t border-white/10 bg-surface/50 backdrop-blur-sm">
           {sidebarCollapsed ? (
-            // Collapsed Footer - Subscribe and Logout Buttons
-            <div className="flex flex-col items-center space-y-2 px-2 py-3">
-              {/* Subscription CTA - Collapsed */}
+            <div className="flex flex-col items-center gap-4 px-2 py-4">
               <SubscriptionCTA tier={profile?.subscription_tier as any} collapsed={true} />
-
-              {/* Logout Button - Collapsed */}
-              <button
-                type="button"
-                onClick={onSignOut}
-                title="Sign out"
-                aria-label="Sign out"
-                className="group relative flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 transition-all duration-200 hover:bg-red-700 hover:shadow-red-500/25 focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:ring-offset-2 active:scale-95"
-              >
-                <IconLogout className="h-4 w-4 text-white" />
-              </button>
+              <UserAvatar
+                user={user}
+                sizeClass="w-8 h-8"
+                avatarUrl={profile?.avatar_url}
+              />
             </div>
           ) : (
-            // Expanded Footer
-            <div className="space-y-2 px-4 py-4">
-              {/* Subscription CTA - Expanded */}
+            <div className="space-y-4 p-4">
               <SubscriptionCTA tier={profile?.subscription_tier as any} collapsed={false} />
-
-              {/* Divider below subscribe removed per request; keep profile divider intact above */}
 
               <button
                 type="button"
                 onClick={() => router.push('/profile')}
-                className="group hover:bg-foreground/5 focus-visible:ring-secondary/50 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98]"
+                className="group hover:bg-foreground/5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 active:scale-[0.98]"
               >
                 <div className="relative">
                   <UserAvatar
@@ -597,31 +515,34 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
                     textClass="text-sm font-bold"
                     avatarUrl={profile?.avatar_url}
                   />
-                  <div className="bg-success border-surface absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2" />
+                  <div className="bg-success absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-surface" />
                 </div>
                 <div className="min-w-0 flex-1 text-left">
-                  <p className="text-foreground truncate text-sm font-semibold">
+                  <p className="text-foreground truncate text-sm font-semibold leading-tight">
                     {getCapitalizedFirstName()}
                   </p>
-                  <p className="text-text-secondary truncate text-xs">{user?.email}</p>
+                  <p className="text-text-secondary truncate text-xs leading-tight mt-0.5">{user?.email}</p>
                 </div>
               </button>
-              <button
-                type="button"
-                onClick={() => router.push('/settings')}
-                className="group text-text-secondary hover:text-foreground hover:bg-foreground/5 focus-visible:ring-secondary/50 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98]"
-              >
-                <IconSettings className="h-5 w-5 shrink-0" />
-                <span className="flex-1 text-left">Settings</span>
-              </button>
-              <button
-                type="button"
-                onClick={onSignOut}
-                className="group text-text-secondary hover:text-error hover:bg-error/5 focus-visible:ring-error/50 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98]"
-              >
-                <IconLogout className="h-5 w-5 shrink-0" />
-                <span className="flex-1 text-left">Sign Out</span>
-              </button>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => router.push('/settings')}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary hover:text-foreground hover:bg-white/5 rounded-lg transition-all"
+                >
+                  <IconSettings className="h-4.5 w-4.5 shrink-0" />
+                  <span>Settings</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={onSignOut}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary hover:text-error hover:bg-error/5 rounded-lg transition-all"
+                >
+                  <IconLogout className="h-4.5 w-4.5 shrink-0" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
             </div>
           )}
         </div>

@@ -475,6 +475,14 @@ h6 {
   background-color: rgba(167, 218, 219, 0.1);
 }
 
+.glass-sidebar {
+  background: rgba(13, 27, 42, 0.75);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
 .bg-primary\/20 {
   background-color: rgba(167, 218, 219, 0.2);
 }
