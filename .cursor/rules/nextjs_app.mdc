@@ -1,0 +1,47 @@
+---
+description: Next.js App Router and React 19 conventions for the frontend
+globs: frontend/app/**/*.{ts,tsx}, frontend/next.config.ts
+alwaysApply: true
+---
+
+- **Component Model**
+  - Default to Server Components. Add `"use client"` only when required (event handlers, `useState`, `useEffect`, browser-only APIs).
+  - Keep Client Components small and leaf-like; pass plain serializable props to them.
+
+- **Metadata & Layout**
+  - Export `metadata` typed as `Metadata` from `next` in `app/layout.tsx`.
+  - Define fonts using `next/font` and expose CSS variables (e.g., `--font-geist-sans`, `--font-geist-mono`).
+
+- **Images & Assets**
+  - Use `next/image` for local assets; supply `alt` text and sizes. Use `priority` for above-the-fold images.
+  - Keep SVGs in `public/` and reference via `/file.svg`. Prefer `Image` unless you specifically need inline SVG.
+
+- **Links & Navigation**
+  - Use `next/link` for internal navigation. External links can use `<a>` with `rel="noopener noreferrer"` and `target="_blank"`.
+
+- **Data Fetching**
+  - Prefer server-side data fetching in Server Components with caching hints (`{ cache: "no-store" }` or `next: { revalidate: N }`).
+  - Do not access secrets in Client Components. Read secrets server-side only.
+
+- **Routing & Structure**
+  - Use App Router conventions (`app/`, route groups, `[param]`, `(group)`), colocate `loading.tsx`/`error.tsx` as needed.
+  - Keep `page.tsx` focused; move reusable UI into components.
+
+- **Config & Env**
+  - Keep `next.config.ts` minimal and typed as `NextConfig`. Avoid exposing server secrets via `env`.
+  - Use `@/*` path alias defined in `tsconfig.json` for internal imports.
+
+- **Example**
+  ```tsx
+  // app/page.tsx (Server Component by default)
+  import Image from "next/image";
+
+  export default function Home() {
+    return (
+      <main className="min-h-screen p-8">
+        <Image src="/next.svg" alt="Next.js logo" width={180} height={38} priority />
+      </main>
+    );
+  }
+  ```
+

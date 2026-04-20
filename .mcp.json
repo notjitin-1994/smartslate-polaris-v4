@@ -1,0 +1,59 @@
+{
+	"mcpServers": {
+		"polaris-context": {
+			"type": "stdio",
+			"command": "node",
+			"args": [
+				"scripts/codebase-mcp/build/index.js"
+			],
+			"env": {
+				"PROJECT_ROOT": "/home/jitin-m-nair/Desktop/polaris-v3"
+			}
+		},
+		"vercel": {
+			"type": "stdio",
+			"url": "https://mcp.vercel.com"
+		},
+		"razorpay": {
+			"type": "stdio",
+			"command": "razorpay-mcp-stdio",
+			"args": [
+				"--key-id",
+				"rzp_live_RZ1LKPIgiJbMuy",
+				"--key-secret",
+				"jbXD0c08wHQz4L0WXSwf3RG5"
+			]
+		},
+		"task-master-ai": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"task-master-ai"
+			],
+			"env": {
+				"ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY_HERE",
+				"PERPLEXITY_API_KEY": "YOUR_PERPLEXITY_API_KEY_HERE",
+				"OPENAI_API_KEY": "YOUR_OPENAI_KEY_HERE",
+				"GOOGLE_API_KEY": "YOUR_GOOGLE_KEY_HERE",
+				"XAI_API_KEY": "YOUR_XAI_KEY_HERE",
+				"OPENROUTER_API_KEY": "YOUR_OPENROUTER_KEY_HERE",
+				"MISTRAL_API_KEY": "YOUR_MISTRAL_KEY_HERE",
+				"AZURE_OPENAI_API_KEY": "YOUR_AZURE_KEY_HERE",
+				"OLLAMA_API_KEY": "YOUR_OLLAMA_API_KEY_HERE"
+			}
+		},
+		"apidog": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"apidog-mcp-server@latest",
+				"--project-id=YOUR_APIDOG_PROJECT_ID"
+			],
+			"env": {
+				"APIDOG_ACCESS_TOKEN": "YOUR_APIDOG_ACCESS_TOKEN"
+			}
+		}
+	}
+}

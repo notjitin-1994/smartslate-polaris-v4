@@ -1,0 +1,387 @@
+# Razorpay Integration Task 4: Database Schema Migration - Payments Table
+
+You are implementing Task 4 of the Razorpay Payment Gateway Integration for SmartSlate Polaris v3. This task focuses on creating the payments table to track transaction history and payment records.
+
+## Current Project Context
+
+**SmartSlate Polaris v3** is an AI-powered learning blueprint generation platform using Next.js 15, TypeScript 5.7, Supabase PostgreSQL, and Tailwind CSS v4.
+
+**Current Status**: Tasks 1-3 are COMPLETED ✅, Task 4 is READY TO START 🚀
+
+### Already Completed (Tasks 1-3):
+- ✅ Task 1: Razorpay Account Setup and Environment Configuration
+- ✅ Task 2: TypeScript Type Definitions and Razorpay Client Setup
+- ✅ Task 3: Database Schema Migration - Subscriptions Table
+- ✅ All 92+ tests passing for previous tasks
+- ✅ Environment variables configured and SDK working
+- ✅ Subscriptions table created with proper schema, indexes, RLS policies
+
+### Current Focus (Task 4):
+- 🆕 Database Schema Migration - Payments Table (READY TO START)
+- 5 subtasks: Table structure, foreign keys, indexing, RLS policies, constraints/triggers
+
+## Task 4: Database Schema Migration - Payments Table
+
+**Task Description**: Create migration for payments table to track transaction history, payment details, refund information, and billing period references.
+
+**Dependencies**: Task 3 (Subscriptions table must exist)
+
+**Expected Deliverables**:
+- `supabase/migrations/0035_razorpay_payments.sql` with complete schema
+- Comprehensive RLS policies for user access control
+- Strategic indexing for query optimization
+- Complete rollback functionality
+- Full test
+
+## Phase 0: Status Assessment (MANDATORY - 5 minutes)
+
+**BEFORE YOU START:**
+
+1. **Check Current Task Status:**
+   ```bash
+   Use: mcp__task-master-ai__get_tasks
+   Parameters: {"projectRoot": "/home/jitin-m-nair/Desktop/polaris-v3", "status": "pending"}
+   ```
+   Identify Task 4 and its subtasks
+
+2. **Verify Dependencies:**
+   ```bash
+   Use: mcp__task-master-ai__get_tasks
+   Parameters: {"projectRoot": "/home/jitin-m-nair/Desktop/polaris-v3", "status": "done"}
+   ```
+   Confirm Task 3 (subscriptions table) is completed
+
+3. **Create TodoWrite List:**
+   ```bash
+   Use: TodoWrite
+   Create items for: "Assess current implementation status", "Verify Task 3 completion", "Read PRD payments requirements", "Review database patterns", "Identify migration file numbering"
+   ```
+
+4. **Read Context Files (MANDATORY):**
+   - `/home/jitin-m-nair/Desktop/polaris-v3/docs/prds/razorpay_payment_integration.txt` (Section 2.3)
+   - `/home/jitin-m-nair/Desktop/polaris-v3/docs/RAZORPAY_INTEGRATION_GUIDE.md`
+   - `/home/jitin-m-nair/Desktop/polaris-v3/CLAUDE.md`
+
+5. **Mark Assessment Complete:**
+   Update TodoWrite items as completed, then proceed to implementation
+
+## Implementation Rules (CRITICAL)
+
+### Status Tracking Pattern (FOLLOW EXACTLY):
+1. **ALWAYS** mark tasks as "in-progress" BEFORE starting work
+2. **ALWAYS** mark tasks as "done" IMMEDIATELY after completion
+3. **NEVER** batch status updates - update in REAL-TIME
+4. **INFORM USER** after each subtask completion
+
+### Pattern for EACH subtask:
+```bash
+# 1. Mark as in-progress
+mcp__task-master-ai__set_task_status({
+  "projectRoot": "/home/jitin-m-nair/Desktop/polaris-v3",
+  "id": "4.[SUBTASK_ID]",
+  "status": "in-progress",
+  "tag": "razorpay-integration"
+})
+
+# 2. Create TodoWrite item
+TodoWrite({"todos": [{"content": "[Specific implementation step]", "status": "in_progress", "activeForm": "[Active description]"}]})
+
+# 3. DO THE WORK
+[Implement the code]
+
+# 4. Mark TodoWrite complete
+TodoWrite({"todos": [{"content": "[Specific implementation step]", "status": "completed", "activeForm": "[Active description]"}]})
+
+# 5. Mark task as done
+mcp__task-master-ai__set_task_status({
+  "projectRoot": "/home/jitin-m-nair/Desktop/polaris-v3",
+  "id": "4.[SUBTASK_ID]",
+  "status": "done",
+  "tag": "razorpay-integration"
+})
+
+# 6. INFORM USER
+"✅ Completed subtask 4.[SUBTASK_ID]: [SUBTASK_NAME] - [Brief description of what was implemented]"
+```
+
+## Phase 1: Payments Table Schema Requirements
+
+**Based on PRD Section 2.3, the payments table requires:**
+
+```sql
+CREATE TABLE public.payments (
+  payment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Foreign Keys
+  subscription_id UUID REFERENCES public.subscriptions(subscription_id) ON DELETE SET NULL,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  -- Razorpay Identifiers
+  razorpay_payment_id TEXT UNIQUE NOT NULL,
+  razorpay_order_id TEXT,
+  razorpay_invoice_id TEXT,
+
+  -- Payment Details
+  amount INTEGER NOT NULL, -- paise (₹100 = 10000 paise)
+  currency TEXT NOT NULL DEFAULT 'INR',
+  status TEXT NOT NULL,
+  -- statuses: created | authorized | captured | refunded | failed | pending
+
+  -- Payment Method Details
+  method TEXT, -- card | upi | netbanking | wallet | emi
+  card_network TEXT, -- Visa | Mastercard | RuPay | etc.
+  card_last4 TEXT,
+  bank TEXT,
+  wallet TEXT,
+  upi_id TEXT,
+
+  -- Billing Period Reference
+  billing_period_start TIMESTAMPTZ,
+  billing_period_end TIMESTAMPTZ,
+
+  -- Error Details (if failed)
+  error_code TEXT,
+  error_description TEXT,
+  error_source TEXT,
+  error_step TEXT,
+  error_reason TEXT,
+
+  -- Refund Details
+  refund_status TEXT,
+  refund_amount INTEGER,
+  refunded_at TIMESTAMPTZ,
+
+  -- Metadata
+  metadata JSONB DEFAULT '{}'::jsonb,
+
+  -- Timestamps
+  payment_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  -- Constraints
+  CONSTRAINT valid_status CHECK (status IN ('created', 'authorized', 'captured', 'refunded', 'failed', 'pending')),
+  CONSTRAINT valid_amount CHECK (amount >= 0)
+);
+```
+
+## Phase 2: Implementation Steps for Each Subtask
+
+### Subtask 4.1: Design payments table structure with core fields and data types
+**Focus**: Create the basic table structure with all required columns
+
+**Key Requirements**:
+- Use UUID PRIMARY KEY with gen_random_uuid()
+- All TEXT columns for Razorpay identifiers
+- INTEGER for amount (in paise)
+- JSONB for flexible data storage
+- Proper TIMESTAMP handling with timezone
+- Default values for created_at, updated_at
+
+### Subtask 4.2: Implement foreign key relationships to subscriptions and user_profiles
+**Focus**: Add proper referential integrity
+
+**Key Requirements**:
+- `subscription_id` → subscriptions(subscription_id) ON DELETE SET NULL
+- `user_id` → auth.users(id) ON DELETE CASCADE
+- Index foreign key columns for performance
+- Handle orphaned records during migration
+
+### Subtask 4.3: Create comprehensive indexing strategy for query optimization
+**Focus**: Strategic indexes for common query patterns
+
+**Required Indexes**:
+```sql
+CREATE INDEX idx_payments_user_id ON payments(user_id);
+CREATE INDEX idx_payments_subscription_id ON payments(subscription_id);
+CREATE UNIQUE INDEX idx_payments_razorpay_id ON payments(razorpay_payment_id);
+CREATE INDEX idx_payments_status ON payments(status);
+CREATE INDEX idx_payments_date ON payments(payment_date DESC);
+CREATE INDEX idx_payments_user_status ON payments(user_id, status);
+```
+
+### Subtask 4.4: Implement Row Level Security policies for user access control
+**Focus**: Security and access control
+
+**Required RLS Policies**:
+```sql
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+
+-- Users can only see their own payments
+CREATE POLICY payments_select_own ON payments
+FOR SELECT USING (user_id = auth.uid());
+
+-- Service role has full access
+CREATE POLICY payments_service_role_all ON payments
+FOR ALL USING (auth.role() = 'service_role');
+
+-- Authenticated users can insert their own payments
+CREATE POLICY payments_authenticated_insert ON payments
+FOR INSERT WITH CHECK (user_id = auth.uid());
+```
+
+### Subtask 4.5: Add table constraints, triggers, and rollback implementation
+**Focus**: Data validation and migration safety
+
+**Required Elements**:
+- CHECK constraints for valid_status and valid_amount
+- Updated_at trigger (reuse existing function)
+- Complete rollback section in migration
+- Comprehensive error handling
+
+## Phase 3: Testing Strategy (CRITICAL)
+
+**For EACH subtask, execute ALL test types:**
+
+### Unit Tests (>90% coverage required):
+```bash
+# Create tests in: frontend/__tests__/integration/razorpay/payments.test.ts
+# Test each database operation in isolation
+# Mock Supabase client and dependencies
+# Test constraint violations and error scenarios
+```
+
+### Integration Tests:
+```bash
+# Test complete payment workflow
+# Use test database
+# Test foreign key relationships
+# Verify RLS policies prevent unauthorized access
+# Test payment status transitions
+```
+
+### Security Tests:
+```bash
+# Verify RLS policies work correctly
+# Test cross-user data access prevention
+# Check SQL injection prevention
+# Verify service role bypasses RLS correctly
+```
+
+### Edge Case Tests:
+```bash
+# Test invalid payment amounts
+# Test duplicate razorpay_payment_id
+# Test orphaned subscription_id handling
+# Test invalid status transitions
+# Test constraint violations
+```
+
+## Phase 4: Quality Assurance Validation
+
+**After EACH subtask completion:**
+
+1. **Migration Testing:**
+   ```bash
+   cd /home/jitin-m-nair/Desktop/polaris-v3
+   npm run db:reset
+   # Verify migration applies cleanly
+   ```
+
+2. **Schema Validation:**
+   ```bash
+   # Connect to database and verify:
+   \d payments  -- Table structure
+   \di payments*  -- Indexes
+   \dp payments  -- RLS policies
+   ```
+
+3. **Data Integrity Testing:**
+   ```bash
+   # Test constraint violations
+   # Test foreign key relationships
+   # Test default values
+   # Test trigger functionality
+   ```
+
+4. **TypeScript Validation:**
+   ```bash
+   cd frontend && npm run typecheck
+   # Ensure ZERO TypeScript errors
+   ```
+
+## Phase 5: Documentation & Migration Best Practices
+
+**Migration File Requirements:**
+
+1. **File Naming**: `supabase/migrations/0035_razorpay_payments.sql`
+2. **Comments**: Add explanatory comments for complex logic
+3. **Rollback Section**: Complete DOWN migration at end
+4. **Error Handling**: Proper error messages and handling
+5. **Performance**: Consider index creation impact
+
+**Rollback Section Must Include**:
+```sql
+-- DOWN Migration
+DROP TRIGGER IF EXISTS update_payments_updated_at ON payments;
+DROP TABLE IF EXISTS payments CASCADE;
+```
+
+## Success Criteria Checklist
+
+**Task 4 is COMPLETE when:**
+
+- [ ] **All 5 subtasks** marked as "done" in Taskmaster
+- [ ] **Migration file** created at correct location with proper naming
+- [ ] **Table structure** matches PRD specifications exactly
+- [ ] **Foreign key relationships** work correctly
+- [ ] **All indexes** created and verified with EXPLAIN ANALYZE
+- [ ] **RLS policies** prevent unauthorized access
+- [ ] **Constraints** enforce data integrity
+- [ ] **Updated_at trigger** functions correctly
+- [ ] **Rollback section** tested and working
+- [ ] **Unit tests** pass with >90% coverage
+- [ ] **Integration tests** pass completely
+- [ ] **Security tests** pass with no vulnerabilities
+- [ ] **Migration applies** locally without errors
+- [ ] **Real-time status updates** provided during implementation
+- [ ] **TodoWrite items** all marked as completed
+
+## Critical Reminders
+
+❌ **DO NOT:**
+- Skip testing foreign key relationships
+- Forget RLS policies for user access control
+- Use inappropriate data types
+- Skip rollback implementation
+- Batch status updates - UPDATE IN REAL-TIME
+- Proceed without verifying Task 3 completion
+- Forget to test constraint violations
+
+✅ **DO:**
+- Verify Task 3 (subscriptions table) is completed first
+- Follow exact schema from PRD Section 2.3
+- Test all constraints and relationships
+- Use proper PostgreSQL data types
+- Create comprehensive indexes for performance
+- Implement strict RLS policies
+- Test rollback functionality thoroughly
+- Document complex logic with comments
+- Follow established patterns from previous tasks
+
+## Deliverables Required
+
+Provide:
+1. **Migration file**: `supabase/migrations/0035_razorpay_payments.sql`
+2. **All test files**: Payment-related tests with passing results
+3. **Schema verification**: Table structure validation results
+4. **Test coverage report**: Unit/integration/security test results
+5. **Performance analysis**: Index usage verification with EXPLAIN ANALYZE
+6. **Implementation summary**: What was completed and tested
+7. **Final task status**: All subtasks marked "done"
+8. **List of all real-time status updates** made during implementation
+
+---
+
+## BEGIN IMPLEMENTATION
+
+Start by:
+1. Checking Task 4 status with mcp__task-master-ai__get_tasks
+2. Verifying Task 3 completion as dependency
+3. Creating your TodoWrite list for subtask tracking
+4. Reading the PRD payments table requirements (Section 2.3)
+5. Identifying the correct migration file number
+6. Starting with Subtask 4.1: Table structure design
+7. Proceeding through all 5 subtasks with real-time status updates
+
+**REMEMBER**: Update task statuses in REAL-TIME and inform the user after each subtask completion!

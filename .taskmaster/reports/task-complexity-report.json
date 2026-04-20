@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2025-10-25T08:47:45.131Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Set up Vercel AI SDK Provider Configuration",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down provider setup into individual configuration files with proper TypeScript types, environment validation, and error handling for each AI provider (Anthropic, Perplexity, Ollama)",
+			"reasoning": "Medium-high complexity due to need for three different provider configurations, TypeScript type safety requirements, environment validation, and ensuring compatibility with existing Ollama client. Requires understanding of AI SDK patterns and proper abstraction."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Migrate Zod Schemas for AI SDK Compatibility",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Create comprehensive schema migration covering all 27+ question types, blueprint sections, and AI SDK experimental_output compatibility with proper TypeScript inference and validation",
+			"reasoning": "High complexity due to extensive schema requirements (27+ question types, 10 sections, complex nested structures), AI SDK compatibility requirements, and need for backward compatibility with existing data formats. Critical foundation piece."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Build Question Generation Service with Streaming",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Implement streaming question generation service with AI SDK streamObject, proper fallback logic, telemetry tracking, and migration from existing prompt building systems",
+			"reasoning": "High complexity involving streaming implementation, fallback logic, prompt migration, telemetry integration, and replacing complex existing logic. Requires deep understanding of AI SDK streaming patterns and error handling."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Build Blueprint Generation Service with Streaming",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Create streaming blueprint generation service using Perplexity via custom OpenAI adapter, with context extraction, fallback handling, and backward compatibility for legacy formats",
+			"reasoning": "High complexity similar to Task 3 but with additional challenges of custom Perplexity adapter, context extraction from multiple answer formats, and replacing triple-fallback system with simplified approach."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Update API Routes for Streaming Support",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Migrate API routes to support Server-Sent Events streaming while maintaining exact backward compatibility, authentication patterns, and existing validation logic",
+			"reasoning": "Medium-high complexity due to SSE implementation, backward compatibility requirements, and need to preserve existing API contracts while adding streaming capability. Integration complexity with new services."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Create Streaming UI Components",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Build real-time progress UI components with EventSource management, visual progress indicators, error states, and proper cleanup for Server-Sent Events consumption",
+			"reasoning": "High complexity involving EventSource management, real-time UI updates, animation integration with Framer Motion, error boundary handling, and proper connection lifecycle management. Frontend streaming is inherently complex."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Implement Feature Flags and Configuration",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Create feature flag system for gradual rollout with environment controls, percentage-based user cohorts, and admin interface for real-time flag management",
+			"reasoning": "Medium complexity for feature flag implementation, percentage rollout logic, and admin interface. Well-established patterns exist but requires careful integration with existing routing logic."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Write Comprehensive Test Suite",
+			"complexityScore": 9,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Create extensive test coverage including unit tests, integration tests, performance benchmarks, streaming functionality tests, and automated regression detection for the entire AI SDK migration",
+			"reasoning": "Very high complexity due to comprehensive testing requirements across multiple layers (unit, integration, performance), streaming functionality testing, fallback scenario testing, and need for 85%+ coverage across complex AI integration logic."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Create Migration Utilities and Monitoring",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Build migration validation tools, performance monitoring infrastructure, structured logging, and health check systems for smooth transition and ongoing monitoring",
+			"reasoning": "Medium-high complexity involving validation logic, telemetry integration, monitoring infrastructure, and alert systems. Requires careful design for production monitoring and debugging capabilities."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Deploy and Clean Up Legacy Code",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Execute gradual production deployment with monitoring, validate system performance, and safely remove legacy code after validation period",
+			"reasoning": "Medium complexity for deployment orchestration, gradual rollout monitoring, and systematic legacy code removal. Well-defined process but requires careful validation and monitoring."
+		}
+	]
+}

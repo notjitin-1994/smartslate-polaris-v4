@@ -1,0 +1,540 @@
+/**
+ * Mobile-First Responsive Container System
+ *
+ * This file implements mobile-first container utility classes that work
+ * seamlessly with the responsive breakpoint system defined in lib/responsive.ts.
+ * All containers use min-width media queries for optimal mobile performance.
+ */
+
+/* ========================================
+   MOBILE-FIRST CONTAINER BASE CLASSES
+   ======================================== */
+
+/**
+ * Base container styles - mobile-first approach
+ * These styles apply to all screen sizes by default
+ */
+.container-base {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ========================================
+   RESPONSIVE CONTAINER UTILITIES
+   ======================================== */
+
+/**
+ * Standard responsive container
+ * Mobile: Full width with mobile padding
+ * Desktop: Centered with max-width and responsive padding
+ */
+.container-responsive {
+  @apply container-base w-full px-4 sm:px-6 lg:px-8;
+}
+
+/**
+ * Narrow container for focused content
+ * Optimized for single-column content like articles and forms
+ */
+.container-narrow {
+  @apply container-base w-full px-4 sm:px-6 lg:px-8;
+  max-width: 1024px; /* lg breakpoint equivalent */
+}
+
+/**
+ * Wide container for full-width layouts
+ * Allows content to spread across larger screens
+ */
+.container-wide {
+  @apply container-base w-full px-4 sm:px-6 lg:px-8;
+  max-width: 1280px; /* xl breakpoint equivalent */
+}
+
+/**
+ * Full-width container for hero sections and banners
+ * No max-width constraint, spans full viewport
+ */
+.container-full {
+  @apply container-base w-full px-4 sm:px-6 lg:px-8;
+}
+
+/**
+ * Mobile-optimized container with reduced padding
+ * Perfect for mobile-first layouts requiring more content space
+ */
+.container-mobile {
+  @apply container-base w-full px-3 sm:px-4 md:px-6 lg:px-8;
+}
+
+/**
+ * Ultra-narrow container for mobile content
+ * Optimized for small screens with minimal padding
+ */
+.container-compact {
+  @apply container-base w-full px-2 sm:px-3 md:px-4 lg:px-6;
+  max-width: 640px; /* sm breakpoint equivalent */
+}
+
+/* ========================================
+   CONTENT AREA CONTAINERS
+   ======================================== */
+
+/**
+ * Main content area container
+ * Provides consistent spacing for page content
+ */
+.content-container {
+  @apply container-responsive py-4 sm:py-6 lg:py-8;
+}
+
+/**
+ * Section container for major content divisions
+ * Provides generous spacing between major sections
+ */
+.section-container {
+  @apply container-responsive py-8 sm:py-12 lg:py-16;
+}
+
+/**
+ * Card container for grouped content
+ * Optimized for card-based layouts
+ */
+.card-container {
+  @apply container-responsive py-6 sm:py-8 lg:py-12;
+}
+
+/**
+ * Form container with optimal mobile spacing
+ * Designed specifically for form layouts
+ */
+.form-container {
+  @apply container-narrow py-4 sm:py-6;
+}
+
+/* ========================================
+   MOBILE-SPECIFIC CONTAINER OPTIMIZATIONS
+   ======================================== */
+
+/**
+ * Mobile-first container with touch-optimized spacing
+ * Reduces padding on very small screens for better content density
+ */
+@media (max-width: 374px) {
+  .container-mobile-compact {
+    @apply container-base w-full px-2;
+  }
+
+  .content-container-mobile {
+    @apply py-3;
+  }
+}
+
+/**
+ * Landscape mobile optimization
+ * Adjusts containers for landscape orientation on mobile devices
+ */
+@media (max-width: 896px) and (orientation: landscape) {
+  .container-landscape {
+    /* Reduce vertical padding in landscape to maximize content space */
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .content-container-landscape {
+    @apply py-2;
+  }
+}
+
+/* ========================================
+   TABLET-SPECIFIC CONTAINER OPTIMIZATIONS
+   ======================================== */
+
+/**
+ * Tablet-optimized containers
+ * Balances mobile usability with desktop-like content density
+ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .container-tablet {
+    /* Slightly wider padding for tablet finger navigation */
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .container-tablet-narrow {
+    max-width: 768px; /* Tablet-optimized width */
+  }
+}
+
+/* ========================================
+   DESKTOP ENHANCEMENT CONTAINERS
+   ======================================== */
+
+/**
+ * Desktop-enhanced containers with larger max-widths
+ * Takes advantage of larger screen real estate
+ */
+@media (min-width: 1024px) {
+  .container-desktop-wide {
+    max-width: 1536px; /* 2xl breakpoint */
+  }
+
+  .container-desktop-ultra {
+    max-width: 1920px; /* Common desktop resolution */
+  }
+}
+
+/* ========================================
+   RESPONSIVE CONTAINER VARIANTS
+   ======================================== */
+
+/**
+ * Fluid container that adapts to content
+ * Uses CSS Grid for responsive behavior without fixed max-width
+ */
+.container-fluid {
+  @apply container-base w-full px-4 sm:px-6 lg:px-8;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-fluid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-fluid {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+  }
+}
+
+/**
+ * Centered container with responsive max-width
+ * Perfect for landing pages and marketing content
+ */
+.container-centered {
+  @apply container-base w-full px-4 sm:px-6 lg:px-8;
+  max-width: min(100%, 1200px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/**
+ * Sidebar layout container
+ * Mobile: Single column, Tablet+: Two column with sidebar
+ */
+.container-sidebar {
+  @apply container-base w-full px-4 sm:px-6 lg:px-8;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .container-sidebar {
+    flex-direction: row;
+    max-width: 1280px;
+  }
+
+  .container-sidebar > :first-child {
+    flex: 0 0 280px; /* Sidebar width */
+  }
+
+  .container-sidebar > :last-child {
+    flex: 1; /* Main content */
+  }
+}
+
+/* ========================================
+   RESPONSIVE PADDING SYSTEM
+   ======================================== */
+
+/**
+ * Responsive padding utilities
+ * Mobile-first padding that scales up with screen size
+ */
+.p-responsive {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .p-responsive {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .p-responsive {
+    padding: 2rem;
+  }
+}
+
+/**
+ * Responsive horizontal padding only
+ */
+.px-responsive {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .px-responsive {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .px-responsive {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/**
+ * Responsive vertical padding only
+ */
+.py-responsive {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .py-responsive {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .py-responsive {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+}
+
+/* ========================================
+   RESPONSIVE MARGIN SYSTEM
+   ======================================== */
+
+/**
+ * Responsive margin utilities
+ */
+.m-responsive {
+  margin: 1rem;
+}
+
+@media (min-width: 640px) {
+  .m-responsive {
+    margin: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .m-responsive {
+    margin: 2rem;
+  }
+}
+
+/* ========================================
+   MOBILE PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/**
+ * Performance-optimized containers for mobile devices
+ * Reduces complexity for better rendering performance
+ */
+@media (max-width: 767px) {
+  .container-performance {
+    /* Disable expensive CSS properties on mobile */
+    transform: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Optimize for touch scrolling */
+  .container-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY ENHANCEMENTS
+   ======================================== */
+
+/**
+ * High contrast container for better accessibility
+ * Increases contrast and spacing for better readability
+ */
+@media (prefers-contrast: high) {
+  .container-accessible {
+    border: 1px solid currentColor;
+    background-color: var(--background);
+  }
+}
+
+/**
+ * Reduced motion container for users who prefer less animation
+ */
+@media (prefers-reduced-motion: reduce) {
+  .container-motion {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+/**
+ * Print-optimized containers
+ * Ensures content fits properly on printed pages
+ */
+@media print {
+  .container-print {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .container-print-narrow {
+    max-width: 600px !important;
+  }
+}
+
+/* ========================================
+   RESPONSIVE CONTAINER COMPONENTS
+   ======================================== */
+
+/**
+ * Responsive card grid container
+ * Automatically adjusts card layout based on screen size
+ */
+.card-grid-container {
+  @apply container-responsive;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .card-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-grid-container {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .card-grid-container {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/**
+ * Responsive dashboard container
+ * Optimized for dashboard layouts with KPI cards
+ */
+.dashboard-container {
+  @apply container-responsive;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .dashboard-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-container {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ========================================
+   UTILITY CLASSES FOR COMMON PATTERNS
+   ======================================== */
+
+/**
+ * Full viewport height container
+ * Useful for hero sections and full-screen layouts
+ */
+.container-full-height {
+  min-height: 100vh;
+  @apply container-responsive;
+}
+
+/**
+ * Sticky container that remains in view during scroll
+ * Mobile-optimized with proper touch target considerations
+ */
+.container-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  @apply container-responsive;
+}
+
+/**
+ * Responsive flex container utilities
+ */
+.flex-container-responsive {
+  @apply container-responsive;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .flex-container-responsive {
+    flex-direction: row;
+    gap: 1.5rem;
+  }
+}
+
+/* ========================================
+   MOBILE-FIRST RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Import breakpoint variables from responsive.ts */
+/* These would be injected via CSS custom properties in the build process */
+
+/*
+  --breakpoint-xs: 320px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+*/
+
+/* Example of how breakpoints would be used in CSS */
+/*
+@media (min-width: var(--breakpoint-sm)) {
+  .container-responsive {
+    max-width: var(--container-sm, 100%);
+  }
+}
+
+@media (min-width: var(--breakpoint-lg)) {
+  .container-responsive {
+    max-width: var(--container-lg, 1024px);
+  }
+}
+*/

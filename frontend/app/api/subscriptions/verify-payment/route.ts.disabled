@@ -1,0 +1,538 @@
+/**
+ * Verify Payment API Route
+ *
+ * @description Secure payment verification endpoint with HMAC signature validation
+ * @version 1.0.0
+ * @date 2025-10-29
+ *
+ * @endpoint POST /api/subscriptions/verify-payment
+ * @access authenticated users
+ * @rateLimit 5 requests per minute per user
+ *
+ * @see docs/RAZORPAY_INTEGRATION_GUIDE.md
+ * @see https://razorpay.com/docs/api/payments/
+ */
+
+import { NextResponse } from 'next/server';
+import {
+  validatePaymentVerificationRequest,
+  createSuccessResponse,
+  createErrorResponse,
+  PAYMENT_VERIFICATION_ERROR_CODES,
+  type PaymentVerificationRequest,
+  type PaymentVerificationResponse,
+  type PaymentVerificationError
+} from '@/lib/schemas/paymentVerification';
+import {
+  verifyPaymentSignature,
+  extractVerificationComponents,
+  type SignatureVerificationResult
+} from '@/lib/razorpay/crypto';
+import { safeConstantTimeCompare } from '@/lib/security/constantTimeCompare';
+import { rateLimitMiddleware, RATE_LIMIT_CONFIGS, createRateLimitHeaders } from '@/lib/middleware/rateLimiting';
+import {
+  logVerificationAttempt,
+  logVerificationSuccess,
+  logVerificationFailure,
+  logSignatureMismatch,
+  logRateLimitExceeded,
+  logUnauthorizedAccess,
+  logDatabaseError,
+  logInternalError
+} from '@/lib/logging/paymentVerification';
+import { getSupabaseServerClient, getServerSession } from '@/lib/supabase/server';
+import type { Database } from '@/types/supabase';
+
+// Set runtime configuration
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+// ============================================================================
+// Environment Variable Validation
+// ============================================================================
+
+/**
+ * Validate required environment variables
+ */
+function validateEnvironment(): { valid: boolean; error?: string } {
+  const razorpaySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!razorpaySecret) {
+    return {
+      valid: false,
+      error: 'Razorpay key secret not configured'
+    };
+  }
+
+  if (razorpaySecret.length < 20) {
+    return {
+      valid: false,
+      error: 'Invalid Razorpay key secret format'
+    };
+  }
+
+  return { valid: true };
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Generate unique request ID for tracking
+ */
+function generateRequestId(): string {
+  return `verify_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+/**
+ * Verify that subscription belongs to the authenticated user
+ */
+async function verifySubscriptionOwnership(
+  supabase: any,
+  subscriptionId: string,
+  userId: string
+): Promise<{ valid: boolean; subscription?: any; error?: string }> {
+  try {
+    const { data: subscription, error } = await supabase
+      .from('razorpay_subscriptions')
+      .select('*')
+      .eq('razorpay_subscription_id', subscriptionId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      return {
+        valid: false,
+        error: `Database error: ${error.message}`
+      };
+    }
+
+    if (!subscription) {
+      return {
+        valid: false,
+        error: 'Subscription not found or access denied'
+      };
+    }
+
+    return { valid: true, subscription };
+  } catch (error) {
+    return {
+      valid: false,
+      error: `Failed to verify subscription ownership: ${error instanceof Error ? error.message : 'Unknown error'}`
+    };
+  }
+}
+
+/**
+ * Update subscription status to authenticated
+ */
+async function updateSubscriptionStatus(
+  supabase: any,
+  subscriptionId: string,
+  paymentId: string,
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const now = new Date().toISOString();
+
+    // Update razorpay_subscriptions table
+    const { error: subscriptionError } = await supabase
+      .from('razorpay_subscriptions')
+      .update({
+        status: 'authenticated',
+        razorpay_payment_id: paymentId,
+        payment_verified_at: now,
+        updated_at: now,
+      })
+      .eq('razorpay_subscription_id', subscriptionId)
+      .eq('user_id', userId);
+
+    if (subscriptionError) {
+      return {
+        success: false,
+        error: `Failed to update subscription: ${subscriptionError.message}`
+      };
+    }
+
+    // Update user_profiles table if needed
+    const { error: profileError } = await supabase
+      .from('user_profiles')
+      .update({
+        updated_at: now,
+      })
+      .eq('user_id', userId);
+
+    if (profileError) {
+      // Log this error but don't fail the operation
+      logDatabaseError({
+        requestId: undefined, // Will be set by caller
+        userId,
+        operation: 'update_user_profile_after_payment',
+        error: profileError.message,
+        errorCode: 'PROFILE_UPDATE_FAILED'
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Failed to update subscription status: ${error instanceof Error ? error.message : 'Unknown error'}`
+    };
+  }
+}
+
+// ============================================================================
+// Main API Route Handler
+// ============================================================================
+
+/**
+ * POST /api/subscriptions/verify-payment
+ *
+ * Verify Razorpay payment signature and update subscription status
+ */
+export async function POST(request: Request): Promise<Response> {
+  const startTime = Date.now();
+  const requestId = generateRequestId();
+
+  // Validate environment
+  const envValidation = validateEnvironment();
+  if (!envValidation.valid) {
+    logInternalError({
+      requestId,
+      operation: 'environment_validation',
+      error: envValidation.error!,
+      errorCode: 'ENVIRONMENT_ERROR'
+    });
+
+    return NextResponse.json(
+      createErrorResponse({
+        error: 'Service configuration error',
+        code: PAYMENT_VERIFICATION_ERROR_CODES.INTERNAL_ERROR
+      }),
+      { status: 500 }
+    );
+  }
+
+  // Get authenticated user session
+  const supabase = await getSupabaseServerClient();
+  const session = await getServerSession(request);
+
+  if (!session?.user?.id) {
+    logUnauthorizedAccess({
+      requestId,
+      ip: request.headers.get('x-forwarded-for') || undefined,
+      userAgent: request.headers.get('user-agent') || undefined,
+      error: 'No authenticated session found',
+      request
+    });
+
+    return NextResponse.json(
+      createErrorResponse({
+        error: 'Authentication required',
+        code: PAYMENT_VERIFICATION_ERROR_CODES.UNAUTHORIZED
+      }),
+      { status: 401 }
+    );
+  }
+
+  const userId = session.user.id;
+
+  // Apply rate limiting
+  const rateLimitResult = await rateLimitMiddleware(RATE_LIMIT_CONFIGS.PAYMENT_VERIFICATION)(request);
+
+  // Add rate limit headers to response
+  const rateLimitHeaders = createRateLimitHeaders(rateLimitResult.status);
+
+  if (!rateLimitResult.allowed) {
+    logRateLimitExceeded({
+      requestId,
+      userId,
+      ip: request.headers.get('x-forwarded-for') || undefined,
+      request
+    });
+
+    return NextResponse.json(
+      createErrorResponse({
+        error: rateLimitResult.error?.message || 'Rate limit exceeded',
+        code: rateLimitResult.error?.code || PAYMENT_VERIFICATION_ERROR_CODES.RATE_LIMIT_EXCEEDED
+      }),
+      {
+        status: 429,
+        headers: {
+          ...rateLimitHeaders,
+          'Retry-After': String(rateLimitResult.error?.retryAfter || 60)
+        }
+      }
+    );
+  }
+
+  // Parse and validate request body
+  let requestBody: PaymentVerificationRequest;
+  try {
+    const rawBody = await request.json();
+
+    // Validate request structure
+    const validation = validatePaymentVerificationRequest(rawBody);
+    if (!validation.success) {
+      const duration = Date.now() - startTime;
+
+      logVerificationFailure({
+        requestId,
+        userId,
+        error: validation.error,
+        errorCode: validation.field ? PAYMENT_VERIFICATION_ERROR_CODES.INVALID_REQUEST_FORMAT : PAYMENT_VERIFICATION_ERROR_CODES.MISSING_REQUIRED_FIELD,
+        duration,
+        metadata: {
+          validationError: validation.error,
+          field: validation.field,
+          received: validation.received
+        },
+        request
+      });
+
+      return NextResponse.json(
+        createErrorResponse({
+          error: validation.error,
+          code: validation.field ? PAYMENT_VERIFICATION_ERROR_CODES.INVALID_REQUEST_FORMAT : PAYMENT_VERIFICATION_ERROR_CODES.MISSING_REQUIRED_FIELD,
+          details: {
+            field: validation.field,
+            issue: validation.issue,
+            received: validation.received
+          }
+        }),
+        {
+          status: 400,
+          headers: rateLimitHeaders
+        }
+      );
+    }
+
+    requestBody = validation.data;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+
+    logVerificationFailure({
+      requestId,
+      userId,
+      error: 'Invalid JSON in request body',
+      errorCode: PAYMENT_VERIFICATION_ERROR_CODES.INVALID_REQUEST_FORMAT,
+      duration,
+      metadata: {
+        parseError: error instanceof Error ? error.message : 'Unknown parse error'
+      },
+      request
+    });
+
+    return NextResponse.json(
+      createErrorResponse({
+        error: 'Invalid request format',
+        code: PAYMENT_VERIFICATION_ERROR_CODES.INVALID_REQUEST_FORMAT
+      }),
+      {
+        status: 400,
+        headers: rateLimitHeaders
+      }
+    );
+  }
+
+  // Log verification attempt
+  logVerificationAttempt({
+    requestId,
+    userId,
+    paymentId: requestBody.razorpayPaymentId,
+    subscriptionId: requestBody.razorpaySubscriptionId,
+    request
+  });
+
+  // Verify subscription ownership
+  const ownershipCheck = await verifySubscriptionOwnership(
+    supabase,
+    requestBody.razorpaySubscriptionId,
+    userId
+  );
+
+  if (!ownershipCheck.valid) {
+    const duration = Date.now() - startTime;
+
+    logVerificationFailure({
+      requestId,
+      userId,
+      paymentId: requestBody.razorpayPaymentId,
+      subscriptionId: requestBody.razorpaySubscriptionId,
+      error: ownershipCheck.error!,
+      errorCode: PAYMENT_VERIFICATION_ERROR_CODES.SUBSCRIPTION_NOT_FOUND,
+      duration,
+      request
+    });
+
+    return NextResponse.json(
+      createErrorResponse({
+        error: 'Subscription not found or access denied',
+        code: PAYMENT_VERIFICATION_ERROR_CODES.SUBSCRIPTION_NOT_FOUND
+      }),
+      {
+        status: 404,
+        headers: rateLimitHeaders
+      }
+    );
+  }
+
+  // Verify HMAC signature
+  let signatureResult: SignatureVerificationResult;
+  try {
+    signatureResult = verifyPaymentSignature(
+      requestBody.razorpayPaymentId,
+      requestBody.razorpaySubscriptionId,
+      requestBody.razorpaySignature,
+      process.env.RAZORPAY_KEY_SECRET!
+    );
+
+    if (!signatureResult.valid) {
+      const duration = Date.now() - startTime;
+
+      logSignatureMismatch({
+        requestId,
+        userId,
+        paymentId: requestBody.razorpayPaymentId,
+        subscriptionId: requestBody.razorpaySubscriptionId,
+        expectedSignature: signatureResult.details?.expectedSignature,
+        receivedSignature: requestBody.razorpaySignature,
+        request
+      });
+
+      logVerificationFailure({
+        requestId,
+        userId,
+        paymentId: requestBody.razorpayPaymentId,
+        subscriptionId: requestBody.razorpaySubscriptionId,
+        error: signatureResult.error || 'Signature verification failed',
+        errorCode: PAYMENT_VERIFICATION_ERROR_CODES.SIGNATURE_MISMATCH,
+        duration,
+        metadata: {
+          signatureLength: requestBody.razorpaySignature.length,
+          expectedSignaturePrefix: signatureResult.details?.expectedSignature?.substring(0, 8),
+          receivedSignaturePrefix: requestBody.razorpaySignature.substring(0, 8)
+        },
+        request
+      });
+
+      return NextResponse.json(
+        createErrorResponse({
+          error: 'Invalid payment signature',
+          code: PAYMENT_VERIFICATION_ERROR_CODES.SIGNATURE_MISMATCH,
+          details: {
+            field: 'razorpaySignature',
+            issue: 'HMAC signature verification failed'
+          }
+        }),
+        {
+          status: 400,
+          headers: rateLimitHeaders
+        }
+      );
+    }
+  } catch (error) {
+    const duration = Date.now() - startTime;
+
+    logInternalError({
+      requestId,
+      userId,
+      operation: 'signature_verification',
+      error: error instanceof Error ? error.message : 'Unknown signature verification error',
+      errorCode: 'SIGNATURE_VERIFICATION_ERROR',
+      metadata: {
+        paymentId: requestBody.razorpayPaymentId,
+        subscriptionId: requestBody.razorpaySubscriptionId
+      },
+      request
+    });
+
+    return NextResponse.json(
+      createErrorResponse({
+        error: 'Signature verification failed',
+        code: PAYMENT_VERIFICATION_ERROR_CODES.VERIFICATION_FAILED
+      }),
+      {
+        status: 500,
+        headers: rateLimitHeaders
+      }
+    );
+  }
+
+  // Update subscription status
+  const updateResult = await updateSubscriptionStatus(
+    supabase,
+    requestBody.razorpaySubscriptionId,
+    requestBody.razorpayPaymentId,
+    userId
+  );
+
+  if (!updateResult.success) {
+    const duration = Date.now() - startTime;
+
+    logDatabaseError({
+      requestId,
+      userId,
+      operation: 'update_subscription_status',
+      error: updateResult.error!,
+      errorCode: 'SUBSCRIPTION_UPDATE_FAILED',
+      metadata: {
+        subscriptionId: requestBody.razorpaySubscriptionId,
+        paymentId: requestBody.razorpayPaymentId
+      },
+      request
+    });
+
+    logVerificationFailure({
+      requestId,
+      userId,
+      paymentId: requestBody.razorpayPaymentId,
+      subscriptionId: requestBody.razorpaySubscriptionId,
+      error: updateResult.error!,
+      errorCode: PAYMENT_VERIFICATION_ERROR_CODES.VERIFICATION_FAILED,
+      duration,
+      request
+    });
+
+    return NextResponse.json(
+      createErrorResponse({
+        error: 'Failed to update subscription status',
+        code: PAYMENT_VERIFICATION_ERROR_CODES.VERIFICATION_FAILED
+      }),
+      {
+        status: 500,
+        headers: rateLimitHeaders
+      }
+    );
+  }
+
+  // Success
+  const duration = Date.now() - startTime;
+
+  logVerificationSuccess({
+    requestId,
+    userId,
+    paymentId: requestBody.razorpayPaymentId,
+    subscriptionId: requestBody.razorpaySubscriptionId,
+    duration,
+    metadata: {
+      subscriptionStatus: 'authenticated',
+      signatureValid: true
+    },
+    request
+  });
+
+  const response: PaymentVerificationResponse = createSuccessResponse({
+    message: 'Payment verified successfully',
+    subscriptionId: requestBody.razorpaySubscriptionId,
+    paymentId: requestBody.razorpayPaymentId,
+    verificationId: requestId
+  });
+
+  return NextResponse.json(response, {
+    status: 200,
+    headers: rateLimitHeaders
+  });
+}

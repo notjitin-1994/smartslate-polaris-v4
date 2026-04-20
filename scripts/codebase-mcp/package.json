@@ -1,0 +1,34 @@
+
+
+{
+  "name": "@polaris/context-mcp",
+  "version": "1.0.0",
+  "description": "MCP server providing SmartSlate Polaris v3 codebase context to LLMs",
+  "type": "module",
+  "main": "build/index.js",
+  "bin": {
+    "polaris-context-mcp": "build/index.js"
+  },
+  "scripts": {
+    "build": "tsc && node -e \"import('fs').then(fs => fs.chmodSync('build/index.js', '755'))\"",
+    "dev": "tsx src/index.ts",
+    "start": "node build/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["mcp", "model-context-protocol", "polaris", "codebase-context"],
+  "author": "SmartSlate Team",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.1",
+    "zod": "^3.25.76",
+    "glob": "^11.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

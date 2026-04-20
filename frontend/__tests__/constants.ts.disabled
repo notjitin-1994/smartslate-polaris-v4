@@ -1,0 +1,394 @@
+/**
+ * Test Constants and Configuration
+ *
+ * Centralized constants for testing scenarios
+ */
+
+// Subscription tier configurations
+export const SUBSCRIPTION_TIERS = {
+  EXPLORER: {
+    name: 'explorer',
+    displayName: 'Free Tier Member',
+    price: 0,
+    limits: {
+      blueprintCreation: 2,
+      blueprintSaving: 2,
+      features: ['basic_blueprints', 'pdf_export']
+    }
+  },
+  NAVIGATOR: {
+    name: 'navigator',
+    displayName: 'Navigator Member',
+    price: 2900, // ₹29/month in paise
+    limits: {
+      blueprintCreation: 25,
+      blueprintSaving: 25,
+      features: ['advanced_blueprints', 'pdf_export', 'word_export', 'priority_support']
+    }
+  },
+  VOYAGER: {
+    name: 'voyager',
+    displayName: 'Voyager Member',
+    price: 5900, // ₹59/month in paise
+    limits: {
+      blueprintCreation: 50,
+      blueprintSaving: 50,
+      features: ['all_blueprints', 'all_exports', 'priority_support', 'team_features']
+    }
+  },
+  CREW: {
+    name: 'crew',
+    displayName: 'Crew Member',
+    price: 9900, // ₹99/month in paise
+    limits: {
+      blueprintCreation: 100,
+      blueprintSaving: 100,
+      features: ['all_blueprints', 'all_exports', 'priority_support', 'team_features', 'api_access']
+    }
+  },
+  FLEET: {
+    name: 'fleet',
+    displayName: 'Fleet Member',
+    price: 19900, // ₹199/month in paise
+    limits: {
+      blueprintCreation: 250,
+      blueprintSaving: 250,
+      features: ['all_blueprints', 'all_exports', 'priority_support', 'team_features', 'api_access', 'custom_templates']
+    }
+  },
+  ARMADA: {
+    name: 'armada',
+    displayName: 'Armada Member',
+    price: 49900, // ₹499/month in paise
+    limits: {
+      blueprintCreation: 1000,
+      blueprintSaving: 1000,
+      features: ['all_blueprints', 'all_exports', 'priority_support', 'team_features', 'api_access', 'custom_templates', 'enterprise_features']
+    }
+  }
+} as const;
+
+// Billing cycle configurations
+export const BILLING_CYCLES = {
+  MONTHLY: {
+    name: 'monthly',
+    interval: 1,
+    displayName: 'Monthly'
+  },
+  YEARLY: {
+    name: 'yearly',
+    interval: 12,
+    displayName: 'Yearly (Save 20%)'
+  }
+} as const;
+
+// Webhook event types
+export const WEBHOOK_EVENTS = {
+  SUBSCRIPTION_CREATED: 'subscription.created',
+  SUBSCRIPTION_AUTHENTICATED: 'subscription.authenticated',
+  SUBSCRIPTION_ACTIVATED: 'subscription.activated',
+  SUBSCRIPTION_COMPLETED: 'subscription.completed',
+  SUBSCRIPTION_CANCELLED: 'subscription.cancelled',
+  SUBSCRIPTION_HALTED: 'subscription.halted',
+  SUBSCRIPTION_RESUMED: 'subscription.resumed',
+  PAYMENT_CAPTURED: 'payment.captured',
+  PAYMENT_FAILED: 'payment.failed',
+  PAYMENT_REFUNDED: 'payment.refunded'
+} as const;
+
+// HTTP status codes
+export const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  NO_CONTENT: 204,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  METHOD_NOT_ALLOWED: 405,
+  CONFLICT: 409,
+  UNPROCESSABLE_ENTITY: 422,
+  TOO_MANY_REQUESTS: 429,
+  INTERNAL_SERVER_ERROR: 500,
+  BAD_GATEWAY: 502,
+  SERVICE_UNAVAILABLE: 503,
+  GATEWAY_TIMEOUT: 504
+} as const;
+
+// Error codes
+export const ERROR_CODES = {
+  // Authentication errors
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  INVALID_TOKEN: 'INVALID_TOKEN',
+  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
+
+  // Validation errors
+  INVALID_REQUEST: 'INVALID_REQUEST',
+  VALIDATION_FAILED: 'VALIDATION_FAILED',
+  MISSING_REQUIRED_FIELD: 'MISSING_REQUIRED_FIELD',
+  INVALID_UUID: 'INVALID_UUID',
+
+  // Business logic errors
+  SUBSCRIPTION_LIMIT_REACHED: 'SUBSCRIPTION_LIMIT_REACHED',
+  INSUFFICIENT_PERMISSIONS: 'INSUFFICIENT_PERMISSIONS',
+  FEATURE_NOT_AVAILABLE: 'FEATURE_NOT_AVAILABLE',
+
+  // Payment errors
+  PAYMENT_FAILED: 'PAYMENT_FAILED',
+  PAYMENT_CANCELLED: 'PAYMENT_CANCELLED',
+  PAYMENT_TIMEOUT: 'PAYMENT_TIMEOUT',
+  INVALID_PLAN: 'INVALID_PLAN',
+
+  // Database errors
+  DATABASE_ERROR: 'DATABASE_ERROR',
+  RECORD_NOT_FOUND: 'RECORD_NOT_FOUND',
+  DUPLICATE_RECORD: 'DUPLICATE_RECORD',
+
+  // External service errors
+  RAZORPAY_ERROR: 'RAZORPAY_ERROR',
+  CLAUDE_API_ERROR: 'CLAUDE_API_ERROR',
+  SUPABASE_ERROR: 'SUPABASE_ERROR',
+
+  // Rate limiting
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED'
+} as const;
+
+// Test user roles
+export const USER_ROLES = {
+  EXPLORER: 'explorer',
+  NAVIGATOR: 'navigator',
+  DEVELOPER: 'developer',
+  ADMIN: 'admin'
+} as const;
+
+// Blueprint statuses
+export const BLUEPRINT_STATUSES = {
+  DRAFT: 'draft',
+  GENERATING: 'generating',
+  COMPLETED: 'completed',
+  ERROR: 'error'
+} as const;
+
+// Payment methods
+export const PAYMENT_METHODS = {
+  CARD: 'card',
+  NETBANKING: 'netbanking',
+  UPI: 'upi',
+  WALLET: 'wallet'
+} as const;
+
+// Test configurations
+export const TEST_CONFIG = {
+  // Performance thresholds
+  MAX_API_RESPONSE_TIME: 500, // ms
+  MAX_WEBHOOK_PROCESSING_TIME: 2000, // ms
+  MAX_DATABASE_QUERY_TIME: 100, // ms
+
+  // Rate limiting
+  MAX_REQUESTS_PER_MINUTE: 60,
+  BURST_LIMIT: 10,
+
+  // File size limits
+  MAX_BLUEPRINT_SIZE: 10 * 1024 * 1024, // 10MB
+  MAX_EXPORT_SIZE: 50 * 1024 * 1024, // 50MB
+
+  // Test data
+  DEFAULT_USER_EMAIL: 'test@example.com',
+  DEFAULT_USER_NAME: 'Test User',
+  DEFAULT_PHONE: '+919876543210',
+
+  // Mock timeouts
+  DEFAULT_MOCK_DELAY: 100, // ms
+  API_TIMEOUT: 30000, // ms
+
+  // Coverage thresholds
+  MIN_COVERAGE_PERCENTAGE: 90,
+  CRITICAL_PATH_COVERAGE: 95
+} as const;
+
+// Test environment variables
+export const TEST_ENV_VARS = {
+  NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
+  SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key',
+  ANTHROPIC_API_KEY: 'test-anthropic-key',
+  NEXT_PUBLIC_RAZORPAY_KEY_ID: 'rzp_test_1234567890',
+  RAZORPAY_KEY_SECRET: 'test_razorpay_secret',
+  NODE_ENV: 'test',
+  DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+  REDIS_URL: 'redis://localhost:6379/0'
+} as const;
+
+// Mock response templates
+export const MOCK_RESPONSES = {
+  SUCCESS: {
+    success: true,
+    message: 'Operation completed successfully'
+  },
+
+  ERROR: {
+    success: false,
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: 'An unexpected error occurred'
+    }
+  },
+
+  VALIDATION_ERROR: {
+    success: false,
+    error: {
+      code: 'VALIDATION_FAILED',
+      message: 'Invalid request data',
+      details: null
+    }
+  },
+
+  NOT_FOUND: {
+    success: false,
+    error: {
+      code: 'NOT_FOUND',
+      message: 'Resource not found'
+    }
+  },
+
+  UNAUTHORIZED: {
+    success: false,
+    error: {
+      code: 'UNAUTHORIZED',
+      message: 'Authentication required'
+    }
+  },
+
+  RATE_LIMITED: {
+    success: false,
+    error: {
+      code: 'RATE_LIMIT_EXCEEDED',
+      message: 'Too many requests, please try again later'
+    }
+  }
+} as const;
+
+// Test URLs
+export const TEST_URLS = {
+  BASE: 'https://test.polaris-v3.com',
+  API_BASE: 'https://test.polaris-v3.com/api',
+
+  // API endpoints
+  SUBSCRIPTIONS_CREATE: '/api/subscriptions/create',
+  SUBSCRIPTIONS_LIST: '/api/subscriptions',
+  SUBSCRIPTIONS_CANCEL: '/api/subscriptions/cancel',
+  WEBHOOKS_RAZORPAY: '/api/webhooks/razorpay',
+
+  // Pages
+  PRICING: '/pricing',
+  DASHBOARD: '/dashboard',
+  SETTINGS: '/settings',
+  LOGIN: '/login',
+  SIGNUP: '/signup'
+} as const;
+
+// Test data templates
+export const TEST_TEMPLATES = {
+  USER: {
+    email: 'test@example.com',
+    full_name: 'Test User',
+    phone: '+919876543210'
+  },
+
+  CUSTOMER: {
+    name: 'Test User',
+    email: 'test@example.com',
+    contact: '+919876543210',
+    notes: {
+      source: 'test',
+      created_via: 'api'
+    }
+  },
+
+  SUBSCRIPTION_REQUEST: {
+    tier: 'navigator',
+    billingCycle: 'monthly',
+    customerInfo: {
+      name: 'Test User',
+      email: 'test@example.com',
+      contact: '+919876543210'
+    }
+  },
+
+  BLUEPRINT_REQUEST: {
+    title: 'Test Blueprint',
+    organization_name: 'Test Organization',
+    industry: 'Technology',
+    department: 'Engineering',
+    team_size: '50-100',
+    timeline: '3-6 months',
+    budget: '100K-500K'
+  }
+} as const;
+
+// Performance benchmarks
+export const PERFORMANCE_BENCHMARKS = {
+  API_RESPONSE_TIME: {
+    FAST: 100,      // ms
+    NORMAL: 500,    // ms
+    SLOW: 2000      // ms
+  },
+
+  DATABASE_QUERY_TIME: {
+    FAST: 10,       // ms
+    NORMAL: 100,    // ms
+    SLOW: 500       // ms
+  },
+
+  WEBHOOK_PROCESSING: {
+    FAST: 500,      // ms
+    NORMAL: 2000,   // ms
+    SLOW: 5000      // ms
+  }
+} as const;
+
+// Security test vectors
+export const SECURITY_VECTORS = {
+  SQL_INJECTION: [
+    "'; DROP TABLE users; --",
+    "' OR '1'='1",
+    "1'; DELETE FROM users WHERE '1'='1"
+  ],
+
+  XSS: [
+    "<script>alert('XSS')</script>",
+    "javascript:alert('XSS')",
+    "<img src=x onerror=alert('XSS')>"
+  ],
+
+  PATH_TRAVERSAL: [
+    "../../../etc/passwd",
+    "..\\..\\..\\windows\\system32\\config\\sam",
+    "....//....//....//etc/passwd"
+  ],
+
+  COMMAND_INJECTION: [
+    "; ls -la",
+    "| cat /etc/passwd",
+    "&& rm -rf /"
+  ]
+} as const;
+
+// Default export
+export default {
+  SUBSCRIPTION_TIERS,
+  BILLING_CYCLES,
+  WEBHOOK_EVENTS,
+  HTTP_STATUS,
+  ERROR_CODES,
+  USER_ROLES,
+  BLUEPRINT_STATUSES,
+  PAYMENT_METHODS,
+  TEST_CONFIG,
+  TEST_ENV_VARS,
+  MOCK_RESPONSES,
+  TEST_URLS,
+  TEST_TEMPLATES,
+  PERFORMANCE_BENCHMARKS,
+  SECURITY_VECTORS
+};

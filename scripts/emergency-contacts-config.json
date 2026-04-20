@@ -1,0 +1,256 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-10-30T00:00:00Z",
+  "environment": "production",
+  "contacts": {
+    "primary": {
+      "productionLead": {
+        "name": "Production Lead",
+        "phone": "+91-XXXXXXXXXX",
+        "email": "prod-lead@smartslate.ai",
+        "role": "Production System Lead",
+        "availability": "24/7",
+        "slack": "@production-lead"
+      },
+      "devopsEngineer": {
+        "name": "DevOps Engineer",
+        "phone": "+91-XXXXXXXXXX",
+        "email": "devops@smartslate.ai",
+        "role": "Infrastructure & Deployment",
+        "availability": "24/7",
+        "slack": "@devops"
+      },
+      "backendDeveloper": {
+        "name": "Backend Developer",
+        "phone": "+91-XXXXXXXXXX",
+        "email": "backend-dev@smartslate.ai",
+        "role": "Backend Systems & APIs",
+        "availability": "24/7",
+        "slack": "@backend-dev"
+      },
+      "frontendDeveloper": {
+        "name": "Frontend Developer",
+        "phone": "+91-XXXXXXXXXX",
+        "email": "frontend-dev@smartslate.ai",
+        "role": "Frontend & User Interface",
+        "availability": "24/7",
+        "slack": "@frontend-dev"
+      },
+      "databaseAdmin": {
+        "name": "Database Administrator",
+        "phone": "+91-XXXXXXXXXX",
+        "email": "dba@smartslate.ai",
+        "role": "Database Management",
+        "availability": "24/7",
+        "slack": "@dba"
+      }
+    },
+    "management": {
+      "cto": {
+        "name": "CTO",
+        "phone": "+91-XXXXXXXXXX",
+        "email": "cto@smartslate.ai",
+        "role": "Chief Technology Officer",
+        "availability": "Critical incidents only",
+        "slack": "@cto"
+      },
+      "engineeringManager": {
+        "name": "Engineering Manager",
+        "phone": "+91-XXXXXXXXXX",
+        "email": "eng-manager@smartslate.ai",
+        "role": "Engineering Management",
+        "availability": "High/Critical incidents",
+        "slack": "@eng-manager"
+      }
+    },
+    "external": {
+      "vercelSupport": {
+        "name": "Vercel Support",
+        "email": "support@vercel.com",
+        "website": "https://vercel.com/support",
+        "phone": "Support available via dashboard",
+        "responseTime": "Business hours, critical 24/7",
+        "purpose": "Vercel platform issues, deployment problems"
+      },
+      "supabaseSupport": {
+        "name": "Supabase Support",
+        "email": "support@supabase.io",
+        "website": "https://supabase.io/support",
+        "phone": "Support available via dashboard",
+        "responseTime": "Business hours, critical 24/7",
+        "purpose": "Database issues, connectivity problems"
+      },
+      "razorpaySupport": {
+        "name": "Razorpay Support",
+        "email": "support@razorpay.com",
+        "website": "https://razorpay.com/support",
+        "phone": "022-6784-9999 (India)",
+        "responseTime": "24/7 for payment issues",
+        "purpose": "Payment processing, webhook issues"
+      },
+      "domainProvider": {
+        "name": "Domain Provider Support",
+        "email": "support@domain-provider.com",
+        "website": "https://domain-provider.com/support",
+        "phone": "Provider-specific",
+        "responseTime": "Business hours",
+        "purpose": "DNS issues, SSL certificate problems"
+      }
+    }
+  },
+  "escalationMatrix": {
+    "severity_1_critical": {
+      "responseTime": "15 minutes",
+      "escalationChain": [
+        "productionLead",
+        "devopsEngineer",
+        "backendDeveloper",
+        "frontendDeveloper",
+        "databaseAdmin",
+        "cto"
+      ],
+      "notifyAll": true,
+      "executiveNotification": true
+    },
+    "severity_2_high": {
+      "responseTime": "1 hour",
+      "escalationChain": [
+        "productionLead",
+        "devopsEngineer",
+        "backendDeveloper",
+        "engineeringManager"
+      ],
+      "notifyAll": false,
+      "executiveNotification": false
+    },
+    "severity_3_medium": {
+      "responseTime": "4 hours",
+      "escalationChain": [
+        "productionLead",
+        "devopsEngineer"
+      ],
+      "notifyAll": false,
+      "executiveNotification": false
+    },
+    "severity_4_low": {
+      "responseTime": "24 hours",
+      "escalationChain": [
+        "productionLead"
+      ],
+      "notifyAll": false,
+      "executiveNotification": false
+    }
+  },
+  "communicationChannels": {
+    "slack": {
+      "incidents": "#incidents",
+      "alerts": "#alerts",
+      "engineering": "#engineering",
+      "management": "#management",
+      "webhookUrl": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+    },
+    "email": {
+      "alerts": "alerts@smartslate.ai",
+      "incidents": "incidents@smartslate.ai",
+      "management": "management@smartslate.ai",
+      "support": "support@smartslate.ai"
+    },
+    "statusPage": {
+      "url": "https://status.smartslate.ai",
+      "updateUrl": "https://status.smartslate.ai/admin"
+    },
+    "phoneTree": {
+      "primary": "+91-XXXXXXXXXX",
+      "secondary": "+91-XXXXXXXXXX",
+      "emergency": "+91-XXXXXXXXXX"
+    }
+  },
+  "incidentTypes": {
+    "paymentSystem": {
+      "description": "Payment processing failures, webhook issues, Razorpay problems",
+      "primaryContacts": ["backendDeveloper", "razorpaySupport"],
+      "severity": "critical"
+    },
+    "infrastructure": {
+      "description": "Deployment failures, database issues, CDN problems",
+      "primaryContacts": ["devopsEngineer", "databaseAdmin"],
+      "severity": "high"
+    },
+    "security": {
+      "description": "Security breaches, unauthorized access, data exposure",
+      "primaryContacts": ["productionLead", "backendDeveloper", "cto"],
+      "severity": "critical"
+    },
+    "performance": {
+      "description": "Slow response times, high error rates, resource issues",
+      "primaryContacts": ["devopsEngineer", "backendDeveloper"],
+      "severity": "medium"
+    },
+    "userExperience": {
+      "description": "UI issues, frontend errors, accessibility problems",
+      "primaryContacts": ["frontendDeveloper"],
+      "severity": "low"
+    }
+  },
+  "backupContacts": {
+    "ifPrimaryUnavailable": {
+      "productionLead": "devopsEngineer",
+      "devopsEngineer": "backendDeveloper",
+      "backendDeveloper": "frontendDeveloper",
+      "frontendDeveloper": "databaseAdmin",
+      "databaseAdmin": "productionLead"
+    }
+  },
+  "onCallSchedule": {
+    "currentWeek": {
+      "monday": "productionLead",
+      "tuesday": "devopsEngineer",
+      "wednesday": "backendDeveloper",
+      "thursday": "frontendDeveloper",
+      "friday": "databaseAdmin",
+      "saturday": "productionLead",
+      "sunday": "devopsEngineer"
+    },
+    "nextWeek": {
+      "monday": "backendDeveloper",
+      "tuesday": "frontendDeveloper",
+      "wednesday": "databaseAdmin",
+      "thursday": "productionLead",
+      "friday": "devopsEngineer",
+      "saturday": "backendDeveloper",
+      "sunday": "frontendDeveloper"
+    }
+  },
+  "serviceStatus": {
+    "vercel": "https://status.vercel.com",
+    "supabase": "https://status.supabase.com",
+    "razorpay": "https://status.razorpay.com",
+    "domainProvider": "https://status.domain-provider.com"
+  },
+  "documentation": {
+    "rollbackProcedures": "/docs/ROLLBACK_AND_EMERGENCY_PROCEDURES.md",
+    "incidentResponse": "/docs/INCIDENT_RESPONSE_PLAYBOOK.md",
+    "monitoringGuide": "/docs/PRODUCTION_MONITORING_SETUP.md",
+    "deploymentGuide": "/docs/PRODUCTION_DEPLOYMENT_CONFIG.md"
+  },
+  "testing": {
+    "emergencyContactTest": {
+      "lastTested": "2025-10-15T10:00:00Z",
+      "nextTest": "2025-11-15T10:00:00Z",
+      "testMethod": "Automated phone verification",
+      "status": "passed"
+    },
+    "escalationTest": {
+      "lastTested": "2025-10-20T14:00:00Z",
+      "nextTest": "2025-11-20T14:00:00Z",
+      "testMethod": "Simulated incident drill",
+      "status": "passed"
+    }
+  },
+  "compliance": {
+    "dataRetention": "Keep incident logs for 2 years",
+    "accessControl": "Only authorized personnel can view contact information",
+    "auditRequired": "Quarterly review of emergency procedures and contacts",
+    "gdprCompliance": "All personal data handled according to GDPR requirements"
+  }
+}

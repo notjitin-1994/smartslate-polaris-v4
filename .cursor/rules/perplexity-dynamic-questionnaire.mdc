@@ -1,0 +1,682 @@
+---
+description: Rules for Perplexity-powered dynamic questionnaire system implementation
+globs: frontend/app/api/dynamic-questions/**, frontend/app/api/perplexity-research/**, frontend/lib/services/questionGeneration*, frontend/lib/dynamic-form/**, frontend/app/logs/**, frontend/lib/logging/**
+alwaysApply: false
+---
+
+# Perplexity Dynamic Questionnaire System Rules
+
+## **Architecture Principles**
+
+- **Perplexity-First, Ollama-Fallback**: Always attempt Perplexity (`sonar-pro`) generation first, gracefully fallback to Ollama on failure
+- **Schema-Driven**: All dynamic questions must conform to strict JSON schema with validation
+- **Extensible Input Types**: Support dynamic input type registration without code changes
+- **Zero Data Loss**: Implement comprehensive error handling and retry mechanisms
+- **Observability**: Log all API calls, responses, and errors with structured metadata
+
+## **Perplexity Integration**
+
+### API Configuration
+```typescript
+// Use existing PerplexityService from smartslate-polaris
+import { perplexityService } from '@/smartslate-polaris/src/services/perplexityService';
+
+// Configuration for dynamic questions
+const PERPLEXITY_CONFIG = {
+  model: 'sonar-pro',
+  temperature: 0.1,
+  maxTokens: 8700,
+  timeout: 75000,
+  retries: 2,
+};
+```
+
+### Prompt Structure
+- **Context First**: Include static questionnaire answers, user role, industry
+- **Research Requirement**: Explicitly request web research for current best practices
+- **Strict JSON Output**: Demand valid JSON without markdown or preamble
+- **Input Type Diversity**: Encourage use of visual inputs (pills, cards) over traditional select/multiselect
+
+### Example Prompt Template
+```typescript
+const buildDynamicQuestionPrompt = (context: QuestionContext) => `
+You are an expert Learning Experience Designer with access to current web research.
+
+CONTEXT:
+- Role: ${context.role}
+- Industry: ${context.industry}
+- Organization Size: ${context.orgSize}
+- Static Answers: ${JSON.stringify(context.staticAnswers)}
+
+TASK:
+Generate 5 sections with 7 questions each (35 total) for a learning needs analysis.
+Research current ${context.industry} L&D best practices from 2024-2025.
+
+OUTPUT SCHEMA (strict JSON):
+{
+  "sections": [
+    {
+      "id": "s1",
+      "title": "Section Title",
+      "description": "Context about this section",
+      "order": 1,
+      "questions": [
+        {
+          "id": "q1_s1",
+          "label": "Question text",
+          "type": "text|textarea|select|radio_pills|radio_cards|checkbox_pills|checkbox_cards|scale|enhanced_scale|labeled_slider|toggle_switch|currency|number_spinner",
+          "required": true,
+          "helpText": "Guidance for user",
+          "placeholder": "Example answer",
+          "options": [{"value": "v1", "label": "Label"}],
+          "scaleConfig": {"min": 1, "max": 5, "minLabel": "Low", "maxLabel": "High"},
+          "metadata": {"researchSource": "cite if applicable"}
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "generatedAt": "${new Date().toISOString()}",
+    "model": "sonar-pro",
+    "researchCitations": []
+  }
+}
+
+NO MARKDOWN, NO PREAMBLE - ONLY VALID JSON
+`;
+```
+
+## **Ollama Fallback**
+
+### Trigger Conditions
+```typescript
+const FALLBACK_TRIGGERS = [
+  'timeout',
+  'api_error',
+  'invalid_response',
+  'rate_limit',
+  'network_error',
+] as const;
+
+async function generateWithFallback(context: QuestionContext) {
+  try {
+    return await generateWithPerplexity(context);
+  } catch (error) {
+    logger.warn('Perplexity failed, activating Ollama fallback', { error });
+    return await generateWithOllama(context);
+  }
+}
+```
+
+### Ollama Configuration
+```typescript
+const OLLAMA_CONFIG = {
+  model: 'qwen3:30b-a3b',
+  baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434/api',
+  timeout: 120000,
+  temperature: 0.2,
+};
+```
+
+## **Dynamic Input Type System**
+
+### Input Type Registry
+```typescript
+// Registry pattern for extensible input types
+class InputTypeRegistry {
+  private registry = new Map<string, ComponentType<any>>();
+  
+  register(type: string, component: ComponentType<any>) {
+    this.registry.set(type, component);
+  }
+  
+  get(type: string): ComponentType<any> | null {
+    return this.registry.get(type) || null;
+  }
+  
+  hasType(type: string): boolean {
+    return this.registry.has(type);
+  }
+}
+
+const inputRegistry = new InputTypeRegistry();
+
+// Register known types
+inputRegistry.register('text', TextInput);
+inputRegistry.register('textarea', TextareaInput);
+inputRegistry.register('radio_pills', RadioPillsInput);
+// ... register all 27 current types
+```
+
+### Unknown Type Handling
+```typescript
+function renderDynamicInput(question: Question) {
+  const { type } = question;
+  
+  // Check if type exists in registry
+  if (inputRegistry.hasType(type)) {
+    const Component = inputRegistry.get(type)!;
+    return <Component {...question} />;
+  }
+  
+  // Intelligent type mapping for unknown types
+  const mappedType = intelligentTypeMapper(type);
+  logger.warn('Unknown input type detected', { 
+    originalType: type, 
+    mappedTo: mappedType,
+    questionId: question.id 
+  });
+  
+  const FallbackComponent = inputRegistry.get(mappedType) || TextInput;
+  return <FallbackComponent {...question} />;
+}
+
+// Intelligent mapping logic
+const intelligentTypeMapper = (unknownType: string): InputType => {
+  const mappings: Record<string, InputType> = {
+    'datetime': 'date',
+    'time': 'text',
+    'file': 'text',
+    'rich_text': 'textarea',
+    'dropdown': 'select',
+    'checklist': 'checkbox_pills',
+    'rating': 'scale',
+    'range': 'labeled_slider',
+    'boolean': 'toggle_switch',
+    'money': 'currency',
+    'count': 'number_spinner',
+  };
+  
+  const lowerType = unknownType.toLowerCase();
+  return mappings[lowerType] || 'text'; // Default to text
+};
+```
+
+## **Data Persistence**
+
+### Save Dynamic Questions
+```typescript
+async function saveDynamicQuestions(
+  blueprintId: string,
+  userId: string,
+  sections: Section[],
+  rawResponse: any
+): Promise<void> {
+  const supabase = await getSupabaseServerClient();
+  
+  // Transform sections for form rendering
+  const formSchema = transformToFormSchema(sections);
+  
+  const { error } = await supabase
+    .from('blueprint_generator')
+    .update({
+      dynamic_questions: formSchema, // For UI rendering
+      dynamic_questions_raw: rawResponse, // Raw LLM response
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', blueprintId)
+    .eq('user_id', userId);
+    
+  if (error) {
+    logger.error('Failed to save dynamic questions', { error, blueprintId });
+    throw new Error('Failed to save questions to database');
+  }
+  
+  logger.info('Dynamic questions saved successfully', { 
+    blueprintId, 
+    sectionCount: sections.length 
+  });
+}
+```
+
+### Save Dynamic Answers
+```typescript
+async function saveDynamicAnswers(
+  blueprintId: string,
+  userId: string,
+  answers: Record<string, any>
+): Promise<void> {
+  const supabase = await getSupabaseServerClient();
+  
+  const { error } = await supabase
+    .from('blueprint_generator')
+    .update({
+      dynamic_answers: answers,
+      status: 'completed',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', blueprintId)
+    .eq('user_id', userId);
+    
+  if (error) {
+    logger.error('Failed to save dynamic answers', { error, blueprintId });
+    throw new Error('Failed to save answers to database');
+  }
+  
+  logger.info('Dynamic answers saved successfully', { 
+    blueprintId, 
+    answerCount: Object.keys(answers).length 
+  });
+}
+```
+
+## **Logging System**
+
+### Structured Logging
+```typescript
+interface LogEntry {
+  id: string;
+  timestamp: string;
+  level: 'debug' | 'info' | 'warn' | 'error';
+  service: string;
+  event: string;
+  userId?: string;
+  blueprintId?: string;
+  metadata: Record<string, any>;
+}
+
+class Logger {
+  private store: LogStore;
+  
+  constructor() {
+    this.store = new LogStore();
+  }
+  
+  private log(level: LogEntry['level'], event: string, metadata: Record<string, any>) {
+    const entry: LogEntry = {
+      id: generateId(),
+      timestamp: new Date().toISOString(),
+      level,
+      service: this.inferService(),
+      event,
+      ...this.scrubSensitiveData(metadata),
+    };
+    
+    this.store.add(entry);
+    
+    // Also console log for development
+    if (process.env.NODE_ENV === 'development') {
+      console[level](event, metadata);
+    }
+  }
+  
+  info(event: string, metadata = {}) {
+    this.log('info', event, metadata);
+  }
+  
+  warn(event: string, metadata = {}) {
+    this.log('warn', event, metadata);
+  }
+  
+  error(event: string, metadata = {}) {
+    this.log('error', event, metadata);
+  }
+  
+  private scrubSensitiveData(data: any): any {
+    // Remove API keys, tokens, passwords
+    const sensitive = ['api_key', 'token', 'password', 'secret'];
+    const scrubbed = { ...data };
+    
+    for (const key of Object.keys(scrubbed)) {
+      if (sensitive.some(s => key.toLowerCase().includes(s))) {
+        scrubbed[key] = '[REDACTED]';
+      }
+    }
+    
+    return scrubbed;
+  }
+}
+
+export const logger = new Logger();
+```
+
+### Log Events
+```typescript
+// ✅ DO: Log all critical operations
+logger.info('dynamic_questions.perplexity.request', {
+  blueprintId,
+  userId,
+  model: 'sonar-pro',
+  contextSize: JSON.stringify(context).length,
+});
+
+logger.info('dynamic_questions.perplexity.success', {
+  blueprintId,
+  duration: Date.now() - startTime,
+  sectionCount: sections.length,
+  questionCount: sections.reduce((sum, s) => sum + s.questions.length, 0),
+});
+
+logger.warn('dynamic_questions.perplexity.failure', {
+  blueprintId,
+  error: error.message,
+  fallbackActivated: true,
+});
+
+logger.info('dynamic_questions.input_type.unknown', {
+  type: unknownType,
+  mappedTo: mappedType,
+  questionId: question.id,
+});
+```
+
+## **API Endpoints**
+
+### POST `/api/dynamic-questions`
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { getSession } from '@/lib/auth/session';
+import { questionGenerationService } from '@/lib/services/questionGenerationService';
+
+export async function POST(req: NextRequest) {
+  try {
+    // Authenticate user
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const { blueprintId, staticAnswers, userPrompts } = await req.json();
+    
+    // Validate blueprint ownership
+    const blueprint = await validateBlueprintOwnership(blueprintId, session.user.id);
+    if (!blueprint) {
+      return NextResponse.json({ error: 'Blueprint not found' }, { status: 404 });
+    }
+    
+    // Generate questions with Perplexity → Ollama fallback
+    const result = await questionGenerationService.generate({
+      blueprintId,
+      userId: session.user.id,
+      staticAnswers,
+      userPrompts,
+    });
+    
+    return NextResponse.json(result);
+  } catch (error) {
+    logger.error('API error: dynamic-questions', { error });
+    return NextResponse.json(
+      { error: 'Failed to generate questions' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### GET `/api/logs` (Admin only)
+```typescript
+export async function GET(req: NextRequest) {
+  const session = await getSession();
+  if (!session || !session.user.isAdmin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  
+  const { searchParams } = new URL(req.url);
+  const level = searchParams.get('level');
+  const service = searchParams.get('service');
+  const userId = searchParams.get('userId');
+  const from = searchParams.get('from');
+  const to = searchParams.get('to');
+  const limit = parseInt(searchParams.get('limit') || '100');
+  
+  const logs = await logStore.query({
+    level,
+    service,
+    userId,
+    from,
+    to,
+    limit,
+  });
+  
+  return NextResponse.json({
+    logs,
+    total: logs.length,
+    filters: { level, service, userId, from, to },
+  });
+}
+```
+
+## **Error Handling**
+
+### Comprehensive Error Boundaries
+```typescript
+class QuestionGenerationError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public details?: any
+  ) {
+    super(message);
+    this.name = 'QuestionGenerationError';
+  }
+}
+
+// ✅ DO: Use specific error types
+throw new QuestionGenerationError(
+  'Perplexity API timeout',
+  'PERPLEXITY_TIMEOUT',
+  { duration: 75000 }
+);
+
+// ❌ DON'T: Use generic errors
+throw new Error('Something went wrong');
+```
+
+### Retry Logic
+```typescript
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  options: {
+    maxRetries: number;
+    delay: number;
+    onRetry?: (attempt: number, error: Error) => void;
+  }
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let attempt = 1; attempt <= options.maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      
+      if (attempt < options.maxRetries) {
+        options.onRetry?.(attempt, lastError);
+        await new Promise(resolve => 
+          setTimeout(resolve, options.delay * Math.pow(2, attempt - 1))
+        );
+      }
+    }
+  }
+  
+  throw lastError!;
+}
+```
+
+## **Testing Requirements**
+
+### Unit Tests
+```typescript
+// ✅ DO: Test Perplexity service integration
+describe('PerplexityService', () => {
+  it('should generate questions with research', async () => {
+    const result = await perplexityService.generateDynamicQuestions(context);
+    expect(result.sections).toHaveLength(5);
+    expect(result.metadata.model).toBe('sonar-pro');
+  });
+  
+  it('should handle timeout gracefully', async () => {
+    jest.setTimeout(80000);
+    const result = await perplexityService.generateDynamicQuestions(context);
+    // Should not throw, may use fallback
+    expect(result.sections).toBeDefined();
+  });
+});
+
+// ✅ DO: Test input type registry
+describe('InputTypeRegistry', () => {
+  it('should map unknown types intelligently', () => {
+    const mapped = intelligentTypeMapper('datetime');
+    expect(mapped).toBe('date');
+  });
+  
+  it('should fallback to text for unmappable types', () => {
+    const mapped = intelligentTypeMapper('unknown_type_xyz');
+    expect(mapped).toBe('text');
+  });
+});
+```
+
+### Integration Tests
+```typescript
+// ✅ DO: Test full flow with database
+describe('Dynamic Questions API', () => {
+  it('should save questions to database', async () => {
+    const response = await fetch('/api/dynamic-questions', {
+      method: 'POST',
+      body: JSON.stringify({ blueprintId, staticAnswers }),
+    });
+    
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    
+    // Verify database save
+    const { data: blueprint } = await supabase
+      .from('blueprint_generator')
+      .select('dynamic_questions')
+      .eq('id', blueprintId)
+      .single();
+      
+    expect(blueprint.dynamic_questions).toBeDefined();
+  });
+});
+```
+
+## **Security Best Practices**
+
+### API Key Management
+```typescript
+// ✅ DO: Use environment variables
+const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL;
+
+// ❌ DON'T: Hardcode or expose client-side
+const API_KEY = 'pplx-abc123'; // NEVER DO THIS
+
+// ✅ DO: Validate presence of keys
+if (!PERPLEXITY_API_KEY) {
+  throw new Error('PERPLEXITY_API_KEY is required');
+}
+```
+
+### Data Access Control
+```typescript
+// ✅ DO: Always verify ownership
+async function validateBlueprintOwnership(
+  blueprintId: string,
+  userId: string
+): Promise<Blueprint | null> {
+  const { data } = await supabase
+    .from('blueprint_generator')
+    .select('*')
+    .eq('id', blueprintId)
+    .eq('user_id', userId) // Critical: enforce ownership
+    .single();
+    
+  return data;
+}
+
+// ❌ DON'T: Trust client-provided user IDs
+const userId = req.body.userId; // NEVER DO THIS
+```
+
+## **Performance Optimization**
+
+### Caching Strategy
+```typescript
+// Consider caching Perplexity responses for identical contexts
+const questionCache = new Map<string, CachedQuestions>();
+
+function getCacheKey(context: QuestionContext): string {
+  return hashObject({
+    role: context.role,
+    industry: context.industry,
+    staticAnswers: context.staticAnswers,
+  });
+}
+
+async function generateWithCache(context: QuestionContext) {
+  const cacheKey = getCacheKey(context);
+  
+  if (questionCache.has(cacheKey)) {
+    logger.info('Serving from cache', { cacheKey });
+    return questionCache.get(cacheKey)!;
+  }
+  
+  const result = await generateWithPerplexity(context);
+  questionCache.set(cacheKey, result);
+  
+  return result;
+}
+```
+
+## **Monitoring & Observability**
+
+### Metrics to Track
+```typescript
+const metrics = {
+  'perplexity.success_rate': 0.95,
+  'perplexity.avg_duration': 8500, // ms
+  'ollama.fallback_rate': 0.05,
+  'questions.generation_count': 1234,
+  'questions.avg_per_blueprint': 35,
+  'input_types.unknown_count': 2,
+  'database.save_success_rate': 0.999,
+};
+```
+
+## **Migration Compatibility**
+
+### Backward Compatibility
+```typescript
+// ✅ DO: Support old and new question formats
+function normalizeQuestions(questions: any): Section[] {
+  // Old format (Ollama-only)
+  if (Array.isArray(questions) && questions[0]?.question_text) {
+    return transformOldFormat(questions);
+  }
+  
+  // New format (Perplexity/Ollama unified)
+  return questions as Section[];
+}
+```
+
+## **Anti-Patterns to Avoid**
+
+- **❌ DON'T** expose Perplexity API key client-side
+- **❌ DON'T** skip validation of LLM responses
+- **❌ DON'T** fail silently when Perplexity is unavailable
+- **❌ DON'T** save invalid JSON to database
+- **❌ DON'T** allow arbitrary input types without fallback
+- **❌ DON'T** log sensitive user data or API keys
+- **❌ DON'T** block UI while generating questions (use loading states)
+- **❌ DON'T** save partial data without user confirmation
+
+## **Quality Checklist**
+
+Before marking a task complete:
+
+- [ ] Perplexity integration tested with real API
+- [ ] Ollama fallback activates correctly on errors
+- [ ] Unknown input types render with fallback
+- [ ] All database saves include user_id validation
+- [ ] Comprehensive error logging implemented
+- [ ] Security audit passed (no exposed keys)
+- [ ] Tests pass with >80% coverage
+- [ ] Backward compatible with existing blueprints
+- [ ] Performance meets targets (<10s generation)
+- [ ] Logs accessible at `/logs` endpoint
+
+---
+
+Follow [taskmaster/dev_workflow.mdc](mdc:.cursor/rules/taskmaster/dev_workflow.mdc) for task-master integration workflow.

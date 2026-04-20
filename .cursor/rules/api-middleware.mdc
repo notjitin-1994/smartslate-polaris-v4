@@ -1,0 +1,619 @@
+---
+description: API route handlers, middleware patterns, and request/response handling
+globs: frontend/app/api/**/*.{ts,tsx}, frontend/lib/auth/**/*.ts
+alwaysApply: false
+---
+
+## **Next.js API Route Structure**
+
+- **Route Handler Basics**
+  ```typescript
+  // app/api/hello/route.ts
+  import { NextRequest, NextResponse } from 'next/server';
+
+  export async function GET(request: NextRequest) {
+    return NextResponse.json({ message: 'Hello World' });
+  }
+
+  export async function POST(request: NextRequest) {
+    const body = await request.json();
+    // Process body
+    return NextResponse.json({ success: true }, { status: 201 });
+  }
+  ```
+
+- **Route Conventions**
+  - Use `route.ts` for API endpoints (not `page.tsx`)
+  - Export named functions: GET, POST, PUT, PATCH, DELETE
+  - Return `NextResponse` for consistent responses
+  - Use TypeScript for type safety
+
+## **Middleware Architecture**
+
+- **Composable Middleware Pattern**
+  ```typescript
+  // lib/auth/roleMiddleware.ts
+  import { NextRequest, NextResponse } from 'next/server';
+  import { createServerClient } from '@/lib/supabase/server';
+
+  export type MiddlewareFunction = (
+    request: NextRequest
+  ) => Promise<NextResponse | null>;
+
+  // Compose multiple middleware functions
+  export function compose(...middleware: MiddlewareFunction[]): MiddlewareFunction {
+    return async (request: NextRequest) => {
+      for (const fn of middleware) {
+        const response = await fn(request);
+        if (response) return response; // Stop if middleware returns response
+      }
+      return null;
+    };
+  }
+
+  // Example usage in route
+  export async function GET(request: NextRequest) {
+    const middlewareResponse = await compose(
+      requireAuth,
+      requireRole('developer'),
+      checkUsageLimits
+    )(request);
+
+    if (middlewareResponse) return middlewareResponse;
+
+    // Continue with actual route logic
+    return NextResponse.json({ data: 'protected data' });
+  }
+  ```
+
+- **Authentication Middleware**
+  ```typescript
+  export async function requireAuth(
+    request: NextRequest
+  ): Promise<NextResponse | null> {
+    const supabase = createServerClient();
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error || !session) {
+      return NextResponse.json(
+        { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
+        { status: 401 }
+      );
+    }
+
+    // Attach user to request (via headers for Next.js)
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-user-id', session.user.id);
+
+    return null; // Continue to next middleware
+  }
+  ```
+
+- **Role-Based Access Control**
+  ```typescript
+  export function requireRole(...allowedRoles: string[]) {
+    return async (request: NextRequest): Promise<NextResponse | null> => {
+      const userId = request.headers.get('x-user-id');
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Unauthorized', code: 'AUTH_REQUIRED' },
+          { status: 401 }
+        );
+      }
+
+      const supabase = createServerClient();
+      const { data: profile, error } = await supabase
+        .from('user_profiles')
+        .select('user_role, subscription_tier')
+        .eq('user_id', userId)
+        .single();
+
+      if (error || !profile) {
+        return NextResponse.json(
+          { error: 'User profile not found', code: 'PROFILE_NOT_FOUND' },
+          { status: 404 }
+        );
+      }
+
+      // Developer role bypasses all checks
+      if (profile.user_role === 'developer') {
+        return null;
+      }
+
+      if (!allowedRoles.includes(profile.user_role)) {
+        return NextResponse.json(
+          {
+            error: 'Insufficient permissions',
+            code: 'FORBIDDEN',
+            requiredRole: allowedRoles,
+            currentRole: profile.user_role,
+            upgradeUrl: '/pricing',
+          },
+          { status: 403 }
+        );
+      }
+
+      return null; // Role check passed
+    };
+  }
+  ```
+
+- **Feature Gate Middleware**
+  ```typescript
+  import { ROLE_LIMITS } from '@/types/roles';
+
+  export function requireFeature(feature: string) {
+    return async (request: NextRequest): Promise<NextResponse | null> => {
+      const userId = request.headers.get('x-user-id');
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+
+      const supabase = createServerClient();
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('user_role, subscription_tier')
+        .eq('user_id', userId)
+        .single();
+
+      if (!profile) {
+        return NextResponse.json(
+          { error: 'Profile not found' },
+          { status: 404 }
+        );
+      }
+
+      // Developer bypass
+      if (profile.user_role === 'developer') {
+        return null;
+      }
+
+      const limits = ROLE_LIMITS[profile.user_role];
+      if (!limits?.features?.includes(feature)) {
+        return NextResponse.json(
+          {
+            error: `Feature '${feature}' not available`,
+            code: 'FEATURE_NOT_AVAILABLE',
+            upgradeUrl: '/pricing',
+            requiredTier: getMinimumTierForFeature(feature),
+          },
+          { status: 403 }
+        );
+      }
+
+      return null;
+    };
+  }
+  ```
+
+- **Usage Limit Checking**
+  ```typescript
+  export function checkUsageLimits(limitType: string) {
+    return async (request: NextRequest): Promise<NextResponse | null> => {
+      const userId = request.headers.get('x-user-id');
+      if (!userId) return null;
+
+      const supabase = createServerClient();
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('user_role, subscription_metadata')
+        .eq('user_id', userId)
+        .single();
+
+      if (!profile) return null;
+
+      // Developer bypass
+      if (profile.user_role === 'developer') {
+        return null;
+      }
+
+      const limits = ROLE_LIMITS[profile.user_role];
+      const usage = profile.subscription_metadata?.[`${limitType}_used`] || 0;
+      const limit = limits?.[limitType] || 0;
+
+      if (limit !== -1 && usage >= limit) {
+        return NextResponse.json(
+          {
+            error: 'Usage limit reached',
+            code: 'USAGE_LIMIT_EXCEEDED',
+            limitType,
+            used: usage,
+            limit,
+            resetDate: profile.subscription_metadata?.reset_date,
+            upgradeUrl: '/pricing',
+          },
+          { status: 429 }
+        );
+      }
+
+      return null;
+    };
+  }
+  ```
+
+## **Error Response Standards**
+
+- **Consistent Error Format**
+  ```typescript
+  type ErrorResponse = {
+    error: string;                    // Human-readable message
+    code: string;                     // Machine-readable code
+    details?: unknown;                // Additional context
+    upgradeUrl?: string;              // Link to upgrade
+    resetAt?: string;                 // When limit resets
+    requiredRole?: string;            // Role needed
+    currentRole?: string;             // User's current role
+  };
+
+  // Helper function
+  export function errorResponse(
+    message: string,
+    code: string,
+    status: number,
+    extra?: Partial<ErrorResponse>
+  ): NextResponse {
+    return NextResponse.json(
+      {
+        error: message,
+        code,
+        ...extra,
+      },
+      { status }
+    );
+  }
+
+  // Usage
+  return errorResponse(
+    'Subscription tier does not allow this feature',
+    'FEATURE_NOT_AVAILABLE',
+    403,
+    {
+      upgradeUrl: '/pricing',
+      requiredRole: 'voyager',
+      currentRole: 'explorer',
+    }
+  );
+  ```
+
+- **Status Code Standards**
+  - 200: Success
+  - 201: Created successfully
+  - 400: Bad request (validation error)
+  - 401: Unauthorized (not authenticated)
+  - 403: Forbidden (authenticated but insufficient permissions)
+  - 404: Not found
+  - 429: Too many requests (rate limit or usage limit)
+  - 500: Internal server error
+
+## **Request Validation**
+
+- **Use Zod for Schema Validation**
+  ```typescript
+  import { z } from 'zod';
+
+  const updateProfileSchema = z.object({
+    subscription_tier: z.enum(['explorer', 'navigator', 'voyager']),
+    reason: z.string().min(1).max(500).optional(),
+  });
+
+  export async function POST(request: NextRequest) {
+    try {
+      const body = await request.json();
+      const validated = updateProfileSchema.parse(body);
+
+      // Process validated data
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          {
+            error: 'Validation error',
+            code: 'VALIDATION_ERROR',
+            details: error.errors,
+          },
+          { status: 400 }
+        );
+      }
+      throw error;
+    }
+  }
+  ```
+
+- **Validate Query Parameters**
+  ```typescript
+  export async function GET(request: NextRequest) {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
+
+    if (page < 1 || limit < 1 || limit > 100) {
+      return NextResponse.json(
+        { error: 'Invalid pagination parameters' },
+        { status: 400 }
+      );
+    }
+
+    // Continue with valid parameters
+  }
+  ```
+
+## **Usage Tracking**
+
+- **Atomic Counter Increment**
+  ```typescript
+  export async function incrementUsage(
+    userId: string,
+    usageType: string,
+    amount: number = 1
+  ): Promise<boolean> {
+    const supabase = createServerClient();
+    
+    // Use database function for atomic operation
+    const { data, error } = await supabase.rpc('increment_usage', {
+      p_user_id: userId,
+      p_usage_type: usageType,
+      p_amount: amount,
+    });
+
+    if (error) {
+      console.error('Failed to increment usage:', error);
+      return false;
+    }
+
+    return data;
+  }
+
+  // Usage in route
+  export async function POST(request: NextRequest) {
+    const userId = request.headers.get('x-user-id')!;
+
+    // Check limits first
+    const middlewareResponse = await checkUsageLimits('generations')(request);
+    if (middlewareResponse) return middlewareResponse;
+
+    // Perform action
+    const result = await generateStarmap(userId);
+
+    // Increment usage counter
+    await incrementUsage(userId, 'generations_used', 1);
+
+    return NextResponse.json(result);
+  }
+  ```
+
+- **Idempotency Keys**
+  ```typescript
+  export async function POST(request: NextRequest) {
+    const idempotencyKey = request.headers.get('x-idempotency-key');
+
+    if (idempotencyKey) {
+      // Check if request was already processed
+      const cached = await getCachedResult(idempotencyKey);
+      if (cached) {
+        return NextResponse.json(cached, { status: 200 });
+      }
+    }
+
+    // Process request
+    const result = await processRequest(request);
+
+    // Cache result if idempotency key provided
+    if (idempotencyKey) {
+      await cacheResult(idempotencyKey, result, { ttl: 3600 });
+    }
+
+    return NextResponse.json(result);
+  }
+  ```
+
+## **Logging and Observability**
+
+- **Structured Logging**
+  ```typescript
+  import { logger } from '@/lib/logging';
+
+  export async function POST(request: NextRequest) {
+    const userId = request.headers.get('x-user-id');
+
+    logger.info('API request started', {
+      endpoint: '/api/generate',
+      userId,
+      method: 'POST',
+    });
+
+    try {
+      const result = await generateStarmap(userId!);
+
+      logger.info('API request completed', {
+        endpoint: '/api/generate',
+        userId,
+        duration: Date.now() - start,
+      });
+
+      return NextResponse.json(result);
+    } catch (error) {
+      logger.error('API request failed', {
+        endpoint: '/api/generate',
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
+    }
+  }
+  ```
+
+- **Audit Trail for Admin Actions**
+  ```typescript
+  export async function logAdminAction(
+    adminUserId: string,
+    action: string,
+    targetUserId: string,
+    details: Record<string, unknown>
+  ): Promise<void> {
+    const supabase = createServerClient();
+
+    await supabase.from('role_audit_log').insert({
+      admin_user_id: adminUserId,
+      target_user_id: targetUserId,
+      action,
+      details,
+      ip_address: request.headers.get('x-forwarded-for'),
+      user_agent: request.headers.get('user-agent'),
+    });
+
+    logger.info('Admin action logged', {
+      adminUserId,
+      action,
+      targetUserId,
+    });
+  }
+  ```
+
+## **Rate Limiting**
+
+- **Simple In-Memory Rate Limiting**
+  ```typescript
+  const rateLimitMap = new Map<string, number[]>();
+
+  export function rateLimit(maxRequests: number, windowMs: number) {
+    return async (request: NextRequest): Promise<NextResponse | null> => {
+      const identifier = request.headers.get('x-user-id') || 
+                        request.headers.get('x-forwarded-for') || 
+                        'anonymous';
+
+      const now = Date.now();
+      const timestamps = rateLimitMap.get(identifier) || [];
+      const recentTimestamps = timestamps.filter(t => now - t < windowMs);
+
+      if (recentTimestamps.length >= maxRequests) {
+        return NextResponse.json(
+          {
+            error: 'Rate limit exceeded',
+            code: 'RATE_LIMIT_EXCEEDED',
+            retryAfter: Math.ceil((recentTimestamps[0] + windowMs - now) / 1000),
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': String(Math.ceil((recentTimestamps[0] + windowMs - now) / 1000)),
+            },
+          }
+        );
+      }
+
+      recentTimestamps.push(now);
+      rateLimitMap.set(identifier, recentTimestamps);
+
+      return null;
+    };
+  }
+
+  // Usage
+  export async function POST(request: NextRequest) {
+    const rateLimitResponse = await rateLimit(10, 60000)(request); // 10 req/min
+    if (rateLimitResponse) return rateLimitResponse;
+
+    // Continue with route logic
+  }
+  ```
+
+## **Caching Strategies**
+
+- **Cache User Roles in Session**
+  ```typescript
+  export async function getUserRole(userId: string): Promise<string> {
+    // Check cache first (in-memory, Redis, or session)
+    const cached = await cache.get(`user:${userId}:role`);
+    if (cached) return cached;
+
+    // Fetch from database
+    const supabase = createServerClient();
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('user_role')
+      .eq('user_id', userId)
+      .single();
+
+    const role = data?.user_role || 'explorer';
+
+    // Cache for 5 minutes
+    await cache.set(`user:${userId}:role`, role, { ttl: 300 });
+
+    return role;
+  }
+  ```
+
+## **Common Patterns**
+
+- **Admin Endpoints**
+  ```typescript
+  // app/api/admin/assign-role/route.ts
+  export async function POST(request: NextRequest) {
+    const middlewareResponse = await compose(
+      requireAuth,
+      requireRole('developer')
+    )(request);
+
+    if (middlewareResponse) return middlewareResponse;
+
+    const adminUserId = request.headers.get('x-user-id')!;
+    const { targetUserId, newRole, reason } = await request.json();
+
+    // Validate input
+    const schema = z.object({
+      targetUserId: z.string().uuid(),
+      newRole: z.enum(['explorer', 'navigator', 'voyager', 'developer']),
+      reason: z.string().min(1),
+    });
+
+    const validated = schema.parse({ targetUserId, newRole, reason });
+
+    // Update role
+    const supabase = createServerClient();
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({
+        user_role: validated.newRole,
+        role_assigned_at: new Date().toISOString(),
+        role_assigned_by: adminUserId,
+      })
+      .eq('user_id', validated.targetUserId);
+
+    if (error) {
+      return errorResponse('Failed to update role', 'UPDATE_FAILED', 500);
+    }
+
+    // Log action
+    await logAdminAction(adminUserId, 'assign_role', validated.targetUserId, {
+      newRole: validated.newRole,
+      reason: validated.reason,
+    });
+
+    return NextResponse.json({ success: true });
+  }
+  ```
+
+## **Anti-Patterns to Avoid**
+
+- ❌ **DON'T trust client-provided user IDs**
+- ❌ **DON'T skip authentication checks**
+- ❌ **DON'T return sensitive data in error messages**
+- ❌ **DON'T use service role key in client-accessible routes**
+- ❌ **DON'T forget to validate all inputs**
+- ❌ **DON'T log sensitive information (passwords, tokens)**
+
+- ✅ **DO validate all inputs with Zod or similar**
+- ✅ **DO use composable middleware for reusability**
+- ✅ **DO return consistent error formats**
+- ✅ **DO log all admin actions for audit trail**
+- ✅ **DO implement rate limiting on public endpoints**
+- ✅ **DO cache frequently accessed data**
+- ✅ **DO use TypeScript for type safety**

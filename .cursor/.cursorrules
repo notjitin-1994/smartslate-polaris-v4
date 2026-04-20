@@ -1,0 +1,12 @@
+---
+description: Repository-wide Cursor rules aggregator and guardrails for SmartSlate Polaris v3
+---
+
+- **Rule modules**: Keep rules small and focused in `.cursor/rules/*.mdc`.
+- **Editing discipline**: Keep edits minimal and localized; avoid unrelated reformatting.
+- **Next.js**: Prefer Server Components by default (React 19 / Next 15). Add `"use client"` only when needed.
+- **TypeScript**: Use strict typing. Avoid `any`; prefer `unknown`, discriminated unions, and explicit return types for exported functions.
+- **Styling**: Use Tailwind v4 utilities. Avoid inline `style` props unless necessary. Keep accessibility in mind.
+- **Quality**: Prefer early returns, clear names, and shallow component trees. Handle errors meaningfully.
+- **Security**: Never commit real API keys/secrets. Use `.env.local` and update `.env.example`. Rotate exposed keys immediately.
+- **Workflows**: Treat `.taskmaster/` tasks and `docs/` PRDs as source of truth for project planning.

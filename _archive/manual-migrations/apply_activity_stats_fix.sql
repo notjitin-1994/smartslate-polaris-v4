@@ -1,0 +1,95 @@
+-- ============================================================================
+-- QUICK FIX: Update get_user_activity_stats to use counter columns
+-- Run this in Supabase SQL Editor: https://supabase.com/dashboard/project/_/sql
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION get_user_activity_stats(p_user_id UUID)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_result JSON;
+BEGIN
+  WITH activity_counts AS (
+    SELECT
+      COUNT(*) FILTER (WHERE action_type = 'blueprint_created') AS blueprints_created,
+      COUNT(*) FILTER (WHERE action_type = 'blueprint_updated') AS blueprints_updated,
+      COUNT(*) FILTER (WHERE action_type = 'blueprint_deleted') AS blueprints_deleted,
+      COUNT(*) FILTER (WHERE action_type = 'blueprint_exported') AS blueprints_exported,
+      COUNT(*) FILTER (WHERE action_type = 'profile_updated') AS profile_updates,
+      COUNT(*) FILTER (WHERE action_type = 'user_login') AS total_logins
+    FROM activity_logs
+    WHERE user_id = p_user_id
+  ),
+  session_stats AS (
+    SELECT
+      COUNT(*) AS total_sessions,
+      MAX(created_at) AS last_login_at
+    FROM user_sessions
+    WHERE user_id = p_user_id
+  ),
+  blueprint_stats AS (
+    SELECT
+      COUNT(*) AS total_blueprints,
+      COUNT(*) FILTER (WHERE status = 'completed') AS completed_blueprints,
+      COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days') AS blueprints_last_30_days
+    FROM blueprint_generator
+    WHERE user_id = p_user_id
+      AND deleted_at IS NULL
+  ),
+  user_info AS (
+    SELECT
+      created_at AS member_since,
+      subscription_tier,
+      user_role,
+      blueprint_creation_count,  -- Use counter column directly
+      blueprint_saving_count,    -- Use counter column directly
+      blueprint_creation_limit,
+      blueprint_saving_limit
+    FROM user_profiles
+    WHERE user_id = p_user_id
+  )
+  SELECT json_build_object(
+    'blueprints_created', COALESCE(ac.blueprints_created, 0),
+    'blueprints_updated', COALESCE(ac.blueprints_updated, 0),
+    'blueprints_deleted', COALESCE(ac.blueprints_deleted, 0),
+    'blueprints_exported', COALESCE(ac.blueprints_exported, 0),
+    'profile_updates', COALESCE(ac.profile_updates, 0),
+    'total_logins', COALESCE(ac.total_logins, 0),
+    'total_sessions', COALESCE(ss.total_sessions, 0),
+    'last_login_at', ss.last_login_at,
+    'total_blueprints', COALESCE(bs.total_blueprints, 0),
+    'completed_blueprints', COALESCE(bs.completed_blueprints, 0),
+    'blueprints_last_30_days', COALESCE(bs.blueprints_last_30_days, 0),
+    'member_since', ui.member_since,
+    'subscription_tier', ui.subscription_tier,
+    'user_role', ui.user_role,
+    'blueprint_creation_count', COALESCE(ui.blueprint_creation_count, 0),
+    'blueprint_saving_count', COALESCE(ui.blueprint_saving_count, 0),
+    'blueprint_creation_limit', ui.blueprint_creation_limit,
+    'blueprint_saving_limit', ui.blueprint_saving_limit,
+    'usage_percentage_creation',
+      CASE
+        WHEN ui.blueprint_creation_limit > 0
+        THEN ROUND((COALESCE(ui.blueprint_creation_count, 0)::NUMERIC / ui.blueprint_creation_limit::NUMERIC) * 100, 2)
+        ELSE 0
+      END,
+    'usage_percentage_saving',
+      CASE
+        WHEN ui.blueprint_saving_limit > 0
+        THEN ROUND((COALESCE(ui.blueprint_saving_count, 0)::NUMERIC / ui.blueprint_saving_limit::NUMERIC) * 100, 2)
+        ELSE 0
+      END
+  ) INTO v_result
+  FROM activity_counts ac
+  CROSS JOIN session_stats ss
+  CROSS JOIN blueprint_stats bs
+  CROSS JOIN user_info ui;
+
+  RETURN v_result;
+END;
+$$;
+
+-- Test the function (optional)
+-- SELECT get_user_activity_stats(auth.uid());

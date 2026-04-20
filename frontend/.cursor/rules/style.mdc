@@ -1,0 +1,206 @@
+---
+description: SmartSlate theming and styling rules for consistent, accessible UI
+globs: app/**/*.tsx, components/**/*.tsx, **/*.css
+alwaysApply: true
+---
+
+# SmartSlate Style & Theming Rules
+
+## **Token-First Design System**
+
+- **Use semantic tokens over hardcoded values**
+  - Text: `text-foreground`, `text-text-secondary`, `text-text-disabled`
+  - Backgrounds: `bg-background`, `bg-paper`, `bg-surface`
+  - Borders: `border-neutral-200`, `border-neutral-300`
+  - Brand colors: `bg-primary text-primary-foreground`, `bg-secondary text-secondary-foreground`
+
+- **Avoid inline styles for theme colors**
+  ```tsx
+  // ❌ DON'T: Inline color styles
+  <div style={{ color: 'var(--text-primary)' }}>Text</div>
+  
+  // ✅ DO: Token utilities
+  <div className="text-foreground">Text</div>
+  ```
+
+## **Theming System**
+
+- **Class-based theming only**
+  - Theme switching toggles `.light`/`.dark` classes on `<html>`
+  - CSS variables automatically update based on class
+  - Never use `root.style.setProperty()` in JavaScript
+
+- **Theme-aware utilities**
+  ```tsx
+  // ✅ DO: These adapt automatically in light/dark
+  className="bg-background text-foreground border-neutral-200"
+  
+  // ❌ DON'T: Manual dark mode variants when tokens exist
+  className="bg-white dark:bg-slate-900 text-black dark:text-white"
+  ```
+
+## **Component Patterns**
+
+- **Button variants follow semantic meaning**
+  - `primary`: Main actions (`bg-primary text-primary-foreground`)
+  - `secondary`: Secondary actions (`bg-secondary text-secondary-foreground`)
+  - `ghost`: Subtle actions (`text-foreground hover:bg-foreground/5`)
+  - `outline`: Alternative style (`border-neutral-300 text-foreground`)
+  - `destructive`: Dangerous actions (`bg-error text-white`)
+
+- **Focus states use brand secondary**
+  ```tsx
+  className="focus-visible:ring-2 focus-visible:ring-secondary/50 focus-visible:ring-offset-2"
+  ```
+
+## **Typography Scale**
+
+- **Use semantic heading classes**
+  - `.text-hero`: Largest display text
+  - `.text-display`: Page titles
+  - `.text-title`: Section headers
+  - `.text-heading`: Subsection headers
+  - `.text-body`: Regular content
+
+- **Consistent text hierarchy**
+  ```tsx
+  // ✅ DO: Semantic classes
+  <h1 className="text-display text-foreground">Page Title</h1>
+  <p className="text-body text-text-secondary">Description</p>
+  
+  // ❌ DON'T: Ad-hoc sizing
+  <h1 className="text-4xl font-bold">Title</h1>
+  ```
+
+## **Spacing & Layout**
+
+- **Use spacing scale utilities**
+  - `.space-section`: Between major sections
+  - `.space-component`: Between components
+  - `.space-content`: Between content elements
+  - `.space-tight`: Minimal spacing
+
+- **Container patterns**
+  ```tsx
+  // ✅ DO: Consistent container
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  
+  // ✅ DO: Responsive spacing
+  <div className="space-y-4 md:space-y-6">
+  ```
+
+## **Glass Effects & Elevation**
+
+- **Use glass utilities sparingly**
+  - `.glass`: Basic translucent surface
+  - `.glass-strong`: More prominent surface
+  - `.glass-hover`: Interactive hover state
+  - Performance fallbacks included for older browsers
+
+- **Shadow hierarchy**
+  - `shadow-sm`: Subtle elevation
+  - `shadow`: Standard elevation
+  - `shadow-lg`: Prominent elevation
+
+## **Accessibility Requirements**
+
+- **Contrast standards**
+  - All text must meet WCAG AA contrast ratios
+  - Token combinations are pre-validated
+  - Use `text-text-disabled` only for non-essential content
+
+- **Motion preferences**
+  - All animations respect `prefers-reduced-motion: reduce`
+  - Hover effects gracefully degrade
+  - Focus indicators always visible
+
+- **Touch targets**
+  - Minimum 44px touch targets on mobile
+  - Use `.touch-target`, `.touch-target-sm` utilities
+  - Interactive elements have adequate spacing
+
+## **Performance Guidelines**
+
+- **Minimize arbitrary values**
+  - Use design tokens and utilities
+  - Arbitrary values like `w-[347px]` should be rare
+  - Extract repeated arbitrary values to tokens
+
+- **Optimize animations**
+  - Use `transform` and `opacity` for animations
+  - Include `will-change` only during active animations
+  - Prefer CSS transitions over JavaScript animations
+
+## **Common Patterns**
+
+- **Card components**
+  ```tsx
+  <div className="glass rounded-2xl p-6 hover:glass-strong transition-all duration-300">
+    <h3 className="text-heading text-foreground mb-2">Title</h3>
+    <p className="text-body text-text-secondary">Content</p>
+  </div>
+  ```
+
+- **Form elements**
+  ```tsx
+  <input className="w-full px-4 py-3 rounded-lg border border-neutral-300 
+                   bg-background text-foreground placeholder:text-text-disabled
+                   focus:ring-2 focus:ring-secondary/50 focus:border-secondary" />
+  ```
+
+- **Navigation items**
+  ```tsx
+  <a className="flex items-center gap-2 px-3 py-2 rounded-lg 
+               text-text-secondary hover:text-foreground hover:bg-foreground/5 
+               transition-colors">
+  ```
+
+## **Anti-Patterns to Avoid**
+
+- **❌ Hardcoded colors**
+  ```tsx
+  // DON'T
+  className="text-slate-900 dark:text-slate-100"
+  style={{ color: '#1e293b' }}
+  ```
+
+- **❌ Inconsistent spacing**
+  ```tsx
+  // DON'T
+  className="mt-3 mb-5 ml-2 mr-4"
+  ```
+
+- **❌ Missing focus states**
+  ```tsx
+  // DON'T
+  <button className="bg-blue-500 text-white">Click me</button>
+  ```
+
+- **❌ Non-semantic markup**
+  ```tsx
+  // DON'T
+  <div className="text-2xl font-bold">This should be a heading</div>
+  ```
+
+## **Migration Guidelines**
+
+When updating existing components:
+
+1. **Replace inline styles** with token utilities
+2. **Remove `dark:` variants** where tokens provide automatic adaptation
+3. **Add focus-visible states** to interactive elements
+4. **Use semantic heading elements** with appropriate classes
+5. **Test in both light and dark themes**
+
+## **Quality Checklist**
+
+Before committing styled components:
+
+- [ ] Uses token utilities for colors
+- [ ] No inline color styles
+- [ ] Proper focus-visible states
+- [ ] Semantic HTML elements
+- [ ] Responsive design considered
+- [ ] Tested in light/dark themes
+- [ ] Meets contrast requirements
+- [ ] Respects motion preferences

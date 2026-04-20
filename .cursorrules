@@ -1,0 +1,424 @@
+---
+description: Repository-wide Cursor rules aggregator and guardrails for SmartSlate Polaris v3
+---
+
+- **Rule modules**: Keep rules small and focused in `.cursor/rules/*.mdc`.
+- **Editing discipline**: Keep edits minimal and localized; avoid unrelated reformatting.
+- **Next.js**: Prefer Server Components by default (React 19 / Next 15). Add `"use client"` only when needed.
+- **TypeScript**: Use strict typing. Avoid `any`; prefer `unknown`, discriminated unions, and explicit return types for exported functions.
+- **Styling**: Use Tailwind v4 utilities. Avoid inline `style` props unless necessary. Keep accessibility in mind.
+- **Quality**: Prefer early returns, clear names, and shallow component trees. Handle errors meaningfully.
+- **Security**: Never commit real API keys/secrets. Use `.env.local` and update `.env.example`. Rotate exposed keys immediately.
+- **Workflows**: Treat `.taskmaster/` tasks and `docs/` PRDs as source of truth for project planning.
+
+## Roles & Subscriptions System Implementation
+
+### Database & Schema Design (Task 1)
+- **Migration Practices**:
+  - Name migrations sequentially with descriptive names (e.g., `0026_add_subscription_and_roles.sql`)
+  - Always include rollback logic in migration files
+  - Use PostgreSQL 15+ features (JSONB, generated columns, etc.)
+  - Test migrations on local Supabase instance before production
+  - Document all schema changes in migration comments
+  
+- **Supabase-Specific Patterns**:
+  - Use Row Level Security (RLS) policies for all new tables
+  - Leverage JSONB for flexible metadata storage
+  - Create indexes on frequently queried columns (user_id, subscription_tier, user_role)
+  - Use database functions for complex operations (e.g., usage increment, reset)
+  - Set appropriate RLS policies: users can read own data, only developers can write
+  
+- **Schema Conventions**:
+  - Add `subscription_tier` as ENUM or check constraint with all tier values
+  - Add `user_role` as ENUM or check constraint with all role values
+  - Use `subscription_metadata` JSONB column for flexible tier-specific data
+  - Include audit fields: `role_assigned_at`, `role_assigned_by`
+  - Create `user_usage_history` table with monthly partitioning strategy
+  - Create `role_audit_log` table with immutable append-only pattern
+  
+- **Testing Requirements**:
+  - Write pgTAP tests for schema constraints
+  - Test RLS policies by impersonating different users
+  - Verify rollback works cleanly
+  - Seed test data for all subscription tiers
+
+### TypeScript Types & Type Safety (Task 2)
+- **Type Definition Standards**:
+  - Define all types in `/frontend/types/roles.ts`
+  - Use literal types for tiers: `type SubscriptionTier = 'explorer' | 'navigator' | 'voyager' | ...`
+  - Use literal types for roles: `type UserRole = 'explorer' | 'navigator' | 'voyager' | ... | 'developer'`
+  - Define feature categories as const enums or literal unions
+  - Create branded types for IDs: `type UserId = string & { readonly __brand: 'UserId' }`
+  
+- **Limit Definitions**:
+  - Create `TierLimits` interface with all measurable limits
+  - Define `ROLE_LIMITS` constant as deeply readonly with as const assertion
+  - Include limits for: generations per month, max saved starmaps, export formats, processing speed multiplier
+  - Add helper functions: `getLimitsForTier()`, `canAccessFeature()`, `getRemainingUsage()`
+  
+- **Supabase Type Integration**:
+  - Update `/frontend/types/supabase.ts` with generated types from Supabase CLI
+  - Extend UserProfile type with new columns
+  - Create view types for joined queries (user + usage + limits)
+  - Use Zod for runtime validation of tier/role values
+  
+- **Type Guards**:
+  - Implement type guards: `isValidTier()`, `isValidRole()`, `isDeveloperRole()`
+  - Use exhaustive checks with never type for switch statements
+  - Create assertion functions for critical type validations
+
+### API Middleware & Backend Enforcement (Task 3)
+- **Middleware Architecture**:
+  - Create composable middleware functions in `/frontend/lib/auth/roleMiddleware.ts`
+  - Implement `requireAuth()` for basic authentication
+  - Implement `requireRole()` for role-based access
+  - Implement `requireFeature()` for feature-gated endpoints
+  - Implement `checkUsageLimits()` for usage tracking
+  - Chain middleware: `requireAuth() → requireRole() → requireFeature() → checkUsageLimits()`
+  
+- **Error Handling**:
+  - Return 401 for unauthenticated requests
+  - Return 403 for insufficient permissions with upgrade URL
+  - Return 429 for rate/usage limits exceeded with reset time
+  - Include structured error responses: `{ error, code, upgradeUrl, resetAt }`
+  - Log all enforcement failures for audit trail
+  
+- **Usage Tracking**:
+  - Increment counters atomically using database functions
+  - Use transactions for multi-step usage updates
+  - Implement idempotency keys for generation requests
+  - Store usage history for analytics
+  - Reset counters via scheduled job, not inline
+  
+- **Developer Role Bypass**:
+  - Check for developer role at top of middleware chain
+  - Early return with full access for developers
+  - Log developer access for audit purposes
+  - Never expose developer bypass logic to client
+  
+- **Performance**:
+  - Cache role and limit data in user session
+  - Use Redis/Upstash for rate limiting if needed
+  - Minimize database queries per request
+  - Implement request coalescing for parallel requests
+
+### React Hooks & Context (Task 4)
+- **Hook Design**:
+  - Create `useUserRole()` in `/frontend/lib/hooks/useUserRole.ts`
+  - Return: `{ role, tier, limits, usage, hasFeature, isUnderLimit, getUsagePercentage }`
+  - Use React Context for global state management
+  - Implement optimistic updates for UI responsiveness
+  - Memoize expensive calculations with useMemo
+  
+- **Context Structure**:
+  - Create `RoleContext` with Provider and Consumer
+  - Fetch role data on mount and refresh periodically
+  - Handle loading, error, and success states
+  - Provide refresh function for manual updates
+  - Cache data in session storage for offline support
+  
+- **Helper Functions**:
+  - `hasFeature(category: FeatureCategory): boolean` - check if feature available
+  - `isUnderLimit(limitType: string): boolean` - check if usage below limit
+  - `getUsagePercentage(limitType: string): number` - calculate usage percent
+  - `canPerformAction(action: string): { allowed: boolean, reason?: string }` - combined check
+  
+- **Performance Optimizations**:
+  - Debounce usage updates
+  - Batch multiple feature checks
+  - Use React.memo for components consuming role context
+  - Implement request deduplication
+
+### UI Components & Feature Gates (Task 5)
+- **Core Components**:
+  - `<FeatureGate feature={FeatureCategory}>` - conditional rendering wrapper
+  - `<UsageWidget type={string} />` - display usage stats with progress bar
+  - `<UpgradePrompt tier={SubscriptionTier} feature={string} />` - CTA for upgrades
+  - `<TierBadge tier={SubscriptionTier} />` - visual tier indicator
+  - `<LimitReachedModal />` - full-screen block when limit hit
+  
+- **Feature Gate Patterns**:
+  - Hide features completely if not available (don't just disable)
+  - Show upgrade prompt inline where feature would be
+  - Use tooltips to explain why feature is unavailable
+  - Provide "Learn more" links to pricing page
+  - Track "feature gate impression" analytics events
+  
+- **Usage Display**:
+  - Show remaining usage clearly (e.g., "3 of 5 starmaps remaining")
+  - Use color coding: green (0-70%), yellow (70-90%), red (90-100%)
+  - Display usage reset date prominently
+  - Animate usage updates for visual feedback
+  - Add sparklines for usage trends
+  
+- **Upgrade Prompts**:
+  - Contextual messaging: "Unlock [feature] with [tier]"
+  - Compare current tier vs required tier
+  - Show specific benefits of upgrading
+  - Include clear CTA button with tracking
+  - Respect user's dismiss preferences
+  
+- **Accessibility**:
+  - All disabled states must have ARIA labels explaining why
+  - Keyboard navigation for all interactive elements
+  - Screen reader announcements for usage updates
+  - High contrast mode support for badges and indicators
+
+### Subscription Management Flows (Task 6)
+- **API Endpoints**:
+  - POST `/api/subscriptions/upgrade` - upgrade to higher tier
+  - POST `/api/subscriptions/downgrade` - downgrade to lower tier
+  - POST `/api/subscriptions/cancel` - cancel subscription with grace period
+  - GET `/api/subscriptions/preview` - preview changes before applying
+  
+- **Upgrade Flow**:
+  - Immediate limit increases
+  - Prorated billing calculation (manual for MVP, Stripe later)
+  - Confirmation email with new limits
+  - Update user_profiles.subscription_tier atomically
+  - Log to role_audit_log
+  
+- **Downgrade Flow**:
+  - Apply changes at end of billing period
+  - Warn if user will exceed new limits
+  - Preserve all saved starmaps (read-only if over limit)
+  - Send confirmation and reminder emails
+  - Implement grace period for reverting
+  
+- **Cancellation Flow**:
+  - Immediate downgrade to free tier (if exists) or read-only access
+  - Preserve data for 90 days
+  - Send exit survey
+  - Offer win-back discount
+  - Allow reactivation within grace period
+  
+- **Data Preservation**:
+  - Never delete user data on downgrade/cancel
+  - Mark starmaps as read-only if over new limit
+  - Allow export of all data before cancellation
+  - Clear usage counters but keep history
+  
+- **Email Notifications**:
+  - Use Resend or similar transactional email service
+  - Templates for: upgrade confirmation, downgrade warning, cancellation confirmation
+  - Include next billing date and new limits
+  - Provide support contact information
+
+### Admin Dashboard & Developer Role (Task 7)
+- **Admin Endpoints**:
+  - POST `/api/admin/assign-role` - assign any role to user (developer-only)
+  - GET `/api/admin/users` - search and list users with pagination
+  - GET `/api/admin/audit-log` - view role change history
+  - POST `/api/admin/reset-usage` - manually reset user's usage
+  
+- **Admin UI** (`/app/(auth)/admin`):
+  - User search with filters (email, tier, role, status)
+  - Role assignment dropdown with confirmation modal
+  - Audit log viewer with filters and export
+  - Usage override tools for support
+  - Real-time updates via WebSocket or polling
+  
+- **Security**:
+  - Protect all admin routes with `requireRole('developer')` middleware
+  - Log all admin actions to role_audit_log with admin user ID
+  - Rate limit admin endpoints
+  - Require 2FA for admin actions (future)
+  - Show developer mode indicator in UI (yellow banner)
+  
+- **Developer Role Indicators**:
+  - Yellow "Developer Mode" banner at top of app
+  - Badge next to username in header
+  - Different color scheme for admin dashboard
+  - Clear visual distinction from regular users
+  
+- **Audit Logging**:
+  - Log: timestamp, admin_user_id, target_user_id, old_role, new_role, reason
+  - Make logs immutable (append-only table)
+  - Provide CSV export for compliance
+  - Retention policy: 7 years
+
+### Automated Usage Management (Task 8)
+- **Cron Job Setup**:
+  - Use Vercel Cron or external scheduler (cron-job.org, AWS EventBridge)
+  - Schedule: `0 0 1 * *` (midnight UTC on 1st of month)
+  - Endpoint: POST `/api/cron/reset-usage`
+  - Require secret token for authentication
+  
+- **Reset Logic**:
+  - Call database function `reset_monthly_usage()`
+  - Archive old usage data to history table
+  - Update user_profiles.usage_metadata with reset timestamp
+  - Send "usage reset" email to users
+  - Handle timezone edge cases
+  
+- **Usage Alerts**:
+  - Monitor usage in real-time after each action
+  - Trigger alerts at 80%, 90%, and 100% of limits
+  - Send in-app toast notifications
+  - Send email notifications (with unsubscribe option)
+  - Include usage stats and upgrade CTA in alerts
+  
+- **Error Handling**:
+  - Implement retries with exponential backoff
+  - Log all cron job executions to dedicated table
+  - Alert ops team on failure
+  - Ensure idempotency (safe to run multiple times)
+  - Rollback on partial failure
+
+### Testing Strategy (Task 9)
+- **Unit Tests**:
+  - Test all type guards and validation functions
+  - Test ROLE_LIMITS correctness for each tier
+  - Test middleware with mocked requests and users
+  - Test hooks with mocked context data
+  - Test components in isolation with all tier states
+  - Coverage: 95%+ for types, middleware, hooks
+  
+- **Integration Tests**:
+  - Test API routes end-to-end with test database
+  - Test usage increment flows with concurrent requests
+  - Test role enforcement across multiple endpoints
+  - Test database functions and RLS policies
+  - Use real Supabase instance (local or staging)
+  - Coverage: 85%+ for API routes
+  
+- **E2E Tests**:
+  - Test user journey: signup → use feature → hit limit → upgrade
+  - Test admin: search user → assign role → verify audit log
+  - Test downgrade: change tier → verify read-only access
+  - Test cron: trigger job → verify reset → check emails
+  - Use Playwright with real browser
+  - Coverage: all critical user paths
+  
+- **Security Tests**:
+  - Test RLS policies: verify users can't access others' data
+  - Test auth bypass attempts
+  - Test rate limiting
+  - Test SQL injection on search fields
+  - Test CSRF protection
+  - Use OWASP ZAP or similar
+  
+- **Performance Tests**:
+  - Load test usage tracking with k6 or Artillery
+  - Test database query performance under load
+  - Test API response times with 1000+ concurrent users
+  - Monitor memory usage and connection pools
+  - Set SLO: p95 < 500ms for all endpoints
+  
+- **CI/CD Integration**:
+  - Run unit tests on every PR
+  - Run integration tests on main branch
+  - Run E2E tests nightly and pre-deploy
+  - Block deploy if tests fail or coverage drops
+  - Upload test artifacts and coverage reports
+
+### Production Deployment (Task 10)
+- **Pre-Deployment Checklist**:
+  - ✅ All migrations tested and rollback verified
+  - ✅ Environment variables set in production
+  - ✅ RLS policies reviewed and enabled
+  - ✅ Error tracking configured (Sentry)
+  - ✅ Analytics tracking implemented
+  - ✅ Runbooks written and reviewed
+  - ✅ Support team trained
+  - ✅ Monitoring dashboards created
+  
+- **Deployment Strategy**:
+  - Phase 1: Deploy to staging, test with internal users
+  - Phase 2: Deploy to production with feature flag off
+  - Phase 3: Enable for 10% of users (canary)
+  - Phase 4: Monitor for 24 hours, check error rates
+  - Phase 5: Full rollout if no issues
+  - Rollback plan: revert migration and feature flag
+  
+- **Monitoring**:
+  - Set up Vercel Analytics for usage tracking
+  - Configure Sentry for error tracking
+  - Create custom dashboard for: signups by tier, upgrades, downgrades, usage patterns
+  - Alert on: error rate > 1%, API latency > 1s, failed cron jobs
+  - Track conversion funnels: free → paid, tier upgrades
+  
+- **Runbooks**:
+  - **Role Assignment**: Step-by-step for support team
+  - **Usage Reset**: Manual reset procedure
+  - **Rollback**: How to revert deployment
+  - **Incident Response**: Triage and escalation
+  - **Database Recovery**: Backup and restore procedures
+  
+- **Documentation**:
+  - Update API documentation with new endpoints
+  - Create user-facing help docs for tiers and limits
+  - Document internal architecture and data flows
+  - Create troubleshooting guides for common issues
+
+### Code Organization
+- **File Structure**:
+  ```
+  /frontend
+    /types
+      roles.ts                    # All role/tier type definitions
+      supabase.ts                 # Supabase-generated types
+    /lib
+      /auth
+        roleMiddleware.ts         # API middleware functions
+        roleEnforcement.ts        # Core enforcement logic
+      /hooks
+        useUserRole.ts            # Main role hook
+        useUsageTracking.ts       # Usage tracking hook
+      /db
+        roleQueries.ts            # Database query functions
+      /utils
+        roleHelpers.ts            # Utility functions
+    /components
+      /role
+        FeatureGate.tsx           # Feature gate component
+        UsageWidget.tsx           # Usage display
+        UpgradePrompt.tsx         # Upgrade CTA
+        TierBadge.tsx             # Visual badge
+    /app
+      /api
+        /subscriptions            # Subscription management
+        /admin                    # Admin endpoints
+        /cron                     # Scheduled jobs
+      /(auth)
+        /admin                    # Admin dashboard
+        /settings
+          /billing                # Billing/subscription UI
+  ```
+
+### Security Best Practices
+- **Never trust client-side checks**: Always enforce on server
+- **Validate all inputs**: Use Zod schemas for API payloads
+- **Rate limit**: All endpoints, especially admin and usage
+- **Audit everything**: Log all role changes and admin actions
+- **Principle of least privilege**: Users only get what they need
+- **Defense in depth**: RLS + middleware + UI checks
+- **Secure secrets**: Use environment variables, never commit
+- **Regular security audits**: Monthly review of RLS and middleware
+
+### Performance Best Practices
+- **Cache aggressively**: Role data changes infrequently
+- **Optimize queries**: Use indexes and explain plans
+- **Batch operations**: Group usage updates when possible
+- **Use database functions**: Push logic to database for atomicity
+- **Monitor query performance**: Alert on slow queries
+- **Connection pooling**: Configure Supabase connection limits
+- **CDN caching**: Cache static assets and public data
+
+### Analytics & Metrics
+- **Track Key Metrics**:
+  - Signups by tier
+  - Upgrade conversion rate
+  - Downgrade/churn rate
+  - Average usage by tier
+  - Feature adoption by tier
+  - Limit hit frequency
+  - Upgrade prompt CTR
+  - Support tickets by issue type
+  
+- **Implementation**:
+  - Use PostHog, Mixpanel, or similar
+  - Track events: feature_gate_shown, upgrade_clicked, limit_reached
+  - Include user properties: tier, role, usage_percentage
+  - Create cohorts by tier for A/B testing
+  - Build dashboards for product and finance teams

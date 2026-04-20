@@ -1,0 +1,32 @@
+---
+description: ESLint, code quality, and formatting guardrails
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: true
+---
+
+- **Config Alignment**
+  - Follow `eslint.config.mjs` with `next/core-web-vitals` and `next/typescript` presets.
+  - Ignore `node_modules`, `.next`, `out`, `build`, and `next-env.d.ts` as configured.
+
+- **Quality Rules**
+  - Prefer early returns over deep nesting.
+  - Avoid unused variables/imports; remove dead code.
+  - Keep functions focused; extract helpers instead of long components.
+  - Ensure alt text for images and accessible labels for controls.
+
+- **Imports**
+  - Use absolute `@/*` imports over deep relative paths.
+  - Order: Node/third-party → internal modules → styles. Keep side-effect imports last.
+
+- **Formatting**
+  - Match existing formatting; do not reformat unrelated lines in edits.
+
+- **Example**
+  ```tsx
+  import Image from "next/image";
+
+  export function Logo(): JSX.Element {
+    return <Image src="/next.svg" alt="Next.js logo" width={180} height={38} />;
+  }
+  ```
+

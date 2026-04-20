@@ -1,0 +1,448 @@
+/**
+ * Enhanced Glass Morphism Effects with Progressive Enhancement
+ *
+ * This file implements progressive enhancement for glass morphism effects
+ * using @supports queries to detect backdrop-filter support and apply
+ * enhanced visual effects for capable devices while maintaining mobile
+ * performance on older devices.
+ */
+
+/* ========================================
+   PROGRESSIVE ENHANCEMENT DETECTION
+   ======================================== */
+
+/**
+ * Enhanced glass effects for devices that support backdrop-filter
+ * Applied only when the browser supports backdrop-filter: blur()
+ */
+@supports (backdrop-filter: blur(10px)) {
+  /* Enhanced base glass effect with backdrop-filter */
+  .glass-enhanced {
+    position: relative;
+    background: rgba(255, 255, 255, var(--glass-bg-opacity));
+    border: 1px solid rgba(255, 255, 255, var(--glass-border-opacity));
+    border-radius: 1rem;
+    box-shadow:
+      0 2px 4px var(--glass-shadow-dark),
+      0 4px 8px var(--glass-shadow-dark),
+      inset 0 1px 1px var(--glass-shadow-light);
+    backdrop-filter: blur(var(--glass-blur-amount));
+    -webkit-backdrop-filter: blur(var(--glass-blur-amount));
+    transition: all var(--glass-transition-duration) var(--glass-transition-easing);
+  }
+
+  /* Dark mode enhanced glass */
+  .dark .glass-enhanced {
+    background: rgba(0, 0, 0, var(--glass-bg-opacity));
+    border-color: rgba(255, 255, 255, var(--glass-border-opacity));
+    box-shadow:
+      0 2px 4px var(--glass-shadow-dark),
+      0 4px 8px var(--glass-shadow-dark),
+      inset 0 1px 1px var(--glass-shadow-light);
+  }
+
+  /* Enhanced glass card with stronger blur effect */
+  .glass-card-enhanced {
+    position: relative;
+    background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.02));
+    border: 1px solid rgba(255, 255, 255, calc(var(--glass-border-opacity) + 0.03));
+    border-radius: 1rem;
+    box-shadow:
+      0 4px 8px var(--glass-shadow-medium),
+      0 8px 16px var(--glass-shadow-medium),
+      inset 0 1px 2px var(--glass-shadow-light);
+    backdrop-filter: blur(calc(var(--glass-blur-amount) + 2px));
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur-amount) + 2px));
+    transition: all var(--glass-transition-duration) var(--glass-transition-easing);
+  }
+
+  /* Dark mode enhanced glass card */
+  .dark .glass-card-enhanced {
+    background: rgba(0, 0, 0, calc(var(--glass-bg-opacity) + 0.02));
+    border-color: rgba(255, 255, 255, calc(var(--glass-border-opacity) + 0.03));
+    box-shadow:
+      0 4px 8px var(--glass-shadow-medium),
+      0 8px 16px var(--glass-shadow-medium),
+      inset 0 1px 2px var(--glass-shadow-light);
+  }
+
+  /* ========================================
+     ENHANCED GLASS VARIATIONS
+     ======================================== */
+
+  /* Subtle enhanced glass with light blur */
+  .glass-enhanced-subtle {
+    background: rgba(255, 255, 255, var(--glass-subtle-bg-opacity));
+    border: 1px solid rgba(255, 255, 255, var(--glass-subtle-border-opacity));
+    box-shadow:
+      0 1px 2px var(--glass-shadow-dark),
+      0 2px 4px var(--glass-shadow-dark),
+      inset 0 1px 0 var(--glass-shadow-light);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Strong enhanced glass with heavy blur */
+  .glass-enhanced-strong {
+    background: rgba(255, 255, 255, var(--glass-strong-bg-opacity));
+    border: 1px solid rgba(255, 255, 255, var(--glass-strong-border-opacity));
+    box-shadow:
+      0 6px 12px var(--glass-shadow-medium),
+      0 12px 24px var(--glass-shadow-medium),
+      inset 0 1px 2px var(--glass-shadow-light);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  /* ========================================
+     ENHANCED HOVER STATES
+     ======================================== */
+
+  /* Enhanced hover state with increased blur */
+  .glass-enhanced:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 6px 12px var(--glass-shadow-medium),
+      0 12px 24px var(--glass-shadow-medium),
+      inset 0 1px 2px var(--glass-shadow-light),
+      var(--glow-subtle);
+    background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.02));
+    backdrop-filter: blur(calc(var(--glass-blur-amount) + 2px));
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur-amount) + 2px));
+  }
+
+  .dark .glass-enhanced:hover {
+    background: rgba(0, 0, 0, calc(var(--glass-bg-opacity) + 0.02));
+  }
+
+  /* Enhanced active state */
+  .glass-enhanced:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow:
+      0 2px 4px var(--glass-shadow-dark),
+      0 4px 8px var(--glass-shadow-dark),
+      inset 0 1px 1px var(--glass-shadow-light);
+    backdrop-filter: blur(var(--glass-blur-amount));
+    -webkit-backdrop-filter: blur(var(--glass-blur-amount));
+  }
+
+  /* Enhanced focus state */
+  .glass-enhanced:focus-visible {
+    outline: none;
+    box-shadow:
+      0 2px 4px var(--glass-shadow-dark),
+      0 4px 8px var(--glass-shadow-dark),
+      inset 0 1px 1px var(--glass-shadow-light),
+      0 0 0 2px var(--background),
+      0 0 0 4px var(--secondary-accent);
+    backdrop-filter: blur(var(--glass-blur-amount));
+    -webkit-backdrop-filter: blur(var(--glass-blur-amount));
+  }
+
+  /* ========================================
+     ENHANCED COMPONENT VARIATIONS
+     ======================================== */
+
+  /* Enhanced glass shell for containers */
+  .glass-shell-enhanced {
+    border: 1px solid rgba(255, 255, 255, var(--glass-border-opacity));
+    border-radius: 1rem;
+    box-shadow:
+      0 2px 4px var(--glass-shadow-dark),
+      0 4px 8px var(--glass-shadow-dark),
+      inset 0 1px 1px var(--glass-shadow-light);
+    backdrop-filter: blur(var(--glass-blur-amount));
+    -webkit-backdrop-filter: blur(var(--glass-blur-amount));
+  }
+
+  /* Enhanced glass overlay for modals */
+  .glass-overlay-enhanced {
+    background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.04));
+    border: 1px solid rgba(255, 255, 255, calc(var(--glass-border-opacity) + 0.02));
+    border-radius: 0.75rem;
+    box-shadow:
+      0 8px 16px var(--glass-shadow-medium),
+      0 16px 32px var(--glass-shadow-medium),
+      inset 0 1px 2px var(--glass-shadow-light);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Enhanced glass navigation */
+  .glass-nav-enhanced {
+    background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.02));
+    border: 1px solid rgba(255, 255, 255, calc(var(--glass-border-opacity) + 0.02));
+    border-radius: 0.75rem 0.75rem 0 0;
+    box-shadow:
+      0 2px 4px var(--glass-shadow-dark),
+      inset 0 1px 1px var(--glass-shadow-light);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Enhanced glass modal */
+  .glass-modal-enhanced {
+    background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.06));
+    border: 1px solid rgba(255, 255, 255, calc(var(--glass-border-opacity) + 0.04));
+    border-radius: 1rem;
+    box-shadow:
+      0 8px 16px var(--glass-shadow-medium),
+      0 16px 32px var(--glass-shadow-medium),
+      inset 0 1px 2px var(--glass-shadow-light);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Enhanced glass section */
+  .glass-section-enhanced {
+    background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.01));
+    border: 1px solid rgba(255, 255, 255, calc(var(--glass-border-opacity) + 0.01));
+    border-radius: 1rem;
+    box-shadow:
+      0 4px 8px var(--glass-shadow-dark),
+      inset 0 1px 1px var(--glass-shadow-light);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  /* ========================================
+     THEMED ENHANCED VARIATIONS
+     ======================================== */
+
+  /* Brand-colored enhanced glass */
+  .glass-enhanced-brand {
+    background: rgba(167, 218, 219, var(--glass-bg-opacity));
+    border: 1px solid rgba(167, 218, 219, var(--glass-border-opacity));
+    box-shadow:
+      0 2px 4px rgba(167, 218, 219, 0.1),
+      0 4px 8px rgba(167, 218, 219, 0.1),
+      inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(var(--glass-blur-amount));
+    -webkit-backdrop-filter: blur(var(--glass-blur-amount));
+  }
+
+  /* Secondary-colored enhanced glass */
+  .glass-enhanced-secondary {
+    background: rgba(79, 70, 229, calc(var(--glass-bg-opacity) * 0.8));
+    border: 1px solid rgba(79, 70, 229, var(--glass-border-opacity));
+    box-shadow:
+      0 2px 4px rgba(79, 70, 229, 0.15),
+      0 4px 8px rgba(79, 70, 229, 0.15),
+      inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(var(--glass-blur-amount));
+    -webkit-backdrop-filter: blur(var(--glass-blur-amount));
+  }
+
+  /* ========================================
+     SIZE VARIATIONS FOR ENHANCED GLASS
+     ======================================== */
+
+  /* Small enhanced glass elements */
+  .glass-enhanced-sm {
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Large enhanced glass elements */
+  .glass-enhanced-lg {
+    padding: 2rem;
+    border-radius: 1.5rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Extra large enhanced glass elements */
+  .glass-enhanced-xl {
+    padding: 3rem;
+    border-radius: 2rem;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
+/* ========================================
+   FALLBACK FOR NON-SUPPORTING BROWSERS
+   ======================================== */
+
+/**
+ * Fallback styles for browsers without backdrop-filter support
+ * These styles are applied when @supports conditions are not met
+ */
+@supports not (backdrop-filter: blur(10px)) {
+  /* Ensure mobile glass styles are applied as fallbacks */
+  .glass-enhanced,
+  .glass-card-enhanced,
+  .glass-enhanced-subtle,
+  .glass-enhanced-strong,
+  .glass-shell-enhanced,
+  .glass-overlay-enhanced,
+  .glass-nav-enhanced,
+  .glass-modal-enhanced,
+  .glass-section-enhanced {
+    /* Apply mobile glass styles as fallback */
+    background: rgba(255, 255, 255, var(--glass-bg-opacity));
+    border: 1px solid rgba(255, 255, 255, var(--glass-border-opacity));
+    border-radius: 1rem;
+    box-shadow:
+      0 2px 4px var(--glass-shadow-dark),
+      0 4px 8px var(--glass-shadow-dark),
+      inset 0 1px 1px var(--glass-shadow-light);
+    transition: all var(--glass-transition-duration) var(--glass-transition-easing);
+  }
+
+  /* Dark mode fallbacks */
+  .dark .glass-enhanced,
+  .dark .glass-card-enhanced,
+  .dark .glass-enhanced-subtle,
+  .dark .glass-enhanced-strong,
+  .dark .glass-shell-enhanced,
+  .dark .glass-overlay-enhanced,
+  .dark .glass-nav-enhanced,
+  .dark .glass-modal-enhanced,
+  .dark .glass-section-enhanced {
+    background: rgba(0, 0, 0, var(--glass-bg-opacity));
+    border-color: rgba(255, 255, 255, var(--glass-border-opacity));
+  }
+
+  /* Enhanced hover states for fallback */
+  .glass-enhanced:hover,
+  .glass-card-enhanced:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 6px 12px var(--glass-shadow-medium),
+      0 12px 24px var(--glass-shadow-medium),
+      inset 0 1px 2px var(--glass-shadow-light),
+      var(--glow-subtle);
+    background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.02));
+  }
+
+  .dark .glass-enhanced:hover,
+  .dark .glass-card-enhanced:hover {
+    background: rgba(0, 0, 0, calc(var(--glass-bg-opacity) + 0.02));
+  }
+}
+
+/* ========================================
+   BROWSER-SPECIFIC ENHANCEMENTS
+   ======================================== */
+
+/**
+ * Chrome/Safari specific enhancements
+ * Additional visual effects for browsers that support advanced features
+ */
+@supports (backdrop-filter: blur(10px)) and (-webkit-backdrop-filter: blur(10px)) {
+  .glass-enhanced-chrome {
+    /* Additional subtle effects for WebKit browsers */
+    background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.01));
+  }
+}
+
+/**
+ * Firefox specific enhancements
+ * Optimized for Gecko rendering engine
+ */
+@supports (backdrop-filter: blur(10px)) and (not (-webkit-backdrop-filter: blur(10px))) {
+  .glass-enhanced-firefox {
+    /* Firefox-optimized backdrop-filter */
+    backdrop-filter: blur(calc(var(--glass-blur-amount) - 1px));
+  }
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS FOR ENHANCED GLASS
+   ======================================== */
+
+/**
+ * Performance-optimized enhanced glass for capable devices
+ * Balances visual enhancement with performance
+ */
+@supports (backdrop-filter: blur(10px)) {
+  @media (min-width: 1024px) {
+    .glass-enhanced-performance {
+      /* Use GPU layers for better performance */
+      will-change: backdrop-filter, transform;
+      transform: translateZ(0);
+    }
+
+    .glass-enhanced-performance:hover {
+      /* Optimize hover performance */
+      will-change: backdrop-filter, transform, box-shadow;
+    }
+  }
+
+  /* Reduce complexity on mobile even with backdrop-filter support */
+  @media (max-width: 767px) {
+    .glass-enhanced-mobile {
+      /* Simplified backdrop-filter for mobile performance */
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY ENHANCEMENTS FOR ENHANCED GLASS
+   ======================================== */
+
+/**
+ * High contrast enhanced glass for better accessibility
+ */
+@media (prefers-contrast: high) {
+  @supports (backdrop-filter: blur(10px)) {
+    .glass-enhanced-accessible {
+      background: rgba(255, 255, 255, 0.25);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      box-shadow:
+        0 4px 8px rgba(0, 0, 0, 0.4),
+        inset 0 1px 2px rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .dark .glass-enhanced-accessible {
+      background: rgba(0, 0, 0, 0.4);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+  }
+}
+
+/**
+ * Reduced motion enhanced glass for users who prefer less animation
+ */
+@media (prefers-reduced-motion: reduce) {
+  @supports (backdrop-filter: blur(10px)) {
+    .glass-enhanced-motion {
+      transition: none !important;
+      animation: none !important;
+    }
+
+    .glass-enhanced-motion:hover,
+    .glass-enhanced-motion:active {
+      transform: none !important;
+    }
+  }
+}
+
+/* ========================================
+   PRINT STYLES FOR ENHANCED GLASS
+   ======================================== */
+
+/**
+ * Print-optimized enhanced glass effects
+ */
+@media print {
+  @supports (backdrop-filter: blur(10px)) {
+    .glass-enhanced,
+    .glass-card-enhanced,
+    .glass-enhanced-subtle,
+    .glass-enhanced-strong {
+      background: white !important;
+      border: 1px solid #ccc !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+  }
+}

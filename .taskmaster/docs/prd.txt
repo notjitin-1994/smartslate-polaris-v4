@@ -1,0 +1,578 @@
+# Product Requirements Document: Presentation Mode for SmartSlate Polaris
+
+## Executive Summary
+Build a world-class, industry-standard presentation mode for SmartSlate Polaris learning blueprints. This feature transforms blueprint data into an interactive, animated, full-screen presentation experience with professional-grade UI/UX, brand-compliant design, and comprehensive presentation controls including speaker notes, laser pointer, and presentation settings.
+
+## Project Metadata
+- **Project Name**: SmartSlate Polaris Presentation Mode
+- **Priority**: High
+- **Timeline**: 5-6 weeks
+- **Tech Stack**: Next.js 15, TypeScript 5.7, Framer Motion, Recharts, Swiper, Tailwind CSS v4
+- **Integration Points**: Blueprint View Page, Blueprint Share Page
+
+## Problem Statement
+Users need a professional way to present their learning blueprints to stakeholders, teams, and learners. Currently, blueprints are only viewable as scrollable documents. A presentation mode enables users to:
+- Present blueprints in meetings and training sessions
+- Share via presentation links
+- Export blueprints as presentation-ready PDFs
+- Engage audiences with animated, visual content
+- Control presentations with professional tools (laser pointer, speaker notes, timer)
+
+## Success Criteria
+1. **Presentation Quality**: Industry-standard presentation experience matching tools like Google Slides, Keynote
+2. **Brand Compliance**: All UI elements use SmartSlate Polaris glassmorphic design with teal accent colors
+3. **Performance**: Smooth 60fps animations, <200ms slide transitions
+4. **Accessibility**: WCAG AA compliant with keyboard navigation and screen reader support
+5. **Integration**: Seamless integration with existing blueprint view and share pages
+6. **Feature Completeness**: Full presentation controls including speaker notes, laser pointer, timer, settings
+
+## User Stories
+
+### Primary User Stories
+1. **As a learning designer**, I want to present my blueprint in full-screen mode so that I can engage my audience during presentations
+2. **As a presenter**, I want speaker notes visible only to me so that I can reference talking points without showing them to my audience
+3. **As a presenter**, I want a laser pointer tool so that I can highlight specific content on slides
+4. **As a user**, I want keyboard shortcuts so that I can control the presentation efficiently
+5. **As a user**, I want to share presentation links so that others can view my blueprint as a presentation
+6. **As a user**, I want to export presentations as PDFs so that I can distribute static versions
+
+### Secondary User Stories
+7. **As a presenter**, I want presentation settings (auto-advance, transition speed) so that I can customize the presentation experience
+8. **As a user**, I want touch/swipe gestures so that I can present from tablets and touch devices
+9. **As a user**, I want animated infographics and charts so that data visualizations are engaging
+10. **As a presenter**, I want a timer and slide counter so that I can track presentation progress
+
+## Functional Requirements
+
+### Phase 1: Core Infrastructure (Week 1)
+**FR1.1 - Dependency Installation**
+- Install Swiper library (~500KB)
+- Verify Framer Motion, Recharts, React CountUp are available
+
+**FR1.2 - Base Component Architecture**
+- Create `/frontend/components/presentation/` directory structure
+- Create `/frontend/lib/presentation/` utility directory
+- Implement `PresentationMode.tsx` main container component
+
+**FR1.3 - Fullscreen Integration**
+- Implement fullscreen API integration
+- Auto-enter fullscreen on presentation start
+- Exit fullscreen on Esc or close button
+
+**FR1.4 - Blueprint Parser**
+- Create `blueprintToSlides.ts` parser
+- Transform `blueprint_json` to slide objects
+- Support all blueprint sections: metadata, objectives, modules, timeline, resources, assessments
+
+**FR1.5 - Navigation System**
+- Implement keyboard shortcuts (Arrow keys, Space, Home, End, Esc, F)
+- Integrate Swiper for touch/swipe navigation
+- Create basic slide transitions
+
+**FR1.6 - Slide Renderer**
+- Create `SlideRenderer.tsx` component
+- Implement dynamic layout selection based on slide type
+- Support slide type system (cover, section, content, metrics, module, timeline, resources, chart)
+
+### Phase 2: Core Slide Layouts (Week 2)
+**FR2.1 - Cover Slide Layout**
+- Hero title with brand gradient background
+- Metadata cards (organization, role, date, duration)
+- Fade-in entrance animations
+- Brand teal accent colors
+
+**FR2.2 - Section Divider Slide**
+- Full-screen section separators
+- Large typography with brand styling
+- Smooth transition animations
+
+**FR2.3 - Content Slide Layout**
+- Markdown content rendering with `react-markdown`
+- Syntax highlighting for code blocks
+- Responsive typography scaling
+
+**FR2.4 - Metrics Slide Layout**
+- Animated KPI cards with `react-countup`
+- Grid layout (1-4 columns responsive)
+- Icon integration with Lucide icons
+- Staggered entry animations
+- Glassmorphic card styling
+
+**FR2.5 - Module Slide Layout**
+- Module number badge with teal accent
+- Duration display with clock icon
+- Topics grid with checkmark icons
+- Activities list with staggered animations
+- Assessments section
+- Two-column responsive layout
+
+### Phase 3: Advanced Visualizations (Week 3)
+**FR3.1 - Timeline Slide Layout**
+- Vertical timeline visualization
+- Phase cards with milestones
+- Animated timeline line drawing
+- Duration labels
+- Responsive stacking on mobile
+
+**FR3.2 - Resources Slide Layout**
+- Resource card grid (max 8 per slide)
+- Resource type icons (article, video, book, course, tool)
+- Hover effects with glassmorphic elevation
+- Pagination for >8 resources
+- Free/paid badges
+
+**FR3.3 - Chart Slide Layout**
+- Recharts integration (bar, line, area, pie, radar)
+- Animated chart entry (bars grow, lines draw)
+- Brand color palette for charts
+- Responsive chart sizing
+- Legend and axis labels
+
+**FR3.4 - Glassmorphic Design System**
+- Apply glass styling to all layouts
+- Implement brand teal accents throughout
+- Consistent backdrop blur effects
+- Gradient overlays
+- Shadow and elevation system
+
+### Phase 4: Presentation Controls & Features (Week 4)
+**FR4.1 - Speaker Notes Popup**
+- Modal/sidebar for speaker notes
+- Toggle visibility (N key or button)
+- Display current slide notes
+- Preview next slide
+- Scrollable content area
+- Glassmorphic popup design
+
+**FR4.2 - Presentation Settings Popup**
+- Settings modal accessible via settings icon
+- Auto-advance toggle with interval selector
+- Transition speed selector (slow, normal, fast)
+- Animation toggle (respect prefers-reduced-motion)
+- Theme selector (dark, light - default dark)
+- Persistent settings in localStorage
+
+**FR4.3 - Laser Pointer Tool**
+- Activate with L key or toolbar button
+- Red dot follows cursor (teal option in settings)
+- Pulsing animation for visibility
+- Click to create temporary highlight circles
+- Deactivate with L key or Esc
+
+**FR4.4 - Presentation Toolbar**
+- Bottom toolbar with glassmorphic background
+- Previous/Next slide buttons
+- Play/Pause auto-advance
+- Speaker notes toggle
+- Settings button
+- Laser pointer toggle
+- Timer display
+- Slide counter (current/total)
+- Auto-hide on inactivity (3 seconds)
+
+**FR4.5 - Progress Tracking**
+- Top progress bar (teal gradient)
+- Animated width based on slide position
+- Slide counter in bottom-right corner
+- Elapsed time timer
+- Total presentation duration estimate
+
+**FR4.6 - Touch Gestures**
+- Swipe left/right for navigation
+- Pinch-to-zoom for slides (optional)
+- Two-finger tap for fullscreen toggle
+- Long-press for context menu
+
+### Phase 5: Integration & Export (Week 5)
+**FR5.1 - Blueprint View Integration**
+- Add "Present" button to blueprint header (`frontend/app/(auth)/blueprint/[id]/page.tsx`)
+- Button with Presentation icon from Lucide
+- Launches PresentationMode in fullscreen
+- Pass blueprint_json data to component
+
+**FR5.2 - Blueprint Share Page Integration**
+- Add "Present" button to share page (`frontend/app/share/[token]/page.tsx`)
+- Create `/share/[token]/present` route
+- Load shared blueprint data
+- Launch presentation mode for public viewers
+
+**FR5.3 - Share Link Generation**
+- Generate shareable presentation links
+- Support starting at specific slide (URL param: `?slide=5`)
+- Track presentation views in analytics
+- Public/private presentation toggle
+
+**FR5.4 - PDF Export**
+- Export presentation as PDF using html2pdf.js or similar
+- One slide per PDF page
+- Print-friendly CSS
+- Preserve animations as static states
+- Include speaker notes option
+
+**FR5.5 - Analytics Integration**
+- Track presentation starts
+- Time spent per slide
+- Completion rate
+- Slide skip patterns
+- Export analytics dashboard
+
+**FR5.6 - User Preferences**
+- Store presentation preferences in localStorage
+- Default transition speed
+- Default theme
+- Auto-advance settings
+- Laser pointer color
+- Speaker notes visibility default
+
+## Non-Functional Requirements
+
+### NFR1: Performance
+- Slides render at 60fps
+- Slide transitions <200ms
+- Initial load time <2 seconds
+- Lazy load slides (current ±2)
+- GPU-accelerated animations only
+- Optimized images with Next.js Image
+- Debounced resize handlers
+
+### NFR2: Accessibility (WCAG AA)
+- Full keyboard navigation support
+- Visible focus indicators
+- Screen reader announcements for slide changes
+- Color contrast ratio ≥4.5:1
+- Respect `prefers-reduced-motion`
+- Alt text for all images and charts
+- Proper heading hierarchy (h1 → h6)
+- ARIA labels on all interactive elements
+
+### NFR3: Brand Compliance
+- Use SmartSlate Polaris glassmorphic design system
+- Brand teal accent color (#14b8a6) for all graphic accents
+- Consistent with existing UI patterns
+- Dark theme by default (matches app)
+- Professional, modern aesthetic
+- Material Design 3 inspired spacing and elevation
+
+### NFR4: Responsive Design
+- Desktop optimized (1920x1080, 1366x768)
+- Tablet support (iPad, Surface)
+- Mobile fallback (graceful degradation)
+- Touch-first on mobile/tablet
+- Viewport scaling for typography
+- Flexible layouts (grid, flexbox)
+
+### NFR5: Browser Compatibility
+- Chrome/Edge 100+ (primary)
+- Firefox 100+
+- Safari 15+
+- No IE11 support
+- Fullscreen API support required
+
+### NFR6: Security
+- Validate all blueprint data
+- Sanitize markdown content (prevent XSS)
+- Secure share token validation
+- RLS policies for blueprint access
+- No sensitive data in presentation URLs
+
+## Technical Architecture
+
+### Component Structure
+```
+frontend/components/presentation/
+├── PresentationMode.tsx              # Main container, fullscreen, navigation
+├── SlideRenderer.tsx                 # Layout selector
+├── PresentationControls.tsx          # Toolbar component
+├── PresentationKeyboardShortcuts.tsx # Keyboard handler
+├── SpeakerNotes.tsx                  # Speaker notes popup
+├── PresentationSettings.tsx          # Settings modal
+├── LaserPointer.tsx                  # Laser pointer overlay
+│
+├── layouts/
+│   ├── CoverSlide.tsx
+│   ├── SectionDividerSlide.tsx
+│   ├── ContentSlide.tsx
+│   ├── MetricsSlide.tsx
+│   ├── ModuleSlide.tsx
+│   ├── TimelineSlide.tsx
+│   ├── ResourcesSlide.tsx
+│   ├── ChartSlide.tsx
+│   └── TwoColumnSlide.tsx
+│
+├── components/
+│   ├── AnimatedMetric.tsx
+│   ├── AnimatedChart.tsx
+│   ├── ProgressBar.tsx
+│   ├── SlideTransition.tsx
+│   └── Timer.tsx
+│
+└── hooks/
+    ├── usePresentationMode.ts        # Fullscreen + keyboard
+    ├── useSlideTransitions.ts        # Animation state
+    ├── useLaserPointer.ts            # Laser pointer state
+    └── usePresentationSettings.ts    # Settings state
+
+frontend/lib/presentation/
+├── blueprintToSlides.ts              # Parser
+├── slideLayouts.ts                   # Type definitions
+├── animationVariants.ts              # Framer Motion variants
+├── presentationTheme.ts              # Brand colors, typography
+└── presentationUtils.ts              # Helper functions
+```
+
+### Data Flow
+```
+blueprint_json (PostgreSQL)
+  ↓
+parseBlueprintToSlides()
+  ↓
+Slide[] objects with type + data
+  ↓
+PresentationMode component
+  ↓
+Swiper navigation
+  ↓
+SlideRenderer (dynamic layout)
+  ↓
+Layout components (Cover, Metrics, etc.)
+  ↓
+Animated elements (Framer Motion + Recharts)
+```
+
+### Slide Type System
+```typescript
+type SlideLayoutType =
+  | 'cover'           // Title slide
+  | 'section'         // Section divider
+  | 'content'         // Markdown content
+  | 'metrics'         // KPI cards
+  | 'timeline'        // Timeline visualization
+  | 'module'          // Module details
+  | 'resources'       // Resources table/cards
+  | 'chart'           // Custom chart
+  | 'two-column';     // Split layout
+
+interface BaseSlide {
+  id: string;
+  type: SlideLayoutType;
+  title?: string;
+  subtitle?: string;
+  notes?: string; // Speaker notes
+  animationPreset?: 'fade' | 'slide' | 'zoom' | 'none';
+}
+```
+
+## Design Specifications
+
+### Color Palette
+- **Primary Teal**: #14b8a6 (brand accent)
+- **Background**: Dark gradient (#0f172a → #1e293b → #0f172a)
+- **Glass**: rgba(255, 255, 255, 0.1) with backdrop-blur-xl
+- **Text**: white (#ffffff) with opacity variants (100%, 80%, 60%, 40%)
+- **Success**: #22c55e
+- **Warning**: #f59e0b
+- **Error**: #ef4444
+
+### Typography Scale
+- **Hero (h1)**: 4rem - 8rem (clamp based on viewport)
+- **Title (h2)**: 3rem - 5rem
+- **Subtitle (h3)**: 2rem - 3rem
+- **Body**: 1rem - 1.5rem
+- **Caption**: 0.875rem - 1rem
+- **Font Family**: System sans-serif stack (from Tailwind)
+
+### Spacing System (Material Design 3 inspired)
+- **4px** (0.25rem): Minimal spacing
+- **8px** (0.5rem): Small gaps
+- **12px** (0.75rem): Default gaps
+- **16px** (1rem): Medium spacing
+- **24px** (1.5rem): Large spacing
+- **32px** (2rem): Section spacing
+- **48px** (3rem): Major section spacing
+
+### Animation Guidelines
+- **Duration**: 300ms (fast), 600ms (standard), 800ms (slow)
+- **Easing**: cubic-bezier(0.6, -0.05, 0.01, 0.99) for entries
+- **Stagger**: 100ms delay between elements
+- **GPU Properties Only**: transform, opacity (avoid left, top, width, height)
+- **Respect**: prefers-reduced-motion media query
+
+### Glassmorphic Effect
+```css
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+```
+
+## Keyboard Shortcuts
+| Key | Action |
+|-----|--------|
+| → or Space | Next slide |
+| ← | Previous slide |
+| Home | First slide |
+| End | Last slide |
+| F or F11 | Toggle fullscreen |
+| Esc | Exit presentation |
+| N | Toggle speaker notes |
+| S | Open settings |
+| L | Toggle laser pointer |
+| P | Play/pause auto-advance |
+| ? | Show keyboard shortcuts help |
+
+## Testing Requirements
+
+### Unit Tests (Vitest)
+- Blueprint parser (`blueprintToSlides.test.ts`)
+- Slide type validation
+- Animation variant generation
+- Helper functions
+
+### Component Tests (React Testing Library)
+- All layout components render correctly
+- Keyboard shortcuts work
+- Settings persist to localStorage
+- Laser pointer activates/deactivates
+- Speaker notes toggle
+
+### Integration Tests
+- Full presentation flow (start → navigate → exit)
+- Share link generation and access
+- PDF export functionality
+- Analytics tracking
+
+### E2E Tests (Playwright)
+- Complete user journey from blueprint view to presentation
+- Fullscreen API integration
+- Touch gesture navigation on mobile
+- Browser compatibility tests
+
+### Accessibility Tests
+- Keyboard navigation (tab order, focus indicators)
+- Screen reader announcements
+- Color contrast validation
+- Reduced motion respect
+
+### Performance Tests
+- FPS monitoring during animations
+- Lighthouse scores (Performance >90)
+- Memory leak detection
+- Bundle size impact (<100KB added)
+
+## Milestones & Timeline
+
+### Week 1: Core Infrastructure
+- Install dependencies
+- Create component structure
+- Implement fullscreen mode
+- Build blueprint parser
+- Basic slide navigation
+- **Deliverable**: Fullscreen presentation with basic navigation
+
+### Week 2: Core Layouts
+- Cover slide
+- Section divider
+- Content slide
+- Metrics slide
+- Module slide
+- **Deliverable**: 5 core slide layouts with animations
+
+### Week 3: Advanced Visualizations
+- Timeline slide
+- Resources slide
+- Chart slide
+- Glassmorphic styling
+- **Deliverable**: All 8 slide layouts complete
+
+### Week 4: Presentation Controls
+- Speaker notes popup
+- Settings modal
+- Laser pointer
+- Presentation toolbar
+- Progress tracking
+- **Deliverable**: Fully functional presentation controls
+
+### Week 5: Integration & Export
+- Blueprint page integration
+- Share page integration
+- PDF export
+- Analytics
+- User preferences
+- **Deliverable**: Production-ready presentation mode
+
+### Week 6: Polish & Launch
+- Bug fixes
+- Performance optimization
+- Accessibility audit
+- Documentation
+- **Deliverable**: Launch-ready feature
+
+## Dependencies
+
+### New Dependencies
+```json
+{
+  "swiper": "^11.2.10"
+}
+```
+
+### Existing Dependencies (Already Installed)
+```json
+{
+  "framer-motion": "^12.23.24",
+  "recharts": "^3.2.1",
+  "react-countup": "^6.5.3",
+  "react-markdown": "^10.1.0",
+  "react-intersection-observer": "^10.0.0",
+  "lucide-react": "^0.544.0",
+  "tailwindcss": "^4.1.17",
+  "next": "15.5.3"
+}
+```
+
+## Risks & Mitigation
+
+### Risk 1: Performance on Low-End Devices
+- **Mitigation**: Lazy load slides, GPU acceleration, reduce animations on low FPS
+- **Fallback**: Static transitions if performance <30fps
+
+### Risk 2: Browser Fullscreen API Inconsistencies
+- **Mitigation**: Polyfill for older browsers, graceful degradation
+- **Fallback**: Maximized window mode if fullscreen unavailable
+
+### Risk 3: Complex Blueprint Data Parsing
+- **Mitigation**: Comprehensive parser tests, error boundaries
+- **Fallback**: Show error slide with helpful message
+
+### Risk 4: Large Bundle Size Impact
+- **Mitigation**: Code splitting, dynamic imports for layouts
+- **Target**: <100KB added to bundle
+
+## Open Questions
+1. Should we support dual-screen presenter mode (main + notes screen)?
+2. Should presentations support video/audio embeds?
+3. Should we allow inline slide editing during presentation?
+4. Export format preferences: PDF, PowerPoint, or both?
+5. Real-time collaboration for live presentations?
+
+## Success Metrics (KPIs)
+- **Adoption Rate**: 40% of users use presentation mode within 1 month
+- **Engagement**: Average presentation duration >5 minutes
+- **Share Rate**: 20% of presentations are shared
+- **Performance**: <2s load time, 60fps maintained
+- **Accessibility**: 100% WCAG AA compliance
+- **User Satisfaction**: >4.5/5 rating in feedback
+
+## Future Enhancements (Post-MVP)
+- Dual-screen presenter mode
+- Live collaboration (multiple viewers)
+- Recording with voiceover
+- Custom themes (light, high contrast)
+- Slide templates library
+- AI-powered slide optimization
+- Analytics heatmaps
+- PowerPoint export
+- Video/audio embeds
+- Animations timeline editor

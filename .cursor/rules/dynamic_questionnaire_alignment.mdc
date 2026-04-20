@@ -1,0 +1,62 @@
+---
+description: PRD-aligned implementation and testing rules for Dynamic Questionnaire MVP and beyond
+globs: frontend/**/*
+alwaysApply: true
+---
+
+- **Scope & Source of Truth**
+  - This rule operationalizes the active PRD for the Dynamic Questionnaire System. Treat the PRD as the single source of truth.
+  - Primary PRD: [prd.txt](mdc:prd.txt). If superseded, use the most relevant file under [docs/prds/](mdc:docs/prds/).
+
+- **Endpoints (required)**
+  - Implement and wire these endpoints as specified in the PRD:
+    - GET `/api/dynamic-questions/:blueprintId` (auth required)
+    - POST `/api/dynamic-answers/save` (auto-save, partial)
+    - POST `/api/dynamic-answers/submit` (finalize + trigger blueprint generation)
+  - Reference implementations and context:
+    - Dynamic generation service: [dynamicQuestionGenerationV2.ts](mdc:frontend/src/lib/services/dynamicQuestionGenerationV2.ts)
+    - Generation route (existing): [generate-dynamic-questions/route.ts](mdc:frontend/app/api/generate-dynamic-questions/route.ts)
+
+- **Dynamic Questionnaire Page**
+  - Route: `/app/(auth)/dynamic-questionnaire/[blueprintId]/page.tsx` (Server Component by default; add "use client" only when necessary).
+  - Integrate renderer: [DynamicQuestionRenderer.tsx](mdc:frontend/components/demo-dynamicv2/DynamicQuestionRenderer.tsx)
+  - Implement section navigation (1..10), progress bar, and resume from saved state.
+
+- **Form State & Auto-save**
+  - Use React Hook Form + Zod resolver; debounce 500ms; auto-save every 30s via POST `/api/dynamic-answers/save`.
+  - Merge server answers with sessionStorage backup on mount; warn on unsaved changes.
+
+- **Validation**
+  - Centralize Zod schemas for dynamic question structures; enforce field- and section-level validation.
+  - Block navigation on validation errors; show inline, accessible error messages.
+
+- **Routing & Loading**
+  - Connect static → dynamic → blueprint flows with unified loaders and descriptive status text.
+  - Ensure authenticated route protection in `(auth)` group.
+
+- **Status & DB contract**
+  - Maintain blueprint status transitions per PRD: `generating` → `answering` → `completed` | `error`.
+  - Table: `blueprint_generator` fields must be updated atomically with clear timestamps.
+
+- **Logging & Observability**
+  - Use structured logging utilities under [frontend/lib/logging](mdc:frontend/lib/logging/).
+  - Add admin logs API `/api/logs` (filtered, paginated) per PRD when in scope.
+
+- **Mobile & Accessibility**
+  - Touch targets ≥44px; sticky progress & fixed bottom nav on mobile; keyboard navigation and screen reader labels.
+  - Respect `prefers-reduced-motion`; ensure contrast meets WCAG AA.
+
+- **Styling**
+  - Use Tailwind v4 token utilities (no hardcoded colors). Follow SmartSlate theming rules.
+
+- **Tests & Gate**
+  - Unit: form logic, validation, API handlers.
+  - Integration: endpoints and DB contract; E2E: core flows including resume, error recovery, provider fallback.
+  - Project test command: `npm --prefix frontend run test`.
+  - Tasks/subtasks are marked done only when PRD acceptance criteria pass and tests are green.
+
+- **References**
+  - Static wizard (production): [static-wizard/page.tsx](mdc:frontend/app/(auth)/static-wizard/page.tsx)
+  - Generation API: [generate-dynamic-questions/route.ts](mdc:frontend/app/api/generate-dynamic-questions/route.ts)
+  - Blueprint generation service: [frontend/lib/services](mdc:frontend/lib/services/)
+

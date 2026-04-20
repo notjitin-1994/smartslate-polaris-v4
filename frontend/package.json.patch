@@ -1,0 +1,9 @@
+Add this to your scripts section in package.json:
+
+"test:claude": "npx tsx scripts/test-claude-api.ts"
+
+This will allow you to run:
+npm run test:claude
+
+To test the Claude API integration with real API calls.
+

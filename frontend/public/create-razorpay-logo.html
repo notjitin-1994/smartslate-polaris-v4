@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Razorpay Logo</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #f0f0f0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .preview {
+            margin: 20px;
+            text-align: center;
+        }
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+        button {
+            margin: 10px;
+            padding: 12px 24px;
+            font-size: 16px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #4f46e5;
+        }
+        .instructions {
+            max-width: 600px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h2>Create Razorpay Logo</h2>
+        <p>This tool will create a 256x256px logo with a black circular background and the swirl icon.</p>
+        <ol>
+            <li>The canvas below shows the preview</li>
+            <li>Click "Download Logo" to save the image</li>
+            <li>Save it as <code>/public/razorpay-logo.png</code></li>
+            <li>Or upload to a CDN and set the URL in your .env.local</li>
+        </ol>
+    </div>
+
+    <div class="preview">
+        <h3>Preview (256x256px)</h3>
+        <canvas id="logoCanvas" width="256" height="256"></canvas>
+    </div>
+
+    <button onclick="downloadLogo()">Download Logo</button>
+    <button onclick="loadSwirlFromInput()">Upload Swirl Image</button>
+    <input type="file" id="swirlInput" accept="image/*" style="display:none">
+
+    <script>
+        const canvas = document.getElementById('logoCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Draw logo function
+        function drawLogo(swirlImage) {
+            // Clear canvas to transparent background
+            ctx.clearRect(0, 0, 256, 256);
+
+            // Draw rounded square background (matching Razorpay's container)
+            const borderRadius = 24; // Rounded corners (about 10% of canvas size)
+
+            ctx.fillStyle = '#020c1b'; // Website background blue
+            ctx.beginPath();
+            ctx.roundRect(0, 0, 256, 256, borderRadius);
+            ctx.fill();
+
+            if (swirlImage) {
+                // Draw swirl image with some padding from edges
+                const padding = 20; // Small padding so swirl doesn't touch edges
+                const size = 256 - (padding * 2); // Swirl size with padding
+                const x = padding;
+                const y = padding;
+                ctx.drawImage(swirlImage, x, y, size, size);
+            } else {
+                // Draw placeholder text
+                ctx.fillStyle = '#ffffff'; // White color for visibility on dark background
+                ctx.font = 'bold 48px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('SWIRL', 128, 128);
+            }
+        }
+
+        // Initial draw with placeholder
+        drawLogo(null);
+
+        // Load swirl image
+        function loadSwirlFromInput() {
+            document.getElementById('swirlInput').click();
+        }
+
+        document.getElementById('swirlInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        drawLogo(img);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Try to load from /logo-swirl.png automatically
+        const swirlImg = new Image();
+        swirlImg.onload = function() {
+            drawLogo(swirlImg);
+        };
+        swirlImg.onerror = function() {
+            console.log('Could not load /logo-swirl.png, using placeholder');
+        };
+        swirlImg.src = '/logo-swirl.png';
+
+        // Download function
+        function downloadLogo() {
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'razorpay-logo.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+    </script>
+</body>
+</html>

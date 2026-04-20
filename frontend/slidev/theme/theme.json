@@ -1,0 +1,95 @@
+{
+  "name": "SmartSlate Polaris",
+  "description": "Premium glassmorphic presentation theme for SmartSlate Polaris learning blueprints",
+  "version": "1.0.0",
+  "author": "SmartSlate Team",
+  "defaults": {
+    "aspectRatio": "16/9",
+    "canvasWidth": 980,
+    "fonts": {
+      "sans": "'Lato', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      "serif": "'Quicksand', Georgia, Cambria, 'Times New Roman', Times, serif",
+      "mono": "'Monaco', 'Menlo', 'Courier New', monospace"
+    },
+    "highlighter": "shiki",
+    "lineNumbers": false,
+    "colorSchema": "dark",
+    "routerMode": "history",
+    "favicon": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23a7dadb' width='100' height='100' rx='20'/><text x='50' y='67' font-size='60' text-anchor='middle' fill='%23020c1b' font-weight='bold' font-family='sans-serif'>SP</text></svg>",
+    "drawings": {
+      "enabled": true,
+      "persist": false,
+      "presenterOnly": false,
+      "syncAll": true
+    }
+  },
+  "layouts": {
+    "cover": {
+      "description": "Title slide with metadata cards",
+      "props": {
+        "title": "string",
+        "subtitle": "string",
+        "author": "string",
+        "date": "string",
+        "duration": "string"
+      }
+    },
+    "default": {
+      "description": "Standard content slide with left-aligned text",
+      "props": {
+        "title": "string"
+      }
+    },
+    "section": {
+      "description": "Section divider with large title and optional number",
+      "props": {
+        "title": "string",
+        "subtitle": "string",
+        "sectionNumber": "string"
+      }
+    },
+    "two-cols": {
+      "description": "Two-column layout with glassmorphic cards",
+      "props": {
+        "title": "string"
+      },
+      "slots": {
+        "left": "Left column content",
+        "right": "Right column content"
+      }
+    },
+    "timeline": {
+      "description": "Vertical timeline layout",
+      "props": {
+        "title": "string"
+      }
+    },
+    "metrics": {
+      "description": "Grid layout for displaying metrics/KPIs",
+      "props": {
+        "title": "string"
+      }
+    },
+    "table": {
+      "description": "Enhanced table layout with glassmorphic styling",
+      "props": {
+        "title": "string"
+      }
+    },
+    "quote": {
+      "description": "Centered quote layout with attribution",
+      "props": {
+        "author": "string",
+        "role": "string"
+      }
+    }
+  },
+  "features": {
+    "glassmorphism": true,
+    "animations": true,
+    "darkMode": true,
+    "branding": true,
+    "progressBar": true,
+    "pageNumbers": true
+  }
+}

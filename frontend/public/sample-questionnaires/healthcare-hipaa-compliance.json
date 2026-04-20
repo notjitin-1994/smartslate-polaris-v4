@@ -1,0 +1,249 @@
+{
+  "metadata": {
+    "title": "Healthcare HIPAA Compliance Training",
+    "scenario": "Senior Learning Director at Regional Health System",
+    "description": "500+ healthcare workers needing HIPAA compliance training",
+    "generatedAt": "2025-10-06T10:00:00Z",
+    "contextUtilization": {
+      "roleExperience": "100%",
+      "organizationContext": "100%",
+      "learningGapAudience": "100%"
+    }
+  },
+  "sections": [
+    {
+      "id": "s1",
+      "title": "Learning Objectives & Outcomes",
+      "description": "Define specific, measurable learning outcomes aligned with Regional Health System's Healthcare context to address mandatory HIPAA compliance training for 500+ clinical and administrative staff",
+      "order": 1,
+      "questions": [
+        {
+          "id": "s1_q1",
+          "label": "As Learning Director at Regional Health System, what are your primary learning objectives for this 501-1000 learner HIPAA compliance initiative?",
+          "type": "checkbox_cards",
+          "required": true,
+          "helpText": "Select all objectives that align with addressing mandatory HIPAA compliance training. Consider your $250K-$1M budget and HIPAA, SOC 2 requirements.",
+          "options": [
+            {
+              "value": "knowledge",
+              "label": "Knowledge Acquisition",
+              "description": "Build foundational understanding of HIPAA privacy and security rules, PHI handling protocols"
+            },
+            {
+              "value": "skills",
+              "label": "Practical Skill Development",
+              "description": "Develop hands-on abilities for secure data handling on Desktop, Laptop, Tablet platforms"
+            },
+            {
+              "value": "compliance",
+              "label": "Regulatory Compliance",
+              "description": "Achieve 100% compliance certification within regulatory deadlines"
+            },
+            {
+              "value": "performance",
+              "label": "Performance Improvement",
+              "description": "Measurable reduction in privacy incidents and security violations"
+            }
+          ],
+          "validation": [
+            { "rule": "minSelections", "value": 1, "message": "Select at least one objective" }
+          ],
+          "metadata": {
+            "contextSource": "role=Learning Director, org=Regional Health System, gap=HIPAA compliance, sector=Healthcare",
+            "complianceCheck": "Verified against HIPAA, SOC 2"
+          }
+        },
+        {
+          "id": "s1_q2",
+          "label": "Given your learners' current 2/5 knowledge level, what Bloom's taxonomy level should objectives target?",
+          "type": "radio_pills",
+          "required": true,
+          "helpText": "Starting from level 2/5 (Beginner), determine appropriate cognitive complexity for 3-5 hours weekly learning time",
+          "options": [
+            { "value": "remember", "label": "Remember", "icon": "📝" },
+            { "value": "understand", "label": "Understand", "icon": "💡" },
+            { "value": "apply", "label": "Apply", "icon": "🔧" },
+            { "value": "analyze", "label": "Analyze", "icon": "🔍" }
+          ],
+          "metadata": {}
+        },
+        {
+          "id": "s1_q3",
+          "label": "What is your expected ROI timeframe for this Healthcare compliance initiative?",
+          "type": "radio_cards",
+          "required": true,
+          "helpText": "Consider your $250K-$1M budget and 501-1000 learner scale when setting ROI expectations",
+          "options": [
+            {
+              "value": "immediate",
+              "label": "Immediate (0-3 months)",
+              "description": "Rapid compliance achievement to meet regulatory deadlines"
+            },
+            {
+              "value": "short_term",
+              "label": "Short-term (3-6 months)",
+              "description": "Measurable reduction in incidents and improved audit scores"
+            },
+            {
+              "value": "medium_term",
+              "label": "Medium-term (6-12 months)",
+              "description": "Cultural shift and sustained behavioral change"
+            }
+          ],
+          "validation": [],
+          "metadata": {}
+        },
+        {
+          "id": "s1_q4",
+          "label": "How will success be measured for your 26-50 person L&D team managing this initiative?",
+          "type": "checkbox_pills",
+          "required": true,
+          "helpText": "Select KPIs that align with Healthcare industry standards and your organization's priorities",
+          "options": [
+            { "value": "completion", "label": "100% Completion Rate" },
+            { "value": "certification", "label": "Certification Achievement" },
+            { "value": "incident_reduction", "label": "Incident Reduction" },
+            { "value": "audit_scores", "label": "Improved Audit Scores" },
+            { "value": "time_to_competency", "label": "Reduced Time-to-Competency" }
+          ],
+          "validation": [
+            { "rule": "minSelections", "value": 1, "message": "Select at least one KPI" }
+          ],
+          "metadata": {}
+        },
+        {
+          "id": "s1_q5",
+          "label": "Rate the strategic importance of this initiative to Regional Health System's organizational goals",
+          "type": "enhanced_scale",
+          "required": true,
+          "helpText": "Consider your role as Learning Director and the impact of HIPAA compliance on patient safety and organizational risk",
+          "scaleConfig": {
+            "min": 1,
+            "max": 5,
+            "minLabel": "Standard Training",
+            "maxLabel": "Mission Critical",
+            "labels": ["⚪ Low", "🔵 Moderate", "🟡 Important", "🟠 High Priority", "🔴 Critical"],
+            "step": 1
+          },
+          "validation": [],
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "title": "Target Audience Analysis",
+      "description": "Deep dive into your 501-1000 learner characteristics to ensure personalized, accessible learning experiences",
+      "order": 2,
+      "questions": [
+        {
+          "id": "s2_q1",
+          "label": "What is the demographic composition of your 501-1000 healthcare workforce?",
+          "type": "checkbox_cards",
+          "required": true,
+          "helpText": "Understanding role distribution helps tailor content depth and examples for Office, Remote/Home learning environments",
+          "options": [
+            {
+              "value": "clinical_staff",
+              "label": "Clinical Staff (Doctors, Nurses, Therapists)",
+              "description": "Direct patient care providers who handle PHI daily"
+            },
+            {
+              "value": "administrative",
+              "label": "Administrative Staff",
+              "description": "Billing, scheduling, records management personnel"
+            },
+            {
+              "value": "it_staff",
+              "label": "IT & Technical Staff",
+              "description": "System administrators managing HIPAA-compliant infrastructure"
+            },
+            {
+              "value": "leadership",
+              "label": "Leadership & Management",
+              "description": "Department heads and compliance officers"
+            }
+          ],
+          "validation": [
+            { "rule": "minSelections", "value": 1, "message": "Select at least one learner group" }
+          ],
+          "metadata": {}
+        },
+        {
+          "id": "s2_q2",
+          "label": "What learning preferences dominate in your Healthcare organization?",
+          "type": "radio_pills",
+          "required": true,
+          "helpText": "Given 3-5 hours per week availability, which format will maximize engagement for Mandatory compliance motivated learners?",
+          "options": [
+            { "value": "visual", "label": "Visual" },
+            { "value": "auditory", "label": "Auditory" },
+            { "value": "kinesthetic", "label": "Hands-on Practice" },
+            { "value": "reading", "label": "Reading/Writing" },
+            { "value": "mixed", "label": "Mixed Modalities" }
+          ],
+          "validation": [],
+          "metadata": {}
+        },
+        {
+          "id": "s2_q3",
+          "label": "What accessibility requirements must be met for your workforce?",
+          "type": "checkbox_pills",
+          "required": true,
+          "helpText": "HIPAA-compliant platforms accessed via Desktop, Laptop, Tablet must meet WCAG standards",
+          "options": [
+            { "value": "wcag_aa", "label": "WCAG 2.1 AA" },
+            { "value": "screen_readers", "label": "Screen Reader Support" },
+            { "value": "closed_captions", "label": "Closed Captions" },
+            { "value": "multilingual", "label": "Multiple Languages" },
+            { "value": "mobile_accessible", "label": "Mobile Accessibility" }
+          ],
+          "validation": [],
+          "metadata": {}
+        },
+        {
+          "id": "s2_q4",
+          "label": "How will you segment the 501-1000 learners for personalized learning paths?",
+          "type": "radio_cards",
+          "required": true,
+          "helpText": "With 2/5 average knowledge level, segmentation ensures appropriate content depth for each group",
+          "options": [
+            {
+              "value": "role_based",
+              "label": "Role-Based Segmentation",
+              "description": "Different paths for clinical, administrative, and IT staff"
+            },
+            {
+              "value": "knowledge_based",
+              "label": "Knowledge-Level Segmentation",
+              "description": "Adaptive paths based on pre-assessment scores"
+            },
+            {
+              "value": "department_based",
+              "label": "Department-Based Cohorts",
+              "description": "Cohorts organized by department or unit"
+            }
+          ],
+          "validation": [],
+          "metadata": {}
+        },
+        {
+          "id": "s2_q5",
+          "label": "Estimate the digital literacy level of your Healthcare workforce",
+          "type": "labeled_slider",
+          "required": true,
+          "helpText": "This affects platform selection and training complexity for Desktop, Laptop, Tablet usage",
+          "sliderConfig": {
+            "min": 0,
+            "max": 100,
+            "step": 10,
+            "unit": "% digitally proficient",
+            "markers": [25, 50, 75]
+          },
+          "validation": [],
+          "metadata": {}
+        }
+      ]
+    }
+  ]
+}

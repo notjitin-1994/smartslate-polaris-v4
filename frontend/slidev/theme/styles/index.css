@@ -1,0 +1,608 @@
+/**
+ * SmartSlate Polaris Slidev Theme - Global Styles
+ * Brand-consistent glassmorphic presentation design
+ */
+
+/* ==================== CSS Variables & Design Tokens ==================== */
+:root {
+  /* Brand Colors - Primary */
+  --primary-accent: #a7dadb;
+  --primary-accent-light: #d0edf0;
+  --primary-accent-dark: #7bc5c7;
+
+  /* Brand Colors - Secondary */
+  --secondary-accent: #4f46e5;
+  --secondary-accent-light: #7c69f5;
+  --secondary-accent-dark: #3730a3;
+
+  /* Background Layers */
+  --background-dark: #020c1b;
+  --background-paper: #0d1b2a;
+  --background-surface: #142433;
+
+  /* Text Hierarchy */
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0c5c6;
+  --text-disabled: #7a8a8b;
+
+  /* Semantic Colors */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+
+  /* Typography Scale */
+  --text-display: 3rem; /* 48px - Hero/Title */
+  --text-title: 2rem; /* 32px - Section headers */
+  --text-heading: 1.5rem; /* 24px - Subsections */
+  --text-body: 1.125rem; /* 18px - Body text (larger for presentations) */
+  --text-caption: 1rem; /* 16px - Captions */
+  --text-small: 0.875rem; /* 14px - Fine print */
+
+  /* Font Weights */
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Spacing System (8px grid for presentations) */
+  --space-1: 0.5rem; /* 8px */
+  --space-2: 1rem; /* 16px */
+  --space-3: 1.5rem; /* 24px */
+  --space-4: 2rem; /* 32px */
+  --space-6: 3rem; /* 48px */
+  --space-8: 4rem; /* 64px */
+
+  /* Border Radius */
+  --radius-sm: 0.5rem; /* 8px */
+  --radius-md: 0.75rem; /* 12px */
+  --radius-lg: 1rem; /* 16px */
+  --radius-xl: 1.5rem; /* 24px */
+
+  /* Glassmorphism */
+  --glass-background: rgba(13, 27, 42, 0.65);
+  --glass-border: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  --glass-blur: 24px;
+
+  /* Animation Timing */
+  --duration-fast: 200ms;
+  --duration-base: 300ms;
+  --duration-slow: 500ms;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==================== Base Styles ==================== */
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  font-family:
+    'Lato',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--background-dark);
+  overflow: hidden;
+}
+
+/* ==================== Slidev Container ==================== */
+.slidev-layout {
+  width: 100%;
+  height: 100%;
+  padding: var(--space-6);
+  background: linear-gradient(135deg, #020c1b 0%, #0d1b2a 50%, #142433 100%);
+  position: relative;
+}
+
+/* ==================== Typography ==================== */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Quicksand', sans-serif;
+  font-weight: var(--font-bold);
+  line-height: 1.2;
+  color: var(--text-primary);
+  margin-bottom: var(--space-3);
+}
+
+h1 {
+  font-size: var(--text-display);
+  background: linear-gradient(135deg, var(--primary-accent) 0%, var(--primary-accent-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h2 {
+  font-size: var(--text-title);
+  color: var(--primary-accent);
+}
+
+h3 {
+  font-size: var(--text-heading);
+  color: var(--text-primary);
+}
+
+p {
+  font-size: var(--text-body);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+  text-align: left;
+}
+
+/* ==================== Glassmorphic Components ==================== */
+.glass-card {
+  background: var(--glass-background);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  background-image: var(--glass-border);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 10px 20px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  padding: var(--space-4);
+  transition: all var(--duration-base) var(--ease);
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 12px rgba(0, 0, 0, 0.15),
+    0 16px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ==================== Lists ==================== */
+ul,
+ol {
+  margin-left: var(--space-4);
+  margin-bottom: var(--space-3);
+  text-align: left;
+}
+
+li {
+  font-size: var(--text-body);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+  line-height: 1.8;
+}
+
+li::marker {
+  color: var(--primary-accent);
+  font-weight: var(--font-semibold);
+}
+
+ul li::marker {
+  content: '▹  ';
+  font-size: 1.2em;
+}
+
+/* ==================== Accent Elements ==================== */
+.accent-line {
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-accent) 0%, transparent 100%);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-3);
+  animation: slideInLeft var(--duration-slow) var(--ease);
+}
+
+.accent-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--primary-accent);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: var(--space-1);
+  animation: pulse 2s infinite;
+}
+
+/* ==================== Progress Indicator ==================== */
+.slidev-page-number {
+  position: fixed;
+  bottom: var(--space-4);
+  right: var(--space-4);
+  font-size: var(--text-caption);
+  color: var(--text-disabled);
+  background: var(--glass-background);
+  backdrop-filter: blur(var(--glass-blur));
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 10;
+}
+
+.slidev-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--background-surface);
+  z-index: 100;
+}
+
+.slidev-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-accent) 0%, var(--secondary-accent) 100%);
+  transition: width var(--duration-base) var(--ease);
+}
+
+/* ==================== Branding ==================== */
+.brand-logo {
+  position: fixed;
+  bottom: var(--space-4);
+  left: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: 'Quicksand', sans-serif;
+  font-weight: var(--font-bold);
+  font-size: var(--text-caption);
+  color: var(--text-secondary);
+  z-index: 10;
+}
+
+.brand-logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-bold);
+  color: var(--background-dark);
+}
+
+.brand-powered-by {
+  font-size: var(--text-small);
+  color: var(--text-disabled);
+  margin-top: 0.25rem;
+}
+
+/* ==================== Tables ==================== */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: var(--space-3) 0;
+  background: var(--glass-background);
+  backdrop-filter: blur(var(--glass-blur));
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  text-align: left;
+}
+
+thead {
+  background: linear-gradient(
+    135deg,
+    var(--primary-accent-dark) 0%,
+    var(--secondary-accent-dark) 100%
+  );
+}
+
+th {
+  padding: var(--space-2) var(--space-3);
+  font-family: 'Quicksand', sans-serif;
+  font-weight: var(--font-semibold);
+  font-size: var(--text-body);
+  color: var(--text-primary);
+  text-align: left;
+}
+
+td {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-body);
+  color: var(--text-secondary);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+tbody tr:hover {
+  background: rgba(167, 218, 219, 0.05);
+}
+
+/* ==================== Code Blocks ==================== */
+pre {
+  background: var(--background-paper);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  overflow-x: auto;
+  margin: var(--space-3) 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+}
+
+code {
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 0.9em;
+  color: var(--primary-accent-light);
+}
+
+/* ==================== Badges & Pills ==================== */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-small);
+  font-weight: var(--font-semibold);
+  background: var(--glass-background);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  margin-right: var(--space-1);
+}
+
+.badge-primary {
+  background: linear-gradient(135deg, var(--primary-accent-dark) 0%, var(--primary-accent) 100%);
+  color: var(--background-dark);
+  border: none;
+}
+
+.badge-success {
+  background: var(--success);
+  color: white;
+  border: none;
+}
+
+.badge-warning {
+  background: var(--warning);
+  color: white;
+  border: none;
+}
+
+.badge-error {
+  background: var(--error);
+  color: white;
+  border: none;
+}
+
+/* ==================== Animations ==================== */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animation Classes */
+.animate-slide-in-left {
+  animation: slideInLeft var(--duration-slow) var(--ease);
+}
+
+.animate-slide-in-up {
+  animation: slideInUp var(--duration-slow) var(--ease);
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--duration-base) var(--ease);
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--duration-base) var(--ease);
+}
+
+/* Staggered animations for lists */
+li:nth-child(1) {
+  animation: slideInLeft 0.5s var(--ease) 0.1s backwards;
+}
+li:nth-child(2) {
+  animation: slideInLeft 0.5s var(--ease) 0.2s backwards;
+}
+li:nth-child(3) {
+  animation: slideInLeft 0.5s var(--ease) 0.3s backwards;
+}
+li:nth-child(4) {
+  animation: slideInLeft 0.5s var(--ease) 0.4s backwards;
+}
+li:nth-child(5) {
+  animation: slideInLeft 0.5s var(--ease) 0.5s backwards;
+}
+li:nth-child(6) {
+  animation: slideInLeft 0.5s var(--ease) 0.6s backwards;
+}
+
+/* ==================== Grid & Layout ==================== */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* ==================== Metric Cards ==================== */
+.metric-card {
+  background: var(--glass-background);
+  backdrop-filter: blur(var(--glass-blur));
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.metric-value {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 2.5rem;
+  font-weight: var(--font-bold);
+  color: var(--primary-accent);
+  margin-bottom: var(--space-1);
+}
+
+.metric-label {
+  font-size: var(--text-caption);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ==================== Timeline ==================== */
+.timeline {
+  position: relative;
+  padding-left: var(--space-4);
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--primary-accent) 0%, var(--secondary-accent) 100%);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: var(--space-4);
+  padding-left: var(--space-3);
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -2.25rem;
+  top: 0.5rem;
+  width: 12px;
+  height: 12px;
+  background: var(--primary-accent);
+  border-radius: 50%;
+  border: 2px solid var(--background-dark);
+  box-shadow: 0 0 0 4px rgba(167, 218, 219, 0.2);
+}
+
+/* ==================== Blockquotes ==================== */
+blockquote {
+  border-left: 4px solid var(--primary-accent);
+  padding-left: var(--space-3);
+  margin: var(--space-3) 0;
+  font-style: italic;
+  color: var(--text-secondary);
+  background: rgba(167, 218, 219, 0.05);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+/* ==================== Utility Classes ==================== */
+.text-left {
+  text-align: left !important;
+}
+.text-center {
+  text-align: center !important;
+}
+.text-right {
+  text-align: right !important;
+}
+
+.mt-2 {
+  margin-top: var(--space-2);
+}
+.mt-3 {
+  margin-top: var(--space-3);
+}
+.mt-4 {
+  margin-top: var(--space-4);
+}
+.mb-2 {
+  margin-bottom: var(--space-2);
+}
+.mb-3 {
+  margin-bottom: var(--space-3);
+}
+.mb-4 {
+  margin-bottom: var(--space-4);
+}
+
+.opacity-70 {
+  opacity: 0.7;
+}
+.opacity-50 {
+  opacity: 0.5;
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 1024px) {
+  :root {
+    --text-display: 2.5rem;
+    --text-title: 1.75rem;
+    --text-heading: 1.25rem;
+    --text-body: 1rem;
+  }
+
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}

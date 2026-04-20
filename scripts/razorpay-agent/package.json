@@ -1,0 +1,40 @@
+{
+  "name": "@smartslate/razorpay-expert-agent",
+  "version": "1.0.0",
+  "description": "Comprehensive Razorpay integration diagnostics and fix agent for SmartSlate Polaris v3",
+  "main": "razorpay-expert-agent.ts",
+  "type": "module",
+  "scripts": {
+    "start": "tsx razorpay-expert-agent.ts",
+    "diagnose": "tsx razorpay-expert-agent.ts --verbose",
+    "fix": "tsx razorpay-expert-agent.ts --auto-fix --verbose",
+    "webhook": "tsx webhook-diagnostics.ts",
+    "test": "tsx razorpay-expert-agent.ts --test",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "razorpay",
+    "payment",
+    "webhook",
+    "diagnostics",
+    "smartslate",
+    "polaris"
+  ],
+  "author": "SmartSlate Development Team",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "axios": "^1.6.0",
+    "chalk": "^5.3.0",
+    "dotenv": "^16.3.1",
+    "tsx": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

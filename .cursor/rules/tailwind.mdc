@@ -1,0 +1,35 @@
+---
+description: Tailwind CSS v4 usage, layout, and accessibility conventions
+globs: frontend/**/*.{ts,tsx,css}
+alwaysApply: true
+---
+
+- **Version & Setup**
+  - Tailwind v4 is configured via PostCSS plugin `@tailwindcss/postcss` and `globals.css`.
+  - Prefer utility classes; avoid custom CSS unless necessary for complex components.
+
+- **Class Organization**
+  - Group classes logically: layout → spacing → typography → color → effects → states.
+  - Use arbitrary values sparingly (e.g., `gap-[32px]`); extract to consistent scales when repeated.
+
+- **Responsive & Dark Mode**
+  - Use responsive prefixes (`sm:`, `md:`, `lg:`). Prefer semantic breakpoints consistent with design.
+  - Use `dark:` variants for dark mode; avoid hardcoded colors that break themes.
+
+- **Accessibility**
+  - Maintain sufficient contrast. Include `focus-visible` styles for interactive components.
+  - Prefer semantic HTML elements and use ARIA only when needed.
+
+- **Layout**
+  - Use grid/flex for layout. Keep container padding consistent (`p-8 sm:p-20`) unless design dictates.
+
+- **Example**
+  ```tsx
+  export function Card({ children }: { children: React.ReactNode }) {
+    return (
+      <section className="rounded-lg border border-black/10 p-4 bg-white dark:bg-neutral-900 shadow-sm">
+        {children}
+      </section>
+    );
+  }
+  ```

@@ -1,0 +1,30 @@
+---
+description: MCP execution guardrails for Cursor — absolute paths, non-interactive ops, and status hygiene
+globs: **/*
+alwaysApply: true
+---
+
+- **Absolute paths & working dirs**
+  - Use absolute paths rooted at `/home/jitin-m-nair/Desktop/polaris-v3` for terminal and tool invocations.
+  - For frontend scripts/tests: prefix commands with `npm --prefix /home/jitin-m-nair/Desktop/polaris-v3/frontend ...`.
+
+- **Non-interactive commands**
+  - Pass non-interactive flags (`--yes`, `-y`, `--force`) where applicable.
+  - Run long-lived processes in background; prefer single-run commands in CI-like sequences.
+
+- **PRD selection**
+  - Prefer `/home/jitin-m-nair/Desktop/polaris-v3/prd.txt`; otherwise choose the most relevant under `/home/jitin-m-nair/Desktop/polaris-v3/docs/prds/` based on current branch scope.
+
+- **Taskmaster tagging**
+  - Mirror current git branch to a Taskmaster tag before parsing PRD.
+  - Keep statuses in sync: set in-progress at start, done only when tests pass.
+
+- **Test command standard**
+  - Use: `npm --prefix /home/jitin-m-nair/Desktop/polaris-v3/frontend run test`.
+
+- **Security & env**
+  - Never commit secrets. Use `.env.local` and `.env.example` with placeholders. Ensure `.cursor/mcp.json` is git-ignored.
+
+- **Edits hygiene**
+  - Minimal, localized edits; preserve formatting; avoid unrelated reformatting.
+

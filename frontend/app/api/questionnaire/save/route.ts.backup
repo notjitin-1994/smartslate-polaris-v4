@@ -1,0 +1,296 @@
+/**
+ * Questionnaire Save API Endpoint
+ * Saves questionnaire data to blueprint_generator table in realtime
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { getServerSession } from '@/lib/supabase/server';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
+import { createServiceLogger } from '@/lib/logging';
+
+// Add basic health check endpoint for testing
+export async function GET() {
+  return NextResponse.json({
+    status: 'ok',
+    message: 'Questionnaire save API is running',
+    timestamp: new Date().toISOString(),
+  });
+}
+
+const logger = createServiceLogger('api');
+
+// Define the schema outside the function to avoid any potential issues
+const SaveQuestionnaireSchema = z.object({
+  staticAnswers: z.record(z.any()),
+  blueprintId: z.string().uuid().optional(),
+});
+
+/**
+ * POST /api/questionnaire/save
+ * Save questionnaire data to blueprint_generator table
+ */
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  const startTime = Date.now();
+
+  try {
+    // Authenticate user
+    const { session } = await getServerSession();
+    if (!session?.user?.id) {
+      logger.warn('questionnaire.save.unauthorized', 'Unauthorized access attempt', {
+        timestamp: new Date().toISOString(),
+        hasSession: !!session,
+        hasUser: !!(session?.user),
+        hasUserId: !!(session?.user?.id),
+      });
+
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = session.user.id;
+
+    // Parse and validate request
+    let body;
+    try {
+      body = await req.json();
+    } catch (parseError) {
+      logger.error('questionnaire.save.json_parse_error', 'Failed to parse JSON body', {
+        userId,
+        error: (parseError as Error).message,
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid JSON in request body',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Ensure body is not null or undefined
+    if (!body) {
+      logger.warn('questionnaire.save.empty_body', 'Request body is empty', {
+        userId,
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Request body cannot be empty',
+        },
+        { status: 400 }
+      );
+    }
+
+    let parseResult;
+    try {
+      parseResult = SaveQuestionnaireSchema.safeParse(body);
+    } catch (schemaError) {
+      logger.error('questionnaire.save.schema_error', 'Schema validation failed', {
+        userId,
+        error: (schemaError as Error).message,
+        bodyType: typeof body,
+        bodyKeys: body ? Object.keys(body) : 'no body',
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Schema validation failed',
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!parseResult.success) {
+      logger.warn('questionnaire.save.invalid_request', 'Invalid request body', {
+        userId,
+        errors: parseResult.error.flatten(),
+        bodyKeys: body ? Object.keys(body) : 'no body',
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: parseResult.error.errors[0]?.message || 'Invalid request: staticAnswers is required',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Additional validation for staticAnswers
+    if (!parseResult.data.staticAnswers || Object.keys(parseResult.data.staticAnswers).length === 0) {
+      logger.warn('questionnaire.save.empty_static_answers', 'staticAnswers is empty', {
+        userId,
+        staticAnswersKeys: Object.keys(parseResult.data.staticAnswers || {}),
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'staticAnswers cannot be empty',
+        },
+        { status: 400 }
+      );
+    }
+
+    const { staticAnswers, blueprintId: providedBlueprintId } = parseResult.data;
+
+    logger.info('questionnaire.save.request_received', 'Request received', {
+      userId,
+      hasBlueprintId: !!providedBlueprintId,
+      staticAnswersKeys: Object.keys(staticAnswers || {}),
+      staticAnswersType: typeof staticAnswers,
+      staticAnswersSample: JSON.stringify(staticAnswers || {}).substring(0, 500),
+    });
+
+    const supabase = await getSupabaseServerClient();
+    let blueprintId = providedBlueprintId;
+
+    try {
+      if (!blueprintId) {
+        // Create new blueprint record
+        logger.info('questionnaire.save.creating_new', 'Creating new blueprint record', {
+          userId,
+          staticAnswersSize: JSON.stringify(staticAnswers).length,
+        });
+
+        const { data: newBlueprint, error: createError } = await supabase
+          .from('blueprint_generator')
+          .insert({
+            user_id: userId,
+            static_answers: staticAnswers,
+            status: 'draft',
+          })
+          .select('id')
+          .single();
+
+        if (createError) {
+          logger.error('questionnaire.save.create_error', 'Database error creating blueprint', {
+            userId,
+            error: createError.message,
+            code: createError.code,
+            details: createError.details,
+            hint: createError.hint,
+          });
+
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Failed to create questionnaire record: ${createError.message}`,
+            },
+            { status: 500 }
+          );
+        }
+
+        if (!newBlueprint) {
+          logger.error('questionnaire.save.create_no_data', 'No data returned from blueprint creation', {
+            userId,
+          });
+
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'Failed to create questionnaire record - no data returned',
+            },
+            { status: 500 }
+          );
+        }
+
+        blueprintId = newBlueprint.id;
+
+        logger.info('questionnaire.save.created_new', 'Created new blueprint record', {
+          blueprintId,
+          userId,
+        });
+      } else {
+        // Update existing blueprint record
+        logger.info('questionnaire.save.updating_existing', 'Updating existing blueprint record', {
+          blueprintId,
+          userId,
+          staticAnswersSize: JSON.stringify(staticAnswers).length,
+        });
+
+        const { error: updateError } = await supabase
+          .from('blueprint_generator')
+          .update({
+            static_answers: staticAnswers,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', blueprintId)
+          .eq('user_id', userId);
+
+        if (updateError) {
+          logger.error('questionnaire.save.update_error', 'Database error updating blueprint', {
+            blueprintId,
+            userId,
+            error: updateError.message,
+            code: updateError.code,
+            details: updateError.details,
+            hint: updateError.hint,
+          });
+
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Failed to update questionnaire record: ${updateError.message}`,
+            },
+            { status: 500 }
+          );
+        }
+
+        logger.info('questionnaire.save.updated_existing', 'Updated existing blueprint', {
+          blueprintId,
+          userId,
+        });
+      }
+
+      const duration = Date.now() - startTime;
+
+      logger.info('questionnaire.save.success', 'Questionnaire saved successfully', {
+        blueprintId,
+        userId,
+        duration,
+      });
+
+      return NextResponse.json({
+        success: true,
+        blueprintId,
+        message: blueprintId === providedBlueprintId ? 'Questionnaire updated' : 'Questionnaire saved',
+      });
+    } catch (error) {
+      const duration = Date.now() - startTime;
+
+      logger.error('questionnaire.save.unexpected_error', 'Unexpected error during save', {
+        duration,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'An unexpected error occurred',
+        },
+        { status: 500 }
+      );
+    }
+  } catch (error) {
+    const duration = Date.now() - startTime;
+
+    logger.error('questionnaire.save.unexpected_error', 'Unexpected error during save', {
+      duration,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'An unexpected error occurred',
+      },
+      { status: 500 }
+    );
+  }
+}

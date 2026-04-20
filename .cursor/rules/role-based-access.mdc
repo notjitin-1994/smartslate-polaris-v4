@@ -1,0 +1,545 @@
+---
+description: Role-based access control patterns and subscription tier enforcement
+globs: frontend/types/roles.ts, frontend/lib/auth/**/*.ts, frontend/components/role/**/*.tsx
+alwaysApply: false
+---
+
+## **Role System Overview**
+
+- **Subscription Tiers → Roles Mapping**
+  - Personal: Explorer ($19), Navigator ($39), Voyager ($79)
+  - Team: Crew ($25/seat), Fleet ($39/seat), Armada (custom)
+  - Enterprise: Enterprise (custom)
+  - Internal: Developer (unrestricted access)
+
+- **Core Principles**
+  - Never trust client-side checks
+  - Always enforce on server (database + middleware)
+  - Developer role bypasses all restrictions
+  - Cache role data for performance
+  - Log all admin role assignments
+
+## **Type Definitions**
+
+- **Base Types**
+  ```typescript
+  // frontend/types/roles.ts
+  
+  // Subscription tiers
+  export type SubscriptionTier =
+    | 'explorer'
+    | 'navigator'
+    | 'voyager'
+    | 'crew'
+    | 'fleet'
+    | 'armada'
+    | 'enterprise';
+
+  // User roles (map 1:1 with tiers + developer)
+  export type UserRole =
+    | SubscriptionTier
+    | 'developer';
+
+  // Feature categories
+  export type FeatureCategory =
+    | 'pdf_export'
+    | 'word_export'
+    | 'api_access'
+    | 'custom_templates'
+    | 'version_history'
+    | 'advanced_research'
+    | 'team_collaboration'
+    | 'sso'
+    | 'audit_logs'
+    | 'priority_support';
+
+  // Tier limits interface
+  export interface TierLimits {
+    generations_per_month: number;     // -1 for unlimited
+    max_saved_starmaps: number;        // -1 for unlimited
+    export_formats: string[];
+    processing_speed_multiplier: number;
+    support_level: 'community' | 'priority' | 'dedicated';
+    version_history_days: number;      // -1 for unlimited
+    features: FeatureCategory[];
+    api_access: boolean;
+    team_seats?: number;
+    sso_enabled: boolean;
+  }
+
+  // Subscription metadata (stored in JSONB)
+  export interface SubscriptionMetadata {
+    generations_used: number;
+    starmaps_saved: number;
+    reset_date: string;                // ISO date string
+    last_generation_at?: string;
+    features_used: string[];
+    trial_ends_at?: string;
+  }
+
+  // Extended user profile
+  export interface UserProfile {
+    user_id: string;
+    email: string;
+    subscription_tier: SubscriptionTier;
+    user_role: UserRole;
+    subscription_metadata: SubscriptionMetadata;
+    role_assigned_at: string;
+    role_assigned_by?: string;
+    created_at: string;
+    updated_at: string;
+  }
+  ```
+
+- **Type Guards**
+  ```typescript
+  const VALID_TIERS: SubscriptionTier[] = [
+    'explorer', 'navigator', 'voyager',
+    'crew', 'fleet', 'armada', 'enterprise'
+  ];
+
+  const VALID_ROLES: UserRole[] = [
+    ...VALID_TIERS,
+    'developer'
+  ];
+
+  export function isValidTier(tier: string): tier is SubscriptionTier {
+    return VALID_TIERS.includes(tier as SubscriptionTier);
+  }
+
+  export function isValidRole(role: string): role is UserRole {
+    return VALID_ROLES.includes(role as UserRole);
+  }
+
+  export function isDeveloperRole(role: UserRole): boolean {
+    return role === 'developer';
+  }
+
+  // Assert function for critical validation
+  export function assertValidRole(role: string): asserts role is UserRole {
+    if (!isValidRole(role)) {
+      throw new Error(`Invalid role: ${role}`);
+    }
+  }
+  ```
+
+## **Role Limits Configuration**
+
+- **Complete Limits Mapping**
+  ```typescript
+  export const ROLE_LIMITS: Record<UserRole, TierLimits> = {
+    explorer: {
+      generations_per_month: 5,
+      max_saved_starmaps: 5,
+      export_formats: ['pdf'],
+      processing_speed_multiplier: 1,
+      support_level: 'community',
+      version_history_days: 0,
+      features: ['pdf_export'],
+      api_access: false,
+      sso_enabled: false,
+    },
+    navigator: {
+      generations_per_month: 15,
+      max_saved_starmaps: 30,
+      export_formats: ['pdf', 'word'],
+      processing_speed_multiplier: 5,
+      support_level: 'priority',
+      version_history_days: 60,
+      features: ['pdf_export', 'word_export', 'custom_templates', 'version_history'],
+      api_access: false,
+      sso_enabled: false,
+    },
+    voyager: {
+      generations_per_month: -1, // unlimited
+      max_saved_starmaps: 50,
+      export_formats: ['pdf', 'word', 'markdown'],
+      processing_speed_multiplier: 10,
+      support_level: 'dedicated',
+      version_history_days: -1,
+      features: [
+        'pdf_export', 'word_export', 'custom_templates',
+        'version_history', 'advanced_research', 'api_access'
+      ],
+      api_access: true,
+      sso_enabled: false,
+    },
+    crew: {
+      generations_per_month: 10, // per user
+      max_saved_starmaps: 25, // per user
+      export_formats: ['pdf', 'word'],
+      processing_speed_multiplier: 3,
+      support_level: 'priority',
+      version_history_days: 30,
+      features: ['pdf_export', 'word_export', 'team_collaboration'],
+      api_access: false,
+      sso_enabled: false,
+      team_seats: 5,
+    },
+    fleet: {
+      generations_per_month: 25, // per user
+      max_saved_starmaps: 75, // per user
+      export_formats: ['pdf', 'word', 'markdown'],
+      processing_speed_multiplier: 5,
+      support_level: 'priority',
+      version_history_days: 90,
+      features: [
+        'pdf_export', 'word_export', 'custom_templates',
+        'team_collaboration', 'sso', 'audit_logs'
+      ],
+      api_access: false,
+      sso_enabled: true,
+      team_seats: 15,
+    },
+    armada: {
+      generations_per_month: 50, // per user
+      max_saved_starmaps: 150, // per user
+      export_formats: ['pdf', 'word', 'markdown', 'json'],
+      processing_speed_multiplier: 8,
+      support_level: 'dedicated',
+      version_history_days: -1,
+      features: [
+        'pdf_export', 'word_export', 'custom_templates',
+        'team_collaboration', 'sso', 'audit_logs',
+        'advanced_research', 'api_access', 'priority_support'
+      ],
+      api_access: true,
+      sso_enabled: true,
+      team_seats: 50,
+    },
+    enterprise: {
+      generations_per_month: -1,
+      max_saved_starmaps: -1,
+      export_formats: ['pdf', 'word', 'markdown', 'json', 'html'],
+      processing_speed_multiplier: 10,
+      support_level: 'dedicated',
+      version_history_days: -1,
+      features: [
+        'pdf_export', 'word_export', 'custom_templates',
+        'team_collaboration', 'sso', 'audit_logs',
+        'advanced_research', 'api_access', 'priority_support'
+      ],
+      api_access: true,
+      sso_enabled: true,
+      team_seats: -1, // unlimited
+    },
+    developer: {
+      generations_per_month: -1,
+      max_saved_starmaps: -1,
+      export_formats: ['pdf', 'word', 'markdown', 'json', 'html'],
+      processing_speed_multiplier: 10,
+      support_level: 'dedicated',
+      version_history_days: -1,
+      features: [
+        'pdf_export', 'word_export', 'custom_templates',
+        'team_collaboration', 'sso', 'audit_logs',
+        'advanced_research', 'api_access', 'priority_support'
+      ],
+      api_access: true,
+      sso_enabled: true,
+    },
+  } as const;
+  ```
+
+- **Helper Functions**
+  ```typescript
+  export function getLimitsForTier(role: UserRole): TierLimits {
+    return ROLE_LIMITS[role];
+  }
+
+  export function canAccessFeature(
+    role: UserRole,
+    feature: FeatureCategory
+  ): boolean {
+    if (isDeveloperRole(role)) return true;
+    return ROLE_LIMITS[role].features.includes(feature);
+  }
+
+  export function getRemainingUsage(
+    role: UserRole,
+    metadata: SubscriptionMetadata,
+    usageType: 'generations' | 'starmaps'
+  ): number {
+    if (isDeveloperRole(role)) return Infinity;
+
+    const limits = ROLE_LIMITS[role];
+    const limit = usageType === 'generations'
+      ? limits.generations_per_month
+      : limits.max_saved_starmaps;
+
+    if (limit === -1) return Infinity;
+
+    const used = usageType === 'generations'
+      ? metadata.generations_used
+      : metadata.starmaps_saved;
+
+    return Math.max(0, limit - used);
+  }
+
+  export function getUsagePercentage(
+    role: UserRole,
+    metadata: SubscriptionMetadata,
+    usageType: 'generations' | 'starmaps'
+  ): number {
+    if (isDeveloperRole(role)) return 0;
+
+    const limits = ROLE_LIMITS[role];
+    const limit = usageType === 'generations'
+      ? limits.generations_per_month
+      : limits.max_saved_starmaps;
+
+    if (limit === -1) return 0;
+
+    const used = usageType === 'generations'
+      ? metadata.generations_used
+      : metadata.starmaps_saved;
+
+    return Math.min(100, Math.round((used / limit) * 100));
+  }
+
+  export function canPerformAction(
+    role: UserRole,
+    metadata: SubscriptionMetadata,
+    action: 'generate' | 'save_starmap' | string
+  ): { allowed: boolean; reason?: string } {
+    if (isDeveloperRole(role)) {
+      return { allowed: true };
+    }
+
+    const limits = ROLE_LIMITS[role];
+
+    if (action === 'generate') {
+      const limit = limits.generations_per_month;
+      if (limit === -1) return { allowed: true };
+
+      if (metadata.generations_used >= limit) {
+        return {
+          allowed: false,
+          reason: `Monthly generation limit of ${limit} reached`,
+        };
+      }
+    }
+
+    if (action === 'save_starmap') {
+      const limit = limits.max_saved_starmaps;
+      if (limit === -1) return { allowed: true };
+
+      if (metadata.starmaps_saved >= limit) {
+        return {
+          allowed: false,
+          reason: `Maximum saved starmaps limit of ${limit} reached`,
+        };
+      }
+    }
+
+    return { allowed: true };
+  }
+
+  export function getMinimumTierForFeature(
+    feature: FeatureCategory
+  ): SubscriptionTier | null {
+    for (const [tier, limits] of Object.entries(ROLE_LIMITS)) {
+      if (tier === 'developer') continue;
+      if (limits.features.includes(feature)) {
+        return tier as SubscriptionTier;
+      }
+    }
+    return null;
+  }
+  ```
+
+## **React Context for Role Management**
+
+- **Context Setup**
+  ```typescript
+  // frontend/contexts/RoleContext.tsx
+  'use client';
+
+  import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+  import { UserRole, TierLimits, SubscriptionMetadata, ROLE_LIMITS } from '@/types/roles';
+  import { createBrowserClient } from '@/lib/supabase/client';
+
+  interface RoleContextValue {
+    role: UserRole | null;
+    tier: SubscriptionTier | null;
+    limits: TierLimits | null;
+    usage: SubscriptionMetadata | null;
+    loading: boolean;
+    error: Error | null;
+    hasFeature: (feature: FeatureCategory) => boolean;
+    isUnderLimit: (limitType: 'generations' | 'starmaps') => boolean;
+    getUsagePercentage: (limitType: 'generations' | 'starmaps') => number;
+    canPerformAction: (action: string) => { allowed: boolean; reason?: string };
+    refresh: () => Promise<void>;
+  }
+
+  const RoleContext = createContext<RoleContextValue | undefined>(undefined);
+
+  export function RoleProvider({ children }: { children: React.ReactNode }) {
+    const [role, setRole] = useState<UserRole | null>(null);
+    const [tier, setTier] = useState<SubscriptionTier | null>(null);
+    const [limits, setLimits] = useState<TierLimits | null>(null);
+    const [usage, setUsage] = useState<SubscriptionMetadata | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+
+    const fetchRoleData = useCallback(async () => {
+      try {
+        const supabase = createBrowserClient();
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+          setRole(null);
+          setTier(null);
+          setLimits(null);
+          setUsage(null);
+          return;
+        }
+
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('subscription_tier, user_role, subscription_metadata')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        setRole(profile.user_role);
+        setTier(profile.subscription_tier);
+        setLimits(ROLE_LIMITS[profile.user_role]);
+        setUsage(profile.subscription_metadata);
+
+        // Cache in session storage
+        sessionStorage.setItem('user_role_data', JSON.stringify({
+          role: profile.user_role,
+          tier: profile.subscription_tier,
+          limits: ROLE_LIMITS[profile.user_role],
+          usage: profile.subscription_metadata,
+          cachedAt: Date.now(),
+        }));
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch role data'));
+      } finally {
+        setLoading(false);
+      }
+    }, []);
+
+    useEffect(() => {
+      // Try to load from cache first
+      const cached = sessionStorage.getItem('user_role_data');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          const age = Date.now() - parsed.cachedAt;
+
+          // Use cache if less than 5 minutes old
+          if (age < 5 * 60 * 1000) {
+            setRole(parsed.role);
+            setTier(parsed.tier);
+            setLimits(parsed.limits);
+            setUsage(parsed.usage);
+            setLoading(false);
+            return;
+          }
+        } catch {}
+      }
+
+      // Fetch fresh data
+      fetchRoleData();
+    }, [fetchRoleData]);
+
+    const value: RoleContextValue = {
+      role,
+      tier,
+      limits,
+      usage,
+      loading,
+      error,
+      hasFeature: useCallback(
+        (feature: FeatureCategory) => {
+          if (!role || !limits) return false;
+          if (isDeveloperRole(role)) return true;
+          return limits.features.includes(feature);
+        },
+        [role, limits]
+      ),
+      isUnderLimit: useCallback(
+        (limitType: 'generations' | 'starmaps') => {
+          if (!role || !usage) return false;
+          const remaining = getRemainingUsage(role, usage, limitType);
+          return remaining > 0;
+        },
+        [role, usage]
+      ),
+      getUsagePercentage: useCallback(
+        (limitType: 'generations' | 'starmaps') => {
+          if (!role || !usage) return 0;
+          return getUsagePercentage(role, usage, limitType);
+        },
+        [role, usage]
+      ),
+      canPerformAction: useCallback(
+        (action: string) => {
+          if (!role || !usage) return { allowed: false, reason: 'Not authenticated' };
+          return canPerformAction(role, usage, action);
+        },
+        [role, usage]
+      ),
+      refresh: fetchRoleData,
+    };
+
+    return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;
+  }
+
+  export function useUserRole(): RoleContextValue {
+    const context = useContext(RoleContext);
+    if (context === undefined) {
+      throw new Error('useUserRole must be used within RoleProvider');
+    }
+    return context;
+  }
+  ```
+
+## **Component Patterns**
+
+- **Feature Gate Component**
+  ```typescript
+  // frontend/components/role/FeatureGate.tsx
+  import { useUserRole } from '@/contexts/RoleContext';
+  import { UpgradePrompt } from './UpgradePrompt';
+
+  interface FeatureGateProps {
+    feature: FeatureCategory;
+    children: React.ReactNode;
+    fallback?: React.ReactNode;
+  }
+
+  export function FeatureGate({ feature, children, fallback }: FeatureGateProps) {
+    const { hasFeature, loading } = useUserRole();
+
+    if (loading) {
+      return <div className="animate-pulse bg-neutral-200 h-8 rounded" />;
+    }
+
+    if (!hasFeature(feature)) {
+      return fallback || <UpgradePrompt feature={feature} />;
+    }
+
+    return <>{children}</>;
+  }
+  ```
+
+## **Best Practices**
+
+- ✅ **DO enforce limits on both client and server**
+- ✅ **DO bypass all checks for developer role**
+- ✅ **DO cache role data for performance**
+- ✅ **DO log all role assignments for audit trail**
+- ✅ **DO use type guards for runtime validation**
+- ✅ **DO provide clear upgrade paths**
+
+- ❌ **DON'T rely only on client-side checks**
+- ❌ **DON'T expose developer bypass logic to client**
+- ❌ **DON'T hardcode role values**
+- ❌ **DON'T forget to update limits in one place**
+- ❌ **DON'T skip validation in API routes**

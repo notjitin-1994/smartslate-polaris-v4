@@ -1,0 +1,662 @@
+---
+description: Testing strategies, patterns, and coverage requirements for roles system
+globs: frontend/tests/**/*.{ts,tsx}, **/*.test.{ts,tsx}, **/*.spec.{ts,tsx}
+alwaysApply: false
+---
+
+## **Testing Philosophy**
+
+- **Test Pyramid**
+  - Many unit tests (fast, isolated)
+  - Fewer integration tests (API + database)
+  - Few E2E tests (critical user journeys)
+  - Security tests for access control
+  - Performance tests for usage tracking
+
+- **Coverage Targets**
+  - Unit tests: 95%+ for types, middleware, hooks
+  - Integration tests: 85%+ for API routes
+  - E2E tests: All critical user paths
+  - Security tests: All RLS policies and auth checks
+  - Performance tests: All high-traffic endpoints
+
+## **Unit Testing**
+
+- **Test Framework Setup**
+  ```typescript
+  // vitest.config.ts
+  import { defineConfig } from 'vitest/config';
+  import react from '@vitejs/plugin-react';
+  import path from 'path';
+
+  export default defineConfig({
+    plugins: [react()],
+    test: {
+      environment: 'jsdom',
+      setupFiles: ['./vitest.setup.ts'],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        exclude: ['node_modules/', 'tests/'],
+      },
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './'),
+      },
+    },
+  });
+  ```
+
+- **Type Guards and Validation**
+  ```typescript
+  // tests/unit/roles.test.ts
+  import { describe, it, expect } from 'vitest';
+  import { isValidTier, isValidRole, isDeveloperRole } from '@/types/roles';
+
+  describe('Role Type Guards', () => {
+    it('should validate subscription tiers', () => {
+      expect(isValidTier('explorer')).toBe(true);
+      expect(isValidTier('invalid')).toBe(false);
+    });
+
+    it('should validate user roles', () => {
+      expect(isValidRole('voyager')).toBe(true);
+      expect(isValidRole('admin')).toBe(false);
+    });
+
+    it('should identify developer role', () => {
+      expect(isDeveloperRole('developer')).toBe(true);
+      expect(isDeveloperRole('explorer')).toBe(false);
+    });
+  });
+  ```
+
+- **Role Limits Configuration**
+  ```typescript
+  // tests/unit/role-limits.test.ts
+  import { describe, it, expect } from 'vitest';
+  import { ROLE_LIMITS, getLimitsForTier } from '@/types/roles';
+
+  describe('Role Limits', () => {
+    it('should define limits for all tiers', () => {
+      const tiers = ['explorer', 'navigator', 'voyager', 'crew', 'fleet', 'armada', 'enterprise'];
+      tiers.forEach(tier => {
+        expect(ROLE_LIMITS[tier]).toBeDefined();
+        expect(ROLE_LIMITS[tier].generations_per_month).toBeDefined();
+        expect(ROLE_LIMITS[tier].max_saved_starmaps).toBeDefined();
+      });
+    });
+
+    it('should return correct limits for each tier', () => {
+      const explorerLimits = getLimitsForTier('explorer');
+      expect(explorerLimits.generations_per_month).toBe(5);
+      expect(explorerLimits.max_saved_starmaps).toBe(5);
+    });
+
+    it('should have developer with unlimited access', () => {
+      const devLimits = ROLE_LIMITS['developer'];
+      expect(devLimits.generations_per_month).toBe(-1);
+      expect(devLimits.max_saved_starmaps).toBe(-1);
+    });
+  });
+  ```
+
+- **Middleware Testing**
+  ```typescript
+  // tests/unit/middleware.test.ts
+  import { describe, it, expect, vi, beforeEach } from 'vitest';
+  import { requireAuth, requireRole } from '@/lib/auth/roleMiddleware';
+  import { NextRequest } from 'next/server';
+
+  // Mock Supabase
+  vi.mock('@/lib/supabase/server', () => ({
+    createServerClient: vi.fn(() => ({
+      auth: {
+        getSession: vi.fn(),
+      },
+      from: vi.fn(),
+    })),
+  }));
+
+  describe('requireAuth middleware', () => {
+    it('should return 401 for unauthenticated requests', async () => {
+      const request = new NextRequest('http://localhost/api/test');
+      const response = await requireAuth(request);
+
+      expect(response?.status).toBe(401);
+      const body = await response?.json();
+      expect(body.code).toBe('AUTH_REQUIRED');
+    });
+
+    it('should pass through for authenticated requests', async () => {
+      // Mock authenticated session
+      const request = new NextRequest('http://localhost/api/test');
+      const response = await requireAuth(request);
+
+      expect(response).toBeNull();
+    });
+  });
+
+  describe('requireRole middleware', () => {
+    it('should allow developer role to access any endpoint', async () => {
+      // Mock developer user
+      const request = new NextRequest('http://localhost/api/admin/test');
+      request.headers.set('x-user-id', 'dev-user-id');
+
+      const middleware = requireRole('admin');
+      const response = await middleware(request);
+
+      expect(response).toBeNull();
+    });
+
+    it('should block users without required role', async () => {
+      // Mock explorer user accessing voyager-only endpoint
+      const request = new NextRequest('http://localhost/api/test');
+      request.headers.set('x-user-id', 'user-id');
+
+      const middleware = requireRole('voyager');
+      const response = await middleware(request);
+
+      expect(response?.status).toBe(403);
+      const body = await response?.json();
+      expect(body.code).toBe('FORBIDDEN');
+      expect(body.upgradeUrl).toBe('/pricing');
+    });
+  });
+  ```
+
+- **React Hooks Testing**
+  ```typescript
+  // tests/unit/useUserRole.test.tsx
+  import { describe, it, expect, vi } from 'vitest';
+  import { renderHook, waitFor } from '@testing-library/react';
+  import { useUserRole } from '@/lib/hooks/useUserRole';
+
+  describe('useUserRole hook', () => {
+    it('should return user role and limits', async () => {
+      const { result } = renderHook(() => useUserRole());
+
+      await waitFor(() => {
+        expect(result.current.role).toBe('explorer');
+        expect(result.current.limits).toBeDefined();
+      });
+    });
+
+    it('should check feature availability', async () => {
+      const { result } = renderHook(() => useUserRole());
+
+      await waitFor(() => {
+        expect(result.current.hasFeature('pdf_export')).toBe(true);
+        expect(result.current.hasFeature('api_access')).toBe(false);
+      });
+    });
+
+    it('should calculate usage percentage', async () => {
+      const { result } = renderHook(() => useUserRole());
+
+      await waitFor(() => {
+        const percentage = result.current.getUsagePercentage('generations');
+        expect(percentage).toBeGreaterThanOrEqual(0);
+        expect(percentage).toBeLessThanOrEqual(100);
+      });
+    });
+  });
+  ```
+
+- **Component Testing**
+  ```typescript
+  // tests/unit/FeatureGate.test.tsx
+  import { describe, it, expect } from 'vitest';
+  import { render, screen } from '@testing-library/react';
+  import { FeatureGate } from '@/components/role/FeatureGate';
+
+  describe('FeatureGate component', () => {
+    it('should render children when feature is available', () => {
+      render(
+        <FeatureGate feature="pdf_export" userRole="explorer">
+          <button>Export PDF</button>
+        </FeatureGate>
+      );
+
+      expect(screen.getByText('Export PDF')).toBeInTheDocument();
+    });
+
+    it('should show upgrade prompt when feature is unavailable', () => {
+      render(
+        <FeatureGate feature="api_access" userRole="explorer">
+          <button>API Access</button>
+        </FeatureGate>
+      );
+
+      expect(screen.queryByText('API Access')).not.toBeInTheDocument();
+      expect(screen.getByText(/Upgrade to/i)).toBeInTheDocument();
+    });
+
+    it('should always render for developer role', () => {
+      render(
+        <FeatureGate feature="any_feature" userRole="developer">
+          <button>Admin Feature</button>
+        </FeatureGate>
+      );
+
+      expect(screen.getByText('Admin Feature')).toBeInTheDocument();
+    });
+  });
+  ```
+
+## **Integration Testing**
+
+- **API Route Testing**
+  ```typescript
+  // tests/integration/api-routes.test.ts
+  import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+  import { createClient } from '@supabase/supabase-js';
+
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  describe('API Routes Integration', () => {
+    let testUserId: string;
+    let authToken: string;
+
+    beforeAll(async () => {
+      // Create test user
+      const { data: { user } } = await supabase.auth.signUp({
+        email: 'test@example.com',
+        password: 'test-password',
+      });
+      testUserId = user!.id;
+
+      // Get auth token
+      const { data: { session } } = await supabase.auth.signInWithPassword({
+        email: 'test@example.com',
+        password: 'test-password',
+      });
+      authToken = session!.access_token;
+    });
+
+    afterAll(async () => {
+      // Cleanup test user
+      await supabase.auth.admin.deleteUser(testUserId);
+    });
+
+    it('should enforce authentication on protected routes', async () => {
+      const response = await fetch('http://localhost:3000/api/generate', {
+        method: 'POST',
+      });
+
+      expect(response.status).toBe(401);
+      const body = await response.json();
+      expect(body.code).toBe('AUTH_REQUIRED');
+    });
+
+    it('should allow authenticated requests', async () => {
+      const response = await fetch('http://localhost:3000/api/profile', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
+
+      expect(response.status).toBe(200);
+    });
+
+    it('should enforce usage limits', async () => {
+      // Make requests until limit is reached
+      for (let i = 0; i < 6; i++) {
+        await fetch('http://localhost:3000/api/generate', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+          },
+        });
+      }
+
+      // Next request should fail
+      const response = await fetch('http://localhost:3000/api/generate', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
+
+      expect(response.status).toBe(429);
+      const body = await response.json();
+      expect(body.code).toBe('USAGE_LIMIT_EXCEEDED');
+    });
+  });
+  ```
+
+- **Database Function Testing**
+  ```typescript
+  // tests/integration/db-functions.test.ts
+  import { describe, it, expect } from 'vitest';
+  import { createClient } from '@supabase/supabase-js';
+
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  describe('Database Functions', () => {
+    it('should increment usage atomically', async () => {
+      const userId = 'test-user-id';
+
+      // Increment usage
+      const { data, error } = await supabase.rpc('increment_usage', {
+        p_user_id: userId,
+        p_usage_type: 'generations_used',
+        p_amount: 1,
+      });
+
+      expect(error).toBeNull();
+      expect(data).toBe(true);
+
+      // Verify increment
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('subscription_metadata')
+        .eq('user_id', userId)
+        .single();
+
+      expect(profile.subscription_metadata.generations_used).toBeGreaterThan(0);
+    });
+
+    it('should handle concurrent increments correctly', async () => {
+      const userId = 'test-user-id';
+
+      // Make 10 concurrent increments
+      await Promise.all(
+        Array.from({ length: 10 }).map(() =>
+          supabase.rpc('increment_usage', {
+            p_user_id: userId,
+            p_usage_type: 'generations_used',
+            p_amount: 1,
+          })
+        )
+      );
+
+      // Verify total is correct
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('subscription_metadata')
+        .eq('user_id', userId)
+        .single();
+
+      expect(profile.subscription_metadata.generations_used).toBe(10);
+    });
+  });
+  ```
+
+## **E2E Testing**
+
+- **Playwright Setup**
+  ```typescript
+  // tests/e2e/setup.ts
+  import { test as base, expect } from '@playwright/test';
+
+  type TestFixtures = {
+    authenticatedPage: Page;
+    explorerUser: { email: string; password: string; token: string };
+    developerUser: { email: string; password: string; token: string };
+  };
+
+  export const test = base.extend<TestFixtures>({
+    explorerUser: async ({}, use) => {
+      // Create explorer tier user
+      const user = await createTestUser('explorer');
+      await use(user);
+      await deleteTestUser(user.id);
+    },
+
+    developerUser: async ({}, use) => {
+      // Create developer user
+      const user = await createTestUser('developer');
+      await use(user);
+      await deleteTestUser(user.id);
+    },
+
+    authenticatedPage: async ({ page, explorerUser }, use) => {
+      // Login
+      await page.goto('/login');
+      await page.fill('[name="email"]', explorerUser.email);
+      await page.fill('[name="password"]', explorerUser.password);
+      await page.click('button[type="submit"]');
+      await page.waitForURL('/dashboard');
+
+      await use(page);
+    },
+  });
+
+  export { expect };
+  ```
+
+- **User Journey Tests**
+  ```typescript
+  // tests/e2e/subscription-flow.spec.ts
+  import { test, expect } from './setup';
+
+  test.describe('Subscription Flow', () => {
+    test('should show upgrade prompt when limit is reached', async ({ authenticatedPage }) => {
+      // Generate starmaps until limit
+      for (let i = 0; i < 5; i++) {
+        await authenticatedPage.click('button:text("Generate Starmap")');
+        await authenticatedPage.waitForSelector('.starmap-preview');
+      }
+
+      // Next attempt should show upgrade prompt
+      await authenticatedPage.click('button:text("Generate Starmap")');
+      await expect(authenticatedPage.locator('.upgrade-modal')).toBeVisible();
+      await expect(authenticatedPage.locator('text=/Upgrade to Navigator/i')).toBeVisible();
+    });
+
+    test('should allow upgrade to higher tier', async ({ authenticatedPage }) => {
+      await authenticatedPage.goto('/settings/billing');
+      await authenticatedPage.click('button:text("Upgrade to Navigator")');
+
+      // Verify upgrade
+      await expect(authenticatedPage.locator('.tier-badge')).toHaveText('Navigator');
+      await expect(authenticatedPage.locator('.generations-limit')).toContainText('15');
+    });
+
+    test('developer should have unlimited access', async ({ page, developerUser }) => {
+      // Login as developer
+      await page.goto('/login');
+      await page.fill('[name="email"]', developerUser.email);
+      await page.fill('[name="password"]', developerUser.password);
+      await page.click('button[type="submit"]');
+
+      // Verify developer badge
+      await expect(page.locator('.developer-badge')).toBeVisible();
+
+      // Should not see usage limits
+      await expect(page.locator('.usage-widget')).toContainText('Unlimited');
+    });
+  });
+  ```
+
+## **Security Testing**
+
+- **RLS Policy Testing**
+  ```typescript
+  // tests/security/rls-policies.test.ts
+  import { describe, it, expect } from 'vitest';
+  import { createClient } from '@supabase/supabase-js';
+
+  describe('Row Level Security Policies', () => {
+    it('should prevent users from accessing other users data', async () => {
+      const user1Client = createClient(url, anonKey);
+      const user2Client = createClient(url, anonKey);
+
+      // Login as user1
+      await user1Client.auth.signInWithPassword({
+        email: 'user1@example.com',
+        password: 'password',
+      });
+
+      // Login as user2
+      await user2Client.auth.signInWithPassword({
+        email: 'user2@example.com',
+        password: 'password',
+      });
+
+      // Try to read user2's profile with user1's client
+      const { data, error } = await user1Client
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user2Id)
+        .single();
+
+      expect(error).toBeDefined();
+      expect(data).toBeNull();
+    });
+
+    it('should allow developers to access all data', async () => {
+      const devClient = createClient(url, anonKey);
+
+      await devClient.auth.signInWithPassword({
+        email: 'dev@example.com',
+        password: 'password',
+      });
+
+      // Should be able to read any user's profile
+      const { data, error } = await devClient
+        .from('user_profiles')
+        .select('*');
+
+      expect(error).toBeNull();
+      expect(data.length).toBeGreaterThan(0);
+    });
+  });
+  ```
+
+## **Performance Testing**
+
+- **Load Testing with k6**
+  ```javascript
+  // tests/performance/usage-tracking.js
+  import http from 'k6/http';
+  import { check, sleep } from 'k6';
+
+  export const options = {
+    stages: [
+      { duration: '30s', target: 50 },
+      { duration: '1m', target: 100 },
+      { duration: '30s', target: 0 },
+    ],
+    thresholds: {
+      http_req_duration: ['p(95)<500'], // 95% of requests under 500ms
+      http_req_failed: ['rate<0.01'],   // Less than 1% errors
+    },
+  };
+
+  export default function () {
+    const token = __ENV.AUTH_TOKEN;
+
+    const response = http.post(
+      'http://localhost:3000/api/generate',
+      JSON.stringify({ prompt: 'Test starmap' }),
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+
+    check(response, {
+      'status is 200': (r) => r.status === 200,
+      'response time < 500ms': (r) => r.timings.duration < 500,
+    });
+
+    sleep(1);
+  }
+  ```
+
+## **Test Data Management**
+
+- **Fixtures and Factories**
+  ```typescript
+  // tests/fixtures/users.ts
+  export const userFixtures = {
+    explorer: {
+      email: 'explorer@test.com',
+      subscription_tier: 'explorer',
+      user_role: 'explorer',
+      subscription_metadata: {
+        generations_used: 0,
+        generations_limit: 5,
+        reset_date: '2025-11-01',
+      },
+    },
+    developer: {
+      email: 'dev@test.com',
+      subscription_tier: 'developer',
+      user_role: 'developer',
+      subscription_metadata: {},
+    },
+  };
+
+  export function createUser(role: string) {
+    return {
+      ...userFixtures[role],
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+    };
+  }
+  ```
+
+## **CI/CD Integration**
+
+- **GitHub Actions Workflow**
+  ```yaml
+  # .github/workflows/test.yml
+  name: Tests
+
+  on: [push, pull_request]
+
+  jobs:
+    unit:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-node@v3
+        - run: npm ci
+        - run: npm run test:unit -- --coverage
+        - uses: codecov/codecov-action@v3
+
+    integration:
+      runs-on: ubuntu-latest
+      services:
+        postgres:
+          image: supabase/postgres
+      steps:
+        - uses: actions/checkout@v3
+        - run: npm ci
+        - run: npm run test:integration
+
+    e2e:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - run: npm ci
+        - run: npx playwright install
+        - run: npm run test:e2e
+  ```
+
+## **Best Practices**
+
+- ✅ **DO write tests before implementing (TDD)**
+- ✅ **DO test error cases and edge conditions**
+- ✅ **DO use descriptive test names**
+- ✅ **DO clean up test data after each test**
+- ✅ **DO mock external dependencies**
+- ✅ **DO test accessibility with screen readers**
+
+- ❌ **DON'T share state between tests**
+- ❌ **DON'T test implementation details**
+- ❌ **DON'T skip cleanup in afterEach/afterAll**
+- ❌ **DON'T use production database for tests**
+- ❌ **DON'T commit auth tokens or secrets**

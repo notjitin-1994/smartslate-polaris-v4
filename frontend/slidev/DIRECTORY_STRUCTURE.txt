@@ -1,0 +1,26 @@
+.
+├── DIRECTORY_STRUCTURE.txt
+├── INTEGRATION_GUIDE.md
+├── SUMMARY.md
+└── theme
+    ├── components
+    ├── example.md
+    ├── layouts
+    │   ├── cover.vue
+    │   ├── default.vue
+    │   ├── metrics.vue
+    │   ├── quote.vue
+    │   ├── section.vue
+    │   ├── table.vue
+    │   ├── timeline.vue
+    │   └── two-cols.vue
+    ├── package.json
+    ├── public
+    ├── README.md
+    ├── setup
+    │   └── shiki.ts
+    ├── styles
+    │   └── index.css
+    └── theme.json
+
+7 directories, 17 files

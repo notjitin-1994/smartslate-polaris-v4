@@ -1,0 +1,3604 @@
+<context>
+# Overview  
+SmartSlate currently offers multiple subscription tiers (Explorer, Navigator, Voyager for individuals; Crew, Fleet, Armada for teams; and Enterprise) with varying feature sets and usage limits. However, the system lacks a robust role-based access control (RBAC) mechanism to enforce these subscription-based restrictions at the database and application levels. This PRD defines a comprehensive user role system that maps subscription tiers to user roles, enforces usage limits, and introduces a new "Developer" role with unrestricted access for internal development and testing.
+
+**Problem it solves:**
+- No enforcement of subscription tier limits (starmap generations, saved starmaps, export formats)
+- Inability to differentiate access levels between subscription tiers
+- No mechanism for testing with unrestricted access
+- Lack of scalability for future tier-specific features
+- Manual verification required for feature access instead of automated role-based checks
+
+**Who it's for:**
+- End users on different subscription tiers (Explorer, Navigator, Voyager, Crew, Fleet, Armada, Enterprise)
+- Development team requiring unrestricted testing access
+- Product managers implementing tier-specific features
+- Customer support team managing user subscriptions
+- Finance team tracking usage and billing
+
+**Why it's valuable:**
+- Automated enforcement of subscription limits reduces support burden
+- Clear separation of concerns between subscription tiers
+- Enables graceful upgrade paths and limit notifications
+- Provides development team with safe, unrestricted testing environment
+- Foundation for future monetization and feature gating
+- Improves user experience with tier-appropriate features
+- Enables accurate usage tracking and analytics per tier
+
+# Core Features  
+
+## 1. Subscription-Based Role System
+**What it does:**
+Maps each subscription tier to a corresponding user role with specific permissions and resource limits.
+
+**Why it's important:**
+Ensures users only access features and resources appropriate for their subscription level, preventing abuse and ensuring fair usage.
+
+**How it works at a high level:**
+- Each subscription plan (Explorer, Navigator, Voyager, Crew, Fleet, Armada, Enterprise) maps to a unique role
+- User profile extended with `subscription_tier`, `user_role`, and `subscription_metadata` fields
+- Middleware checks role on each request to enforce limits
+- Database constraints ensure data integrity
+
+**Detailed Mappings:**
+
+**Personal Tiers:**
+- **Explorer Role** ($19/month):
+  - Max 5 starmap generations/month  
+  - Max 5 saved starmaps (with 12-month rollover to 60)
+  - PDF export only
+  - Standard processing speed
+  - Community support
+  - No version history
+  - No custom templates
+  - No API access
+
+- **Navigator Role** ($39/month):
+  - Max 25 starmap generations/month
+  - Max 25 saved starmaps (with 12-month rollover to 300)
+  - PDF & Word export
+  - 5x faster AI processing
+  - Priority support (24h response)
+  - Version history (60 days)
+  - Custom templates
+  - Advanced formatting
+  - No API access
+
+- **Voyager Role** ($79/month):
+  - Max 50 starmap generations/month
+  - Max 50 saved starmaps (with 12-month rollover to 600)
+  - PDF & Word export with advanced options
+  - Priority processing queue
+  - Advanced research suite
+  - Custom style presets
+  - API access (coming soon)
+  - White-glove onboarding
+  - Unlimited version history
+  - Dedicated account manager
+
+**Team Tiers:**
+- **Crew Role** ($25/seat, 2-5 seats):
+  - 10 generations/user/month
+  - 10 saved starmaps/user (with 12-month rollover to 120)
+  - Shared team workspace
+  - Real-time collaboration
+  - Role-based permissions (within team)
+  - Team analytics dashboard
+  - Bulk export (PDF & Word)
+  - Priority email support
+
+- **Fleet Role** ($49/seat, 6-15 seats):
+  - 30 generations/user/month
+  - 30 saved starmaps/user (with 12-month rollover to 360)
+  - Everything in Crew, plus:
+  - SSO with OAuth/SAML
+  - Advanced user management
+  - Priority support SLA (4h response)
+  - Custom onboarding session
+  - Advanced team analytics
+  - Audit logs
+
+- **Armada Role** ($99/seat, 16-50 seats):
+  - 60 generations/user/month
+  - 60 saved starmaps/user (with 12-month rollover to 720)
+  - Everything in Fleet, plus:
+  - Dedicated success manager
+  - Quarterly business reviews
+  - Custom integrations & API
+  - Advanced security controls
+  - Custom usage alerts
+  - SLA with uptime guarantee
+  - Training & workshops
+
+- **Enterprise Role** ($49+/seat, 50+ seats, custom):
+  - Unlimited generations
+  - Unlimited saved starmaps
+  - Custom contract terms
+  - Multi-region data residency
+  - White-label options
+  - Dedicated infrastructure
+  - Volume discounts
+  - Advanced compliance features
+
+## 2. Developer Role (Internal Only)
+**What it does:**
+Provides unrestricted access to all features and bypasses all usage limits for internal development, testing, and support purposes.
+
+**Why it's important:**
+- Enables thorough testing without hitting rate limits
+- Allows customer support to reproduce and fix issues
+- Facilitates feature development without subscription constraints
+- Provides admin capabilities for platform management
+
+**How it works at a high level:**
+- Special "developer" role assigned manually via admin interface or database
+- Middleware recognizes developer role and bypasses all checks
+- Logging tracks developer actions for audit purposes
+- Cannot be self-assigned; requires admin privileges
+
+**Developer Role Permissions:**
+- Unlimited starmap generations
+- Unlimited saved starmaps
+- Unlimited constellations
+- Access to all export formats
+- Access to all processing speeds
+- Access to all AI models/providers
+- Access to experimental features
+- Access to admin dashboard
+- Ability to impersonate users (with logging)
+- Bypass all rate limits
+- Access to system analytics
+- Ability to trigger manual jobs
+- Database query access (read-only via admin UI)
+
+## 3. Usage Tracking & Enforcement
+**What it does:**
+Monitors user resource consumption and enforces limits based on subscription tier.
+
+**Why it's important:**
+Prevents abuse, ensures fair usage, and provides data for billing and product decisions.
+
+**How it works at a high level:**
+- Real-time counters track monthly usage (resets on subscription anniversary)
+- Pre-request middleware checks if user has available quota
+- Graceful error messages explain limit exceeded with upgrade CTA
+- Admin dashboard shows usage patterns across tiers
+- Automated alerts when users approach limits (80%, 90%, 100%)
+
+**Tracked Metrics:**
+- Starmap generations (current month)
+- Saved starmaps (total count)
+- Export operations (count & type)
+- API calls (for tiers with API access)
+- Processing time/tokens consumed
+- Collaboration actions (for team tiers)
+- Storage used (future consideration)
+
+## 4. Upgrade & Downgrade Flows
+**What it does:**
+Handles subscription tier changes gracefully, preserving user data while adjusting limits.
+
+**Why it's important:**
+Ensures smooth user experience when changing plans and prevents data loss.
+
+**How it works at a high level:**
+- Upgrade: Immediately grants new limits and permissions
+- Downgrade: Preserves existing data but applies new limits going forward
+- Prorated billing handled by payment provider
+- Usage counters adjust based on new tier
+- Email notifications confirm changes
+- Grace period for downgrades to prevent accidental data loss
+
+**Business Rules:**
+- **On Upgrade:**
+  - New limits apply immediately
+  - Previous month's usage counts toward new tier limits
+  - Unlock new features instantly
+  - Pro-rated credit for unused time on old plan
+
+- **On Downgrade:**
+  - Existing saved starmaps preserved (read-only if over new limit)
+  - New generation limit applies next billing cycle
+  - Premium features disabled immediately
+  - 30-day grace period to export data or upgrade again
+  - Warning before downgrade if current usage exceeds new tier limits
+
+- **On Cancellation:**
+  - 30-day access period to saved starmaps (read-only)
+  - Export capability remains active during grace period
+  - Email reminders at 7, 3, and 1 day before expiration
+  - All data deleted after grace period (GDPR compliant)
+
+## 5. Role-Based Feature Gates
+**What it does:**
+Conditionally renders UI elements and enforces backend access based on user role.
+
+**Why it's important:**
+Prevents confusion by hiding unavailable features and enforces security at multiple layers.
+
+**How it works at a high level:**
+- Frontend: React components check user role via context/hook
+- Backend: Middleware validates role before executing operations
+- API endpoints return 403 for unauthorized role-based access
+- Feature flags integrated with role system
+- Database RLS policies enforce row-level access
+
+**Feature Gates by Category:**
+
+**Export Features:**
+- Explorer: PDF only
+- Navigator+: PDF + Word
+- Voyager+: PDF + Word + Advanced formatting
+- Enterprise: PDF + Word + Custom formats + API export
+
+**Processing Speed:**
+- Explorer: Standard queue
+- Navigator+: Priority queue (5x faster)
+- Voyager+: Highest priority queue
+- Developer: Bypass queue entirely
+
+**Collaboration:**
+- Personal tiers: Individual workspaces only
+- Crew+: Team workspaces, real-time collaboration
+- Fleet+: Advanced user management, SSO
+- Armada+: Custom integrations, dedicated support
+- Developer: Full admin access to all workspaces
+
+**Support:**
+- Explorer: Community support (forum, knowledge base)
+- Navigator: Priority email (24h response SLA)
+- Voyager: Priority support + account manager
+- Enterprise: Dedicated success manager + custom SLAs
+- Developer: Direct access to engineering team
+
+# User Experience  
+
+## User Personas
+
+### 1. Individual Creator (Explorer/Navigator/Voyager)
+- **Goals:** Create high-quality learning blueprints efficiently
+- **Pain Points:** Limited resources, need for flexibility, budget constraints
+- **Usage Pattern:** Sporadic usage, peaks around project deadlines
+- **Needs:** Clear limit visibility, easy upgrade path, value for money
+
+### 2. Team Lead (Crew/Fleet/Armada)
+- **Goals:** Coordinate team, maintain consistency, track usage
+- **Pain Points:** Managing multiple users, ensuring compliance, budget approval
+- **Usage Pattern:** Consistent usage across team, seasonal variations
+- **Needs:** Team analytics, user management, bulk operations
+
+### 3. Enterprise Administrator (Enterprise)
+- **Goals:** Deploy at scale, integrate with existing systems, ensure security
+- **Pain Points:** Complex requirements, compliance, vendor management
+- **Usage Pattern:** High volume, mission-critical
+- **Needs:** Custom integrations, dedicated support, SLA guarantees
+
+### 4. Developer/Support Engineer (Developer)
+- **Goals:** Build features, debug issues, support customers
+- **Pain Points:** Production constraints, limited testing capabilities
+- **Usage Pattern:** Variable, spike during development/incidents
+- **Needs:** Unrestricted access, debugging tools, audit logs
+
+## Key User Flows
+
+### Flow 1: New User Signup & Role Assignment
+1. User lands on pricing page (`/pricing`)
+2. Reviews tier comparison table with detailed limits
+3. Selects desired tier (e.g., "Navigator")
+4. Clicks "Get Started" → redirects to `/signup?plan=personal-pro&billing=monthly`
+5. Completes signup form (email, password, name)
+6. Supabase Auth creates `auth.users` record
+7. Trigger creates `user_profiles` record with:
+   - `subscription_tier: 'navigator'`
+   - `user_role: 'navigator'`
+   - `subscription_metadata`:
+     ```json
+     {
+       "plan_id": "personal-pro",
+       "billing_cycle": "monthly",
+       "started_at": "2025-01-15T00:00:00Z",
+       "renewal_date": "2025-02-15T00:00:00Z",
+  "usage": {
+    "generations_this_month": 0,
+    "saved_starmaps": 0,
+    "last_reset": "2025-01-15T00:00:00Z"
+  },
+  "limits": {
+    "max_generations_monthly": 15,
+    "max_saved_starmaps": 30
+  }
+     }
+     ```
+8. Redirect to onboarding flow or dashboard
+9. Welcome email sent with tier details and limits
+
+### Flow 2: Usage Limit Enforcement
+1. User authenticated, initiates starmap generation
+2. Frontend checks user role via `useUser()` hook
+3. Backend API receives generation request
+4. Middleware `checkUsageLimits()` runs:
+   ```typescript
+   if (userRole !== 'developer' && userRole !== 'enterprise') {
+     const usage = await getUserUsage(userId);
+     const limits = ROLE_LIMITS[userRole];
+     if (usage.generations_this_month >= limits.max_generations_monthly) {
+       return res.status(429).json({
+         error: 'Monthly generation limit reached',
+         limit: limits.max_generations_monthly,
+         used: usage.generations_this_month,
+         upgrade_url: '/pricing',
+         tier: userRole
+       });
+     }
+   }
+   ```
+5. If under limit:
+   - Process generation
+   - Increment usage counter
+   - Return success
+6. If at limit:
+   - Return 429 error
+   - Frontend shows upgrade modal:
+     - "You've used all 15 generations this month"
+     - "Upgrade to Voyager for unlimited generations"
+     - CTA: "Upgrade Now" → `/pricing`
+     - Secondary: "View Usage" → `/settings/usage`
+
+### Flow 3: Feature Access Check (Export Example)
+1. User clicks "Export to Word" on blueprint
+2. Frontend checks `canExportToWord(userRole)`:
+   ```typescript
+   const canExportToWord = (role: UserRole): boolean => {
+     return ['navigator', 'voyager', 'crew', 'fleet', 'armada', 'enterprise', 'developer'].includes(role);
+   };
+   ```
+3. If `false` (Explorer tier):
+   - Button disabled with tooltip: "Available on Navigator plan and above"
+   - Hover shows: "Upgrade to export to Word format"
+   - Click shows upgrade modal
+4. If `true`:
+   - API request to `/api/export/word`
+   - Backend validates role again
+   - Generates and returns Word file
+   - Logs export operation
+
+### Flow 4: Upgrade Flow
+1. User at limit, sees upgrade banner in dashboard
+2. Clicks "Upgrade" → `/pricing` with `?current=explorer` query param
+3. Pricing page highlights recommended upgrade (Navigator)
+4. User selects Navigator, clicks "Upgrade Now"
+5. Redirects to `/settings/billing` with `?upgrade=navigator` param
+6. Payment form pre-filled with plan details
+7. User confirms, payment processed via Stripe (future integration)
+8. Webhook receives `subscription.updated` event
+9. Backend updates `user_profiles`:
+   - `subscription_tier: 'navigator'`
+   - `user_role: 'navigator'`
+   - Updates `subscription_metadata.limits`
+10. Frontend polls or receives WebSocket update
+11. UI updates to show new limits and features
+12. Confirmation email sent
+13. Banner: "You've been upgraded to Navigator! You now have 15 generations/month."
+
+### Flow 5: Developer Role Assignment (Internal)
+1. Admin logs into admin dashboard (`/admin` - future feature)
+2. Searches for user by email
+3. User details page shows current role: "Navigator"
+4. Admin clicks "Assign Developer Role"
+5. Confirmation modal:
+   - Warning: "Developer role bypasses all limits and provides admin access"
+   - Requires reason: [text input]
+   - Logs action with admin ID and reason
+6. Admin confirms
+7. Backend updates:
+   - `user_role: 'developer'`
+   - Adds audit log entry
+   - Notifies user via email
+8. User's next request uses developer permissions
+9. Dashboard shows developer badge and notice
+
+## UI/UX Considerations
+
+### Limit Visibility
+- **Dashboard Widget:** Real-time usage display
+  ```
+  This Month's Usage
+  ┌─────────────────────────────────────┐
+  │ Generations: 12/15 [Progress bar]   │
+  │ Saved Starmaps: 8/30 [Progress bar] │
+  │ Resets in 12 days                   │
+  └─────────────────────────────────────┘
+  ```
+
+- **Near-Limit Warnings:**
+  - At 80%: Yellow badge "Running low"
+  - At 90%: Orange banner "Almost at limit"
+  - At 100%: Red banner "Limit reached - Upgrade to continue"
+
+### Contextual Upgrade CTAs
+- Disabled features show upgrade tooltip
+- Limit-reached errors show comparison table
+- Settings page has "Compare Plans" section
+- Email digests include usage summary and upgrade suggestions
+
+### Tier Badges
+- Subtle badge in navigation showing current tier
+- Hover shows quick stats
+- Click opens usage details modal
+
+### Developer Mode Indicator
+- Persistent banner when logged in as developer
+- Shows message: "Developer Mode - Unrestricted Access"
+- Prevents accidental developer actions on production data
+
+</context>
+
+<PRD>
+# Technical Architecture  
+
+## System Components
+
+### 1. Database Schema Extensions
+
+#### User Profiles Table Updates
+```sql
+-- Migration: 0026_add_subscription_and_roles.sql
+
+-- Add subscription and role fields to user_profiles
+ALTER TABLE public.user_profiles 
+ADD COLUMN IF NOT EXISTS subscription_tier TEXT NOT NULL DEFAULT 'explorer',
+ADD COLUMN IF NOT EXISTS user_role TEXT NOT NULL DEFAULT 'explorer',
+ADD COLUMN IF NOT EXISTS subscription_metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+ADD COLUMN IF NOT EXISTS role_assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+ADD COLUMN IF NOT EXISTS role_assigned_by UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+
+-- Add check constraints for valid subscription tiers
+ALTER TABLE public.user_profiles
+ADD CONSTRAINT check_valid_subscription_tier 
+CHECK (subscription_tier IN ('explorer', 'navigator', 'voyager', 'crew', 'fleet', 'armada', 'enterprise', 'developer'));
+
+-- Add check constraint for valid user roles
+ALTER TABLE public.user_profiles
+ADD CONSTRAINT check_valid_user_role 
+CHECK (user_role IN ('explorer', 'navigator', 'voyager', 'crew', 'fleet', 'armada', 'enterprise', 'developer'));
+
+-- Create index for role-based queries
+CREATE INDEX idx_user_profiles_user_role ON public.user_profiles(user_role);
+CREATE INDEX idx_user_profiles_subscription_tier ON public.user_profiles(subscription_tier);
+
+-- Add comment documentation
+COMMENT ON COLUMN public.user_profiles.subscription_tier IS 'The subscription plan tier the user is on (explorer, navigator, voyager, crew, fleet, armada, enterprise, developer)';
+COMMENT ON COLUMN public.user_profiles.user_role IS 'The role assigned to the user, typically matches subscription_tier but can be overridden by admins';
+COMMENT ON COLUMN public.user_profiles.subscription_metadata IS 'JSONB containing usage stats, limits, billing info, and tier-specific settings';
+COMMENT ON COLUMN public.user_profiles.role_assigned_at IS 'Timestamp when the current role was assigned';
+COMMENT ON COLUMN public.user_profiles.role_assigned_by IS 'User ID of admin who assigned the role (NULL for automatic assignments)';
+```
+
+#### Usage Tracking Table
+```sql
+-- Table to track monthly usage with historical records
+CREATE TABLE IF NOT EXISTS public.user_usage_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  period_start TIMESTAMPTZ NOT NULL,
+  period_end TIMESTAMPTZ NOT NULL,
+  subscription_tier TEXT NOT NULL,
+  starmaps_generated INT NOT NULL DEFAULT 0,
+  starmaps_saved INT NOT NULL DEFAULT 0,
+  exports_pdf INT NOT NULL DEFAULT 0,
+  exports_word INT NOT NULL DEFAULT 0,
+  api_calls INT NOT NULL DEFAULT 0,
+  processing_time_ms BIGINT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  
+  -- Ensure one record per user per period
+  UNIQUE(user_id, period_start)
+);
+
+-- RLS policies
+ALTER TABLE public.user_usage_history ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own usage history"
+ON public.user_usage_history FOR SELECT
+TO authenticated
+USING (user_id = auth.uid());
+
+-- Admins and developers can view all usage (future policy)
+CREATE POLICY "Developers can view all usage history"
+ON public.user_usage_history FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.user_profiles 
+    WHERE user_id = auth.uid() AND user_role = 'developer'
+  )
+);
+
+-- Indexes for efficient queries
+CREATE INDEX idx_usage_history_user_period ON public.user_usage_history(user_id, period_start DESC);
+CREATE INDEX idx_usage_history_tier ON public.user_usage_history(subscription_tier, period_start DESC);
+```
+
+#### Role Audit Log
+```sql
+-- Table to audit role changes and developer actions
+CREATE TABLE IF NOT EXISTS public.role_audit_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  action_type TEXT NOT NULL CHECK (action_type IN ('role_assigned', 'role_removed', 'tier_upgraded', 'tier_downgraded', 'limit_override', 'developer_action')),
+  performed_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  old_value JSONB,
+  new_value JSONB,
+  reason TEXT,
+  metadata JSONB DEFAULT '{}'::JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- RLS
+ALTER TABLE public.role_audit_log ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own role audit log"
+ON public.role_audit_log FOR SELECT
+TO authenticated
+USING (user_id = auth.uid());
+
+CREATE POLICY "Developers can view all audit logs"
+ON public.role_audit_log FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.user_profiles 
+    WHERE user_id = auth.uid() AND user_role = 'developer'
+  )
+);
+
+-- Only developers can insert audit logs
+CREATE POLICY "Developers can insert audit logs"
+ON public.role_audit_log FOR INSERT
+TO authenticated
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM public.user_profiles 
+    WHERE user_id = auth.uid() AND user_role = 'developer'
+  )
+);
+
+-- Indexes
+CREATE INDEX idx_role_audit_user ON public.role_audit_log(user_id, created_at DESC);
+CREATE INDEX idx_role_audit_action ON public.role_audit_log(action_type, created_at DESC);
+```
+
+### 2. TypeScript Type Definitions
+
+```typescript
+// /frontend/types/roles.ts
+
+/**
+ * User subscription tiers matching pricing page plans
+ */
+export type SubscriptionTier = 
+  | 'explorer'      // Personal: $19/month
+  | 'navigator'     // Personal: $39/month
+  | 'voyager'       // Personal: $79/month
+  | 'crew'          // Team: $25/seat (2-5)
+  | 'fleet'         // Team: $39/seat (6-15)
+  | 'armada'        // Team: $59/seat (16-50)
+  | 'enterprise'    // Custom: $49+/seat
+  | 'developer';    // Internal: unlimited
+
+/**
+ * User role (typically matches tier but can be overridden)
+ */
+export type UserRole = SubscriptionTier;
+
+/**
+ * Feature categories that can be gated by role
+ */
+export type FeatureCategory =
+  | 'export_pdf'
+  | 'export_word'
+  | 'export_advanced'
+  | 'processing_priority'
+  | 'api_access'
+  | 'version_history'
+  | 'custom_templates'
+  | 'research_suite'
+  | 'team_collaboration'
+  | 'sso'
+  | 'advanced_analytics'
+  | 'audit_logs'
+  | 'custom_integrations'
+  | 'dedicated_support'
+  | 'admin_dashboard';
+
+/**
+ * Usage limits for each tier
+ */
+export interface TierLimits {
+  max_generations_monthly: number | 'unlimited';
+  max_saved_starmaps: number | 'unlimited';
+  processing_priority: 'standard' | 'high' | 'highest' | 'bypass';
+  export_formats: ('pdf' | 'word' | 'custom')[];
+  api_access: boolean;
+  version_history_days: number | 'unlimited';
+  support_level: 'community' | 'priority' | 'dedicated';
+  features: FeatureCategory[];
+}
+
+/**
+ * Role-to-limits mapping
+ */
+export const ROLE_LIMITS: Record<UserRole, TierLimits> = {
+  explorer: {
+    max_generations_monthly: 5,
+    max_saved_starmaps: 5, // Rolls over to 60 max over 12 months
+    processing_priority: 'standard',
+    export_formats: ['pdf'],
+    api_access: false,
+    version_history_days: 0,
+    support_level: 'community',
+    features: ['export_pdf'],
+  },
+  navigator: {
+    max_generations_monthly: 25,
+    max_saved_starmaps: 25, // Rolls over to 300 max over 12 months
+    processing_priority: 'high',
+    export_formats: ['pdf', 'word'],
+    api_access: false,
+    version_history_days: 60,
+    support_level: 'priority',
+    features: ['export_pdf', 'export_word', 'processing_priority', 'version_history', 'custom_templates'],
+  },
+  voyager: {
+    max_generations_monthly: 'unlimited', // Fair usage policy
+    max_saved_starmaps: 50,
+    processing_priority: 'highest',
+    export_formats: ['pdf', 'word', 'custom'],
+    api_access: true,
+    version_history_days: 'unlimited',
+    support_level: 'dedicated',
+    features: [
+      'export_pdf',
+      'export_word',
+      'export_advanced',
+      'processing_priority',
+      'api_access',
+      'version_history',
+      'custom_templates',
+      'research_suite',
+      'dedicated_support',
+    ],
+  },
+  crew: {
+    max_generations_monthly: 10,
+    max_saved_starmaps: 10,
+    processing_priority: 'high',
+    export_formats: ['pdf', 'word'],
+    api_access: false,
+    version_history_days: 90,
+    support_level: 'priority',
+    features: [
+      'export_pdf',
+      'export_word',
+      'processing_priority',
+      'version_history',
+      'team_collaboration',
+    ],
+  },
+  fleet: {
+    max_generations_monthly: 30,
+    max_saved_starmaps: 30,
+    processing_priority: 'highest',
+    export_formats: ['pdf', 'word'],
+    api_access: false,
+    version_history_days: 'unlimited',
+    support_level: 'dedicated',
+    features: [
+      'export_pdf',
+      'export_word',
+      'processing_priority',
+      'version_history',
+      'team_collaboration',
+      'sso',
+      'advanced_analytics',
+      'audit_logs',
+    ],
+  },
+  armada: {
+    max_generations_monthly: 60,
+    max_saved_starmaps: 60,
+    processing_priority: 'highest',
+    export_formats: ['pdf', 'word', 'custom'],
+    api_access: true,
+    version_history_days: 'unlimited',
+    support_level: 'dedicated',
+    features: [
+      'export_pdf',
+      'export_word',
+      'export_advanced',
+      'processing_priority',
+      'api_access',
+      'version_history',
+      'custom_templates',
+      'team_collaboration',
+      'sso',
+      'advanced_analytics',
+      'audit_logs',
+      'custom_integrations',
+      'dedicated_support',
+    ],
+  },
+  enterprise: {
+    max_generations_monthly: 'unlimited',
+    max_saved_starmaps: 'unlimited',
+    processing_priority: 'highest',
+    export_formats: ['pdf', 'word', 'custom'],
+    api_access: true,
+    version_history_days: 'unlimited',
+    support_level: 'dedicated',
+    features: [
+      'export_pdf',
+      'export_word',
+      'export_advanced',
+      'processing_priority',
+      'api_access',
+      'version_history',
+      'custom_templates',
+      'research_suite',
+      'team_collaboration',
+      'sso',
+      'advanced_analytics',
+      'audit_logs',
+      'custom_integrations',
+      'dedicated_support',
+    ],
+  },
+  developer: {
+    max_generations_monthly: 'unlimited',
+    max_saved_starmaps: 'unlimited',
+    processing_priority: 'bypass',
+    export_formats: ['pdf', 'word', 'custom'],
+    api_access: true,
+    version_history_days: 'unlimited',
+    support_level: 'dedicated',
+    features: [
+      'export_pdf',
+      'export_word',
+      'export_advanced',
+      'processing_priority',
+      'api_access',
+      'version_history',
+      'custom_templates',
+      'research_suite',
+      'team_collaboration',
+      'sso',
+      'advanced_analytics',
+      'audit_logs',
+      'custom_integrations',
+      'dedicated_support',
+      'admin_dashboard',
+    ],
+  },
+};
+
+/**
+ * Subscription metadata structure
+ */
+export interface SubscriptionMetadata {
+  plan_id: string;
+  billing_cycle: 'monthly' | 'annual';
+  started_at: string; // ISO timestamp
+  renewal_date: string; // ISO timestamp
+  status: 'active' | 'past_due' | 'cancelled' | 'trial';
+  trial_end?: string; // ISO timestamp
+  usage: {
+    constellations_this_month: number;
+    generations_this_month: number;
+    saved_starmaps: number;
+    last_reset: string; // ISO timestamp
+  };
+  limits: {
+    max_constellations_monthly: number | 'unlimited';
+    max_generations_monthly: number | 'unlimited';
+    max_saved_starmaps: number | 'unlimited';
+  };
+  billing_info?: {
+    stripe_customer_id?: string;
+    stripe_subscription_id?: string;
+    payment_method?: string;
+  };
+  team_info?: {
+    team_id?: string;
+    team_name?: string;
+    seat_count?: number;
+    is_owner?: boolean;
+  };
+}
+
+/**
+ * Updated user profile type
+ */
+export interface UserProfile {
+  user_id: string;
+  full_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+  preferences: Record<string, any>;
+  subscription_tier: SubscriptionTier;
+  user_role: UserRole;
+  subscription_metadata: SubscriptionMetadata;
+  role_assigned_at: string;
+  role_assigned_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+```
+
+### 3. API Middleware
+
+```typescript
+// /frontend/lib/auth/roleMiddleware.ts
+
+import { NextRequest, NextResponse } from 'next/server';
+import { getSession } from '@/lib/auth/session';
+import { getUserProfile } from '@/lib/db/userProfiles';
+import { ROLE_LIMITS, UserRole, FeatureCategory } from '@/types/roles';
+import { createServiceLogger } from '@/lib/logging';
+
+const logger = createServiceLogger('role-middleware');
+
+/**
+ * Check if user has access to a specific feature
+ */
+export async function requireFeature(
+  req: NextRequest,
+  feature: FeatureCategory
+): Promise<NextResponse | null> {
+  const session = await getSession();
+  
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
+  const profile = await getUserProfile(session.user.id);
+  
+  if (!profile) {
+    return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+  }
+  
+  const role = profile.user_role;
+  const limits = ROLE_LIMITS[role];
+  
+  // Developer role bypasses all checks
+  if (role === 'developer') {
+    logger.info('role.feature_check.bypass', {
+      userId: session.user.id,
+      role,
+      feature,
+      bypassed: true,
+    });
+    return null;
+  }
+  
+  if (!limits.features.includes(feature)) {
+    logger.warn('role.feature_check.denied', {
+      userId: session.user.id,
+      role,
+      feature,
+      requiredTier: getMinimumTierForFeature(feature),
+    });
+    
+    return NextResponse.json(
+      {
+        error: 'Feature not available for your subscription tier',
+        feature,
+        current_tier: role,
+        required_tier: getMinimumTierForFeature(feature),
+        upgrade_url: '/pricing',
+      },
+      { status: 403 }
+    );
+  }
+  
+  logger.info('role.feature_check.granted', {
+    userId: session.user.id,
+    role,
+    feature,
+  });
+  
+  return null;
+}
+
+/**
+ * Check if user is under usage limits
+ */
+export async function checkUsageLimits(
+  req: NextRequest,
+  limitType: 'generations' | 'saved_starmaps'
+): Promise<NextResponse | null> {
+  const session = await getSession();
+  
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
+  const profile = await getUserProfile(session.user.id);
+  
+  if (!profile) {
+    return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+  }
+  
+  const role = profile.user_role;
+  const limits = ROLE_LIMITS[role];
+  const usage = profile.subscription_metadata.usage;
+  
+  // Developer and enterprise bypass checks
+  if (role === 'developer' || role === 'enterprise') {
+    return null;
+  }
+  
+  // Check specific limit
+  let isOverLimit = false;
+  let limitValue: number | 'unlimited' = 0;
+  let usageValue = 0;
+  
+  switch (limitType) {
+    case 'generations':
+      limitValue = limits.max_generations_monthly;
+      usageValue = usage.generations_this_month;
+      isOverLimit = limitValue !== 'unlimited' && usageValue >= limitValue;
+      break;
+    case 'saved_starmaps':
+      limitValue = limits.max_saved_starmaps;
+      usageValue = usage.saved_starmaps;
+      isOverLimit = limitValue !== 'unlimited' && usageValue >= limitValue;
+      break;
+  }
+  
+  if (isOverLimit) {
+    logger.warn('role.usage_limit.exceeded', {
+      userId: session.user.id,
+      role,
+      limitType,
+      limit: limitValue,
+      usage: usageValue,
+    });
+    
+    return NextResponse.json(
+      {
+        error: 'Usage limit exceeded',
+        limit_type: limitType,
+        limit: limitValue,
+        current_usage: usageValue,
+        subscription_tier: role,
+        upgrade_url: '/pricing',
+        upgrade_recommendation: getUpgradeRecommendation(role),
+      },
+      { status: 429 }
+    );
+  }
+  
+  return null;
+}
+
+/**
+ * Get minimum tier that has access to a feature
+ */
+function getMinimumTierForFeature(feature: FeatureCategory): UserRole {
+  const tiers: UserRole[] = ['explorer', 'navigator', 'voyager', 'crew', 'fleet', 'armada', 'enterprise'];
+  
+  for (const tier of tiers) {
+    if (ROLE_LIMITS[tier].features.includes(feature)) {
+      return tier;
+    }
+  }
+  
+  return 'enterprise';
+}
+
+/**
+ * Recommend upgrade based on current tier
+ */
+function getUpgradeRecommendation(currentTier: UserRole): UserRole {
+  const tierProgression: Record<UserRole, UserRole> = {
+    explorer: 'navigator',
+    navigator: 'voyager',
+    voyager: 'voyager', // Already at max personal tier
+    crew: 'fleet',
+    fleet: 'armada',
+    armada: 'enterprise',
+    enterprise: 'enterprise',
+    developer: 'developer',
+  };
+  
+  return tierProgression[currentTier] || 'navigator';
+}
+
+/**
+ * Increment usage counter
+ */
+export async function incrementUsage(
+  userId: string,
+  type: 'generations' | 'saved_starmaps' | 'export_pdf' | 'export_word'
+): Promise<void> {
+  const { createClient } = await import('@/lib/supabase/server');
+  const supabase = await createClient();
+  
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('subscription_metadata')
+    .eq('user_id', userId)
+    .single();
+  
+  if (!profile) {
+    logger.error('role.usage_increment.profile_not_found', { userId, type });
+    return;
+  }
+  
+  const metadata = profile.subscription_metadata as SubscriptionMetadata;
+  
+  // Update usage counters
+  switch (type) {
+    case 'generations':
+      metadata.usage.generations_this_month += 1;
+      break;
+    case 'saved_starmaps':
+      metadata.usage.saved_starmaps += 1;
+      break;
+  }
+  
+  // Update database
+  await supabase
+    .from('user_profiles')
+    .update({ subscription_metadata: metadata })
+    .eq('user_id', userId);
+  
+  logger.info('role.usage_increment.success', {
+    userId,
+    type,
+    new_value: metadata.usage[type === 'generations' ? 'generations_this_month' : 'saved_starmaps'],
+  });
+}
+```
+
+### 4. React Hooks & Context
+
+```typescript
+// /frontend/lib/hooks/useUserRole.ts
+
+import { useUser } from '@/lib/hooks/useSession';
+import { UserRole, FeatureCategory, ROLE_LIMITS } from '@/types/roles';
+
+export function useUserRole() {
+  const { user, profile, isLoading } = useUser();
+  
+  const role: UserRole | null = profile?.user_role || null;
+  const tier = profile?.subscription_tier || null;
+  const limits = role ? ROLE_LIMITS[role] : null;
+  const usage = profile?.subscription_metadata?.usage || null;
+  
+  /**
+   * Check if user has access to a feature
+   */
+  const hasFeature = (feature: FeatureCategory): boolean => {
+    if (!role || !limits) return false;
+    return limits.features.includes(feature);
+  };
+  
+  /**
+   * Check if user is under usage limits
+   */
+  const isUnderLimit = (limitType: 'generations' | 'saved_starmaps'): boolean => {
+    if (!role || !limits || !usage) return false;
+    if (role === 'developer' || role === 'enterprise') return true;
+    
+    switch (limitType) {
+      case 'generations':
+        return limits.max_generations_monthly === 'unlimited' || 
+               usage.generations_this_month < limits.max_generations_monthly;
+      case 'saved_starmaps':
+        return limits.max_saved_starmaps === 'unlimited' || 
+               usage.saved_starmaps < limits.max_saved_starmaps;
+      default:
+        return false;
+    }
+  };
+  
+  /**
+   * Get usage percentage for a limit type
+   */
+  const getUsagePercentage = (limitType: 'generations' | 'saved_starmaps'): number => {
+    if (!limits || !usage) return 0;
+    if (role === 'developer' || role === 'enterprise') return 0;
+    
+    let limit: number | 'unlimited' = 0;
+    let current = 0;
+    
+    switch (limitType) {
+      case 'generations':
+        limit = limits.max_generations_monthly;
+        current = usage.generations_this_month;
+        break;
+      case 'saved_starmaps':
+        limit = limits.max_saved_starmaps;
+        current = usage.saved_starmaps;
+        break;
+    }
+    
+    if (limit === 'unlimited') return 0;
+    return Math.min(100, Math.round((current / limit) * 100));
+  };
+  
+  /**
+   * Check if user is developer
+   */
+  const isDeveloper = role === 'developer';
+  
+  /**
+   * Check if user is on a team plan
+   */
+  const isTeamPlan = role && ['crew', 'fleet', 'armada'].includes(role);
+  
+  /**
+   * Check if user is enterprise
+   */
+  const isEnterprise = role === 'enterprise';
+  
+  return {
+    role,
+    tier,
+    limits,
+    usage,
+    hasFeature,
+    isUnderLimit,
+    getUsagePercentage,
+    isDeveloper,
+    isTeamPlan,
+    isEnterprise,
+    isLoading,
+  };
+}
+```
+
+```typescript
+// /frontend/components/auth/FeatureGate.tsx
+
+import React from 'react';
+import { useUserRole } from '@/lib/hooks/useUserRole';
+import { FeatureCategory } from '@/types/roles';
+
+interface FeatureGateProps {
+  feature: FeatureCategory;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+  showUpgradePrompt?: boolean;
+}
+
+export function FeatureGate({
+  feature,
+  children,
+  fallback = null,
+  showUpgradePrompt = true,
+}: FeatureGateProps): React.ReactNode {
+  const { hasFeature, role } = useUserRole();
+  
+  if (!hasFeature(feature)) {
+    if (showUpgradePrompt) {
+      return (
+        <div className="relative">
+          <div className="opacity-50 pointer-events-none">
+            {children}
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-lg">
+            <div className="text-center p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                Feature Locked
+              </h3>
+              <p className="text-sm text-text-secondary mb-4">
+                This feature is not available on your current plan ({role}).
+              </p>
+              <a
+                href="/pricing"
+                className="inline-flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary-dark transition"
+              >
+                Upgrade to Unlock
+              </a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    return fallback;
+  }
+  
+  return <>{children}</>;
+}
+```
+
+### 5. Database Functions & Triggers
+
+```sql
+-- Function to automatically reset monthly usage counters
+CREATE OR REPLACE FUNCTION reset_monthly_usage()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE public.user_profiles
+  SET subscription_metadata = jsonb_set(
+    subscription_metadata,
+    '{usage}',
+    jsonb_build_object(
+      'generations_this_month', 0,
+      'saved_starmaps', (subscription_metadata->'usage'->>'saved_starmaps')::int,
+      'last_reset', NOW()::text
+    )
+  )
+  WHERE 
+    (subscription_metadata->'renewal_date')::text < NOW()::text
+    AND user_role != 'developer'; -- Don't reset for developers
+    
+  -- Log the reset
+  INSERT INTO public.role_audit_log (user_id, action_type, metadata)
+  SELECT 
+    user_id,
+    'usage_reset',
+    jsonb_build_object(
+      'reset_time', NOW(),
+      'reason', 'monthly_billing_cycle'
+    )
+  FROM public.user_profiles
+  WHERE (subscription_metadata->'renewal_date')::text < NOW()::text;
+  
+END;
+$$;
+
+-- Schedule monthly reset (requires pg_cron extension or external scheduler)
+-- This would typically be called by a cron job or serverless function
+
+-- Function to check if user has feature access
+CREATE OR REPLACE FUNCTION user_has_feature(
+  p_user_id UUID,
+  p_feature TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_role TEXT;
+  v_features TEXT[];
+BEGIN
+  SELECT user_role INTO v_role
+  FROM public.user_profiles
+  WHERE user_id = p_user_id;
+  
+  IF v_role IS NULL THEN
+    RETURN FALSE;
+  END IF;
+  
+  -- Developer has all features
+  IF v_role = 'developer' THEN
+    RETURN TRUE;
+  END IF;
+  
+  -- Check role limits (would need to be maintained in a separate config table)
+  -- For now, return true as this is primarily enforced in application code
+  RETURN TRUE;
+END;
+$$;
+
+-- Function to increment usage counter
+CREATE OR REPLACE FUNCTION increment_usage(
+  p_user_id UUID,
+  p_usage_type TEXT,
+  p_amount INT DEFAULT 1
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_current_value INT;
+  v_path TEXT[];
+BEGIN
+  -- Determine JSONB path based on usage type
+  CASE p_usage_type
+    WHEN 'generations' THEN
+      v_path := ARRAY['usage', 'generations_this_month'];
+    WHEN 'saved_starmaps' THEN
+      v_path := ARRAY['usage', 'saved_starmaps'];
+    ELSE
+      RAISE EXCEPTION 'Invalid usage type: %', p_usage_type;
+  END CASE;
+  
+  -- Get current value
+  SELECT (subscription_metadata #>> v_path)::INT INTO v_current_value
+  FROM public.user_profiles
+  WHERE user_id = p_user_id;
+  
+  -- Update with new value
+  UPDATE public.user_profiles
+  SET subscription_metadata = jsonb_set(
+    subscription_metadata,
+    v_path,
+    to_jsonb(COALESCE(v_current_value, 0) + p_amount)
+  )
+  WHERE user_id = p_user_id;
+  
+END;
+$$;
+
+-- Trigger to log role changes
+CREATE OR REPLACE FUNCTION log_role_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF OLD.user_role IS DISTINCT FROM NEW.user_role THEN
+    INSERT INTO public.role_audit_log (
+      user_id,
+      action_type,
+      old_value,
+      new_value,
+      performed_by
+    ) VALUES (
+      NEW.user_id,
+      'role_assigned',
+      to_jsonb(OLD.user_role),
+      to_jsonb(NEW.user_role),
+      NEW.role_assigned_by
+    );
+  END IF;
+  
+  IF OLD.subscription_tier IS DISTINCT FROM NEW.subscription_tier THEN
+    INSERT INTO public.role_audit_log (
+      user_id,
+      action_type,
+      old_value,
+      new_value,
+      performed_by
+    ) VALUES (
+      NEW.user_id,
+      CASE 
+        WHEN NEW.subscription_tier > OLD.subscription_tier THEN 'tier_upgraded'
+        ELSE 'tier_downgraded'
+      END,
+      to_jsonb(OLD.subscription_tier),
+      to_jsonb(NEW.subscription_tier),
+      auth.uid()
+    );
+  END IF;
+  
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trigger_log_role_change ON public.user_profiles;
+CREATE TRIGGER trigger_log_role_change
+  AFTER UPDATE ON public.user_profiles
+  FOR EACH ROW
+  WHEN (OLD.user_role IS DISTINCT FROM NEW.user_role OR OLD.subscription_tier IS DISTINCT FROM NEW.subscription_tier)
+  EXECUTE FUNCTION log_role_change();
+```
+
+## Data Models
+
+### Updated Supabase Types
+
+```typescript
+// /frontend/types/supabase.ts (additions)
+
+import { SubscriptionTier, UserRole, SubscriptionMetadata } from './roles';
+
+export interface Database {
+  public: {
+    Tables: {
+      user_profiles: {
+        Row: {
+          user_id: string;
+          full_name: string | null;
+          first_name: string | null;
+          last_name: string | null;
+          avatar_url: string | null;
+          preferences: Json;
+          subscription_tier: SubscriptionTier;
+          user_role: UserRole;
+          subscription_metadata: SubscriptionMetadata;
+          role_assigned_at: string;
+          role_assigned_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          full_name?: string | null;
+          first_name?: string | null;
+          last_name?: string | null;
+          avatar_url?: string | null;
+          preferences?: Json;
+          subscription_tier?: SubscriptionTier;
+          user_role?: UserRole;
+          subscription_metadata?: SubscriptionMetadata;
+          role_assigned_at?: string;
+          role_assigned_by?: string | null;
+        };
+        Update: {
+          full_name?: string | null;
+          first_name?: string | null;
+          last_name?: string | null;
+          avatar_url?: string | null;
+          preferences?: Json;
+          subscription_tier?: SubscriptionTier;
+          user_role?: UserRole;
+          subscription_metadata?: SubscriptionMetadata;
+          role_assigned_at?: string;
+          role_assigned_by?: string | null;
+        };
+      };
+      user_usage_history: {
+        Row: {
+          id: string;
+          user_id: string;
+          period_start: string;
+          period_end: string;
+          subscription_tier: SubscriptionTier;
+          starmaps_generated: number;
+          starmaps_saved: number;
+          exports_pdf: number;
+          exports_word: number;
+          api_calls: number;
+          processing_time_ms: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          period_start: string;
+          period_end: string;
+          subscription_tier: SubscriptionTier;
+          starmaps_generated?: number;
+          starmaps_saved?: number;
+          exports_pdf?: number;
+          exports_word?: number;
+          api_calls?: number;
+          processing_time_ms?: number;
+        };
+        Update: {
+          starmaps_generated?: number;
+          starmaps_saved?: number;
+          exports_pdf?: number;
+          exports_word?: number;
+          api_calls?: number;
+          processing_time_ms?: number;
+        };
+      };
+      role_audit_log: {
+        Row: {
+          id: string;
+          user_id: string;
+          action_type: 'role_assigned' | 'role_removed' | 'tier_upgraded' | 'tier_downgraded' | 'limit_override' | 'developer_action';
+          performed_by: string | null;
+          old_value: Json | null;
+          new_value: Json | null;
+          reason: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          action_type: string;
+          performed_by?: string | null;
+          old_value?: Json | null;
+          new_value?: Json | null;
+          reason?: string | null;
+          metadata?: Json;
+        };
+      };
+    };
+  };
+}
+```
+
+## APIs and Integrations
+
+### Example API Routes
+
+```typescript
+// /frontend/app/api/blueprints/generate/route.ts (updated)
+
+import { NextRequest, NextResponse } from 'next/server';
+import { checkUsageLimits, incrementUsage } from '@/lib/auth/roleMiddleware';
+
+export async function POST(req: NextRequest) {
+  // Check if user is under generation limit
+  const limitError = await checkUsageLimits(req, 'generations');
+  if (limitError) {
+    return limitError;
+  }
+  
+  // ... existing generation logic ...
+  
+  // Increment usage counter on success
+  const session = await getSession();
+  await incrementUsage(session.user.id, 'generations');
+  
+  return NextResponse.json({ success: true, blueprintId });
+}
+```
+
+```typescript
+// /frontend/app/api/export/word/route.ts (new)
+
+import { NextRequest, NextResponse } from 'next/server';
+import { requireFeature } from '@/lib/auth/roleMiddleware';
+
+export async function POST(req: NextRequest) {
+  // Check if user has Word export feature
+  const featureError = await requireFeature(req, 'export_word');
+  if (featureError) {
+    return featureError;
+  }
+  
+  // ... Word export logic ...
+  
+  return NextResponse.json({ success: true, downloadUrl });
+}
+```
+
+```typescript
+// /frontend/app/api/admin/assign-role/route.ts (new)
+
+import { NextRequest, NextResponse } from 'next/server';
+import { getSession } from '@/lib/auth/session';
+import { UserRole } from '@/types/roles';
+import { createServiceLogger } from '@/lib/logging';
+
+const logger = createServiceLogger('admin');
+
+export async function POST(req: NextRequest) {
+  const session = await getSession();
+  
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
+  // Check if requester is developer
+  const { data: requesterProfile } = await supabase
+    .from('user_profiles')
+    .select('user_role')
+    .eq('user_id', session.user.id)
+    .single();
+  
+  if (!requesterProfile || requesterProfile.user_role !== 'developer') {
+    return NextResponse.json(
+      { error: 'Only developers can assign roles' },
+      { status: 403 }
+    );
+  }
+  
+  const { targetUserId, newRole, reason } = await req.json();
+  
+  if (!targetUserId || !newRole || !reason) {
+    return NextResponse.json(
+      { error: 'Missing required fields' },
+      { status: 400 }
+    );
+  }
+  
+  // Validate role
+  const validRoles: UserRole[] = ['explorer', 'navigator', 'voyager', 'crew', 'fleet', 'armada', 'enterprise', 'developer'];
+  if (!validRoles.includes(newRole)) {
+    return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+  }
+  
+  // Update user role
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update({
+      user_role: newRole,
+      role_assigned_at: new Date().toISOString(),
+      role_assigned_by: session.user.id,
+    })
+    .eq('user_id', targetUserId)
+    .select()
+    .single();
+  
+  if (error) {
+    logger.error('admin.assign_role.error', { error: error.message, targetUserId, newRole });
+    return NextResponse.json({ error: 'Failed to assign role' }, { status: 500 });
+  }
+  
+  // Log the action
+  await supabase.from('role_audit_log').insert({
+    user_id: targetUserId,
+    action_type: 'role_assigned',
+    performed_by: session.user.id,
+    new_value: { role: newRole },
+    reason,
+  });
+  
+  logger.info('admin.assign_role.success', {
+    adminUserId: session.user.id,
+    targetUserId,
+    newRole,
+    reason,
+  });
+  
+  return NextResponse.json({ success: true, profile: data });
+}
+```
+
+## Infrastructure Requirements
+
+- **Database:** PostgreSQL (Supabase) with JSONB support
+- **Serverless Functions:** Next.js API Routes (Edge or Node.js runtime)
+- **Scheduled Jobs:** Vercel Cron or external scheduler for monthly usage resets
+- **Logging:** Existing SmartSlate logging infrastructure (`/lib/logging`)
+- **Monitoring:** Track API 429 responses, usage patterns, upgrade conversions
+- **Payment Integration (Future):** Stripe for subscription management and webhooks
+
+# Development Roadmap  
+
+## Phase 1: Database Foundation & Types (Week 1)
+**Goal:** Establish database schema and TypeScript type system
+
+### Tasks:
+1. Create migration `0026_add_subscription_and_roles.sql`
+   - Add columns to `user_profiles` table
+   - Create `user_usage_history` table
+   - Create `role_audit_log` table
+   - Add constraints and indexes
+   - Write rollback migration
+
+2. Update TypeScript types (`/frontend/types/roles.ts`)
+   - Define `SubscriptionTier` and `UserRole` enums
+   - Create `TierLimits` interface
+   - Define `ROLE_LIMITS` constant with all tier mappings
+   - Create `SubscriptionMetadata` interface
+   - Update `UserProfile` interface
+
+3. Update Supabase type definitions (`/frontend/types/supabase.ts`)
+   - Regenerate types from new schema
+   - Add new table types
+
+4. Create database functions
+   - `reset_monthly_usage()` function
+   - `user_has_feature()` function
+   - `increment_usage()` function
+   - `log_role_change()` trigger
+
+5. Seed development data
+   - Create test users for each tier
+   - Populate realistic usage data
+   - Create developer role user
+
+**Acceptance Criteria:**
+- All migrations run successfully on clean database
+- Rollback migrations restore previous state
+- TypeScript types compile without errors
+- Database functions execute correctly
+- RLS policies enforce user data access
+- Test users exist for each subscription tier
+
+**Testing:**
+- Unit tests for type validation
+- Integration tests for database functions
+- RLS policy tests
+- Migration rollback tests
+
+## Phase 2: Backend Middleware & API Protection (Week 2)
+**Goal:** Implement role-based access control in API layer
+
+### Tasks:
+1. Create role middleware (`/frontend/lib/auth/roleMiddleware.ts`)
+   - Implement `requireFeature()` middleware
+   - Implement `checkUsageLimits()` middleware
+   - Implement `incrementUsage()` helper
+   - Implement tier upgrade recommendations
+
+2. Create user profile database functions (`/frontend/lib/db/userProfiles.ts`)
+   - Update `getUserProfile()` to include new fields
+   - Create `updateUserRole()` function
+   - Create `getUserUsage()` function
+   - Create `resetUsageCounters()` function
+
+3. Update existing API routes
+   - `/api/blueprints/generate` - add generation limit check
+   - `/api/blueprints/save` - add saved starmap limit check
+   - `/api/blueprints` - filter based on role permissions
+
+4. Create new API routes
+   - `/api/export/word` - Word export with feature gate
+   - `/api/export/pdf` - PDF export (all tiers)
+   - `/api/admin/assign-role` - Developer-only role assignment
+   - `/api/usage/current` - Get current usage stats
+
+5. Add logging for role checks
+   - Log feature access attempts
+   - Log limit exceeded events
+   - Log developer bypass actions
+
+**Acceptance Criteria:**
+- All API routes enforce role-based limits
+- Middleware returns proper error codes (403, 429)
+- Error responses include upgrade URLs and recommendations
+- Developer role bypasses all checks
+- Usage counters increment correctly
+- All actions logged to audit table
+
+**Testing:**
+- API endpoint tests for each tier
+- Limit enforcement tests (at limit, over limit)
+- Feature gate tests for each feature category
+- Developer role bypass tests
+- Usage increment tests
+- Error response format tests
+
+## Phase 3: Frontend Hooks & Components (Week 3)
+**Goal:** Build React components for role-based UI
+
+### Tasks:
+1. Create `useUserRole()` hook (`/frontend/lib/hooks/useUserRole.ts`)
+   - Expose role, tier, limits, usage
+   - Provide `hasFeature()` helper
+   - Provide `isUnderLimit()` helper
+   - Provide `getUsagePercentage()` helper
+
+2. Create role-aware components
+   - `<FeatureGate>` - conditionally render based on features
+   - `<UsageWidget>` - display current usage stats
+   - `<UpgradePrompt>` - contextual upgrade CTA
+   - `<TierBadge>` - show current tier
+
+3. Update existing components
+   - Export buttons - disable based on tier
+   - Generation buttons - show usage percentage
+   - Dashboard - add usage widget
+   - Settings page - add tier information
+
+4. Create usage dashboard page (`/app/(auth)/settings/usage/page.tsx`)
+   - Current month usage with progress bars
+   - Historical usage chart
+   - Limit details by tier
+   - Upgrade CTA for near-limit users
+
+5. Update navigation
+   - Add tier badge to user menu
+   - Add usage indicator to sidebar
+   - Show feature badges on restricted items
+
+**Acceptance Criteria:**
+- `useUserRole()` hook provides all necessary role data
+- `<FeatureGate>` correctly hides/shows features
+- Usage widgets display real-time data
+- Upgrade prompts appear contextually
+- All tier-restricted features visually indicate status
+- Dashboard usage page shows accurate statistics
+
+**Testing:**
+- Component unit tests for each tier
+- Hook tests with mocked user data
+- Integration tests for feature visibility
+- Visual regression tests for tier badges
+- Accessibility tests for disabled states
+
+## Phase 4: Upgrade & Downgrade Flows (Week 4)
+**Goal:** Handle subscription tier changes gracefully
+
+### Tasks:
+1. Create upgrade flow
+   - Update pricing page to handle current tier
+   - Create `/api/subscriptions/upgrade` endpoint
+   - Implement immediate limit updates
+   - Send upgrade confirmation email
+
+2. Create downgrade flow
+   - Add downgrade warnings (if over new limits)
+   - Create `/api/subscriptions/downgrade` endpoint
+   - Implement grace period logic
+   - Send downgrade confirmation email
+
+3. Create cancellation flow
+   - Add 30-day grace period
+   - Implement read-only access to saved starmaps
+   - Create data export functionality
+   - Send reminder emails (7, 3, 1 day before deletion)
+
+4. Create billing history page (`/app/(auth)/settings/billing/page.tsx`)
+   - Show current subscription
+   - Display upgrade/downgrade options
+   - Show billing history
+   - Manage payment method (future)
+
+5. Implement tier change notifications
+   - In-app notification when tier changes
+   - Email confirmation for changes
+   - Dashboard banner for new features unlocked
+
+**Acceptance Criteria:**
+- Upgrade flow works without data loss
+- Downgrade flow preserves existing starmaps (read-only if over limit)
+- Cancellation provides 30-day grace period
+- All tier changes logged to audit table
+- Users receive email confirmations
+- Billing history displays correctly
+
+**Testing:**
+- Upgrade flow tests (each tier to each higher tier)
+- Downgrade flow tests with data preservation
+- Cancellation and reactivation tests
+- Grace period enforcement tests
+- Email delivery tests
+- Proration calculation tests (future, with Stripe)
+
+## Phase 5: Developer Role & Admin Dashboard (Week 5)
+**Goal:** Provide internal tools for development and support
+
+### Tasks:
+1. Implement developer role assignment
+   - Create admin-only API endpoint
+   - Add role assignment UI (dev-only access)
+   - Implement audit logging for role changes
+
+2. Create admin dashboard (`/app/(auth)/admin/page.tsx`)
+   - User search and management
+   - Role assignment interface
+   - Usage analytics across all tiers
+   - Audit log viewer
+
+3. Add developer mode indicators
+   - Persistent banner when logged in as developer
+   - Highlight developer-only actions
+   - Show bypass notifications
+
+4. Create developer tools
+   - Usage reset functionality
+   - Impersonation feature (with logging)
+   - Feature flag management
+   - System health dashboard
+
+5. Build usage analytics dashboard
+   - Aggregate usage by tier
+   - Conversion funnel (tier upgrades)
+   - Limit-exceeded event tracking
+   - Revenue projections (future)
+
+**Acceptance Criteria:**
+- Only developers can access admin dashboard
+- Role assignment requires authentication and reason
+- All developer actions logged to audit table
+- Developer mode visually distinct
+- Usage analytics display accurate data
+- Impersonation logs all actions
+
+**Testing:**
+- Access control tests (non-developers blocked)
+- Role assignment tests
+- Audit log tests
+- Developer bypass tests
+- Analytics calculation tests
+- Impersonation logging tests
+
+## Phase 6: Monthly Usage Reset & Cron Jobs (Week 6)
+**Goal:** Automate usage counter resets and maintenance tasks
+
+### Tasks:
+1. Create Vercel Cron job configuration
+   - Add `vercel.json` cron config
+   - Create `/api/cron/reset-usage` endpoint
+   - Implement `CRON_SECRET` authentication
+
+2. Implement usage reset logic
+   - Call `reset_monthly_usage()` database function
+   - Handle timezone considerations (UTC)
+   - Log reset operations
+
+3. Create usage alert system
+   - Detect users at 80%, 90%, 100% of limits
+   - Send alert emails
+   - Create in-app notifications
+
+4. Build automated data cleanup
+   - Remove expired grace period users
+   - Archive old usage history (older than 2 years)
+   - Clean up orphaned audit logs
+
+5. Create monitoring and alerting
+   - Track cron job execution
+   - Alert on job failures
+   - Monitor usage reset accuracy
+
+**Acceptance Criteria:**
+- Cron job runs daily at midnight UTC
+- Usage counters reset on subscription renewal date
+- Users receive alerts before hitting limits
+- Expired data cleaned up automatically
+- Cron job failures trigger alerts
+- All automated actions logged
+
+**Testing:**
+- Cron job execution tests (manual trigger)
+- Usage reset accuracy tests
+- Alert trigger threshold tests
+- Data cleanup tests (soft delete first)
+- Timezone handling tests
+- Failure recovery tests
+
+## Phase 7: Integration Testing & QA (Week 7)
+**Goal:** Comprehensive testing across all tiers and flows
+
+### Tasks:
+1. End-to-end tier testing
+   - Test complete flows for each tier
+   - Verify limit enforcement
+   - Test upgrade/downgrade paths
+   - Validate feature gates
+
+2. Load testing
+   - Simulate concurrent users per tier
+   - Test middleware performance
+   - Validate database query efficiency
+   - Ensure rate limiting works under load
+
+3. Security audit
+   - Review RLS policies
+   - Test privilege escalation attempts
+   - Validate API authentication
+   - Audit developer role access
+
+4. User acceptance testing
+   - Internal team testing on staging
+   - Test with sample users from each tier
+   - Gather feedback on UX
+   - Validate error messaging clarity
+
+5. Documentation updates
+   - Update API documentation
+   - Create tier comparison guide
+   - Document developer role usage
+   - Write upgrade/downgrade guides
+
+**Acceptance Criteria:**
+- All E2E tests pass for every tier
+- Load tests show acceptable performance
+- No security vulnerabilities found
+- UAT feedback addressed
+- Documentation complete and accurate
+
+**Testing:**
+- Full E2E test suite
+- Performance benchmarks
+- Security penetration testing
+- Accessibility audit
+- Cross-browser testing
+
+## Phase 8: Deployment & Monitoring (Week 8)
+**Goal:** Production deployment with monitoring
+
+### Tasks:
+1. Prepare production environment
+   - Run migrations on production database
+   - Set up Vercel Cron jobs
+   - Configure environment variables
+   - Enable monitoring and logging
+
+2. Gradual rollout strategy
+   - Deploy to staging environment
+   - Beta test with internal users
+   - Deploy to 10% of production users
+   - Monitor for errors and rollback if needed
+   - Full production deployment
+
+3. Set up monitoring
+   - Create Vercel Analytics dashboards
+   - Set up error alerting (Sentry/similar)
+   - Monitor API 429 response rates
+   - Track upgrade conversion rates
+
+4. Create operational runbooks
+   - Document role assignment process
+   - Create troubleshooting guides
+   - Write incident response procedures
+   - Document rollback procedures
+
+5. Post-launch support
+   - Monitor user feedback
+   - Address critical bugs immediately
+   - Gather upgrade conversion data
+   - Plan iteration based on metrics
+
+**Acceptance Criteria:**
+- Production deployment successful
+- Zero data loss during deployment
+- Monitoring dashboards operational
+- Runbooks documented and accessible
+- Support team trained on new features
+- No critical bugs in first week
+
+**Testing:**
+- Production smoke tests
+- Canary deployment validation
+- Rollback procedure tests
+- Monitoring alert tests
+- Documentation completeness review
+
+# Logical Dependency Chain
+
+## Foundation First
+1. **Database schema must exist before any code** - migrations, tables, constraints
+2. **TypeScript types defined from schema** - ensures type safety across stack
+3. **Database functions and triggers** - automate business logic at data layer
+
+## Backend Before Frontend
+4. **Middleware layer** - enforce rules at API boundary before UI
+5. **API route updates** - protect resources and enforce limits
+6. **Logging infrastructure** - visibility into role-based decisions
+
+## Progressive Enhancement
+7. **React hooks** - abstract role logic for easy consumption
+8. **UI components** - visual representation of role restrictions
+9. **Feature gates** - conditionally render based on role
+
+## User Flows Last
+10. **Upgrade/downgrade flows** - depend on all previous layers
+11. **Admin dashboard** - requires mature role system
+12. **Automation (cron jobs)** - final piece after manual flows work
+
+## Testing & Deployment
+13. **Integration testing** - validate end-to-end flows
+14. **Performance testing** - ensure scalability
+15. **Production deployment** - rollout with monitoring
+
+**Rationale:**
+- Database is source of truth, must be stable first
+- Backend enforces security, frontend enhances UX
+- Can't build upgrade flows until role enforcement works
+- Automation should be added after manual processes are proven
+- Testing validates each layer before moving to next
+
+# Testing Strategy
+
+## Overview
+This comprehensive testing strategy ensures the user roles and subscription system works reliably, securely, and performantly across all tiers. Testing is organized into multiple layers, from unit tests to end-to-end scenarios, with specific focus on role enforcement, usage tracking, and tier transitions.
+
+## Testing Pyramid
+
+```
+         E2E Tests (10%)
+    ┌──────────────────────┐
+    │  User Flows          │
+    │  Tier Transitions    │
+    └──────────────────────┘
+          Integration Tests (30%)
+    ┌──────────────────────────────┐
+    │  API Endpoints               │
+    │  Middleware + Database       │
+    │  Multi-component Flows       │
+    └──────────────────────────────┘
+              Unit Tests (60%)
+    ┌────────────────────────────────────┐
+    │  Individual Functions              │
+    │  React Components                  │
+    │  Database Functions                │
+    │  Type Validation                   │
+    └────────────────────────────────────┘
+```
+
+## 1. Unit Tests
+
+### 1.1 Type System Tests
+**Location:** `/frontend/types/__tests__/roles.test.ts`
+
+**Test Cases:**
+```typescript
+describe('Role Type System', () => {
+  test('ROLE_LIMITS has all subscription tiers defined', () => {
+    const expectedTiers: UserRole[] = [
+      'explorer', 'navigator', 'voyager',
+      'crew', 'fleet', 'armada',
+      'enterprise', 'developer'
+    ];
+    
+    expectedTiers.forEach(tier => {
+      expect(ROLE_LIMITS[tier]).toBeDefined();
+      expect(ROLE_LIMITS[tier].max_generations_monthly).toBeDefined();
+      expect(ROLE_LIMITS[tier].max_saved_starmaps).toBeDefined();
+    });
+  });
+  
+  test('Explorer tier has correct limits', () => {
+    expect(ROLE_LIMITS.explorer.max_generations_monthly).toBe(5);
+    expect(ROLE_LIMITS.explorer.max_saved_starmaps).toBe(5);
+    expect(ROLE_LIMITS.explorer.export_formats).toEqual(['pdf']);
+    expect(ROLE_LIMITS.explorer.api_access).toBe(false);
+  });
+  
+  test('Developer role has unlimited access', () => {
+    expect(ROLE_LIMITS.developer.max_generations_monthly).toBe('unlimited');
+    expect(ROLE_LIMITS.developer.max_saved_starmaps).toBe('unlimited');
+    expect(ROLE_LIMITS.developer.processing_priority).toBe('bypass');
+    expect(ROLE_LIMITS.developer.features).toContain('admin_dashboard');
+  });
+  
+  test('Voyager has 50 generations and 50 saved starmaps', () => {
+    expect(ROLE_LIMITS.voyager.max_generations_monthly).toBe(50);
+    expect(ROLE_LIMITS.voyager.max_saved_starmaps).toBe(50);
+  });
+  
+  test('All tiers have valid processing priorities', () => {
+    const validPriorities = ['standard', 'high', 'highest', 'bypass'];
+    Object.values(ROLE_LIMITS).forEach(limits => {
+      expect(validPriorities).toContain(limits.processing_priority);
+    });
+  });
+});
+```
+
+### 1.2 Middleware Tests
+**Location:** `/frontend/lib/auth/__tests__/roleMiddleware.test.ts`
+
+**Test Cases:**
+```typescript
+describe('requireFeature Middleware', () => {
+  test('allows access when user has required feature', async () => {
+    const mockSession = createMockSession('navigator');
+    const result = await requireFeature(mockRequest, 'export_word');
+    expect(result).toBeNull(); // null means allowed
+  });
+  
+  test('denies access when user lacks required feature', async () => {
+    const mockSession = createMockSession('explorer');
+    const result = await requireFeature(mockRequest, 'export_word');
+    expect(result).toBeDefined();
+    expect(result?.status).toBe(403);
+    expect(await result?.json()).toMatchObject({
+      error: 'Feature not available for your subscription tier',
+      feature: 'export_word',
+      current_tier: 'explorer',
+      required_tier: 'navigator'
+    });
+  });
+  
+  test('developer role bypasses all feature checks', async () => {
+    const mockSession = createMockSession('developer');
+    const result = await requireFeature(mockRequest, 'admin_dashboard');
+    expect(result).toBeNull();
+  });
+});
+
+describe('checkUsageLimits Middleware', () => {
+  test('allows generation when under limit', async () => {
+    const mockProfile = createMockProfile('navigator', {
+      generations_this_month: 10,
+      max_generations_monthly: 15
+    });
+    const result = await checkUsageLimits(mockRequest, 'generations');
+    expect(result).toBeNull();
+  });
+  
+  test('blocks generation when at limit', async () => {
+    const mockProfile = createMockProfile('navigator', {
+      generations_this_month: 15,
+      max_generations_monthly: 15
+    });
+    const result = await checkUsageLimits(mockRequest, 'generations');
+    expect(result).toBeDefined();
+    expect(result?.status).toBe(429);
+    expect(await result?.json()).toMatchObject({
+      error: 'Usage limit exceeded',
+      limit_type: 'generations',
+      limit: 15,
+      current_usage: 15
+    });
+  });
+  
+  test('developer role bypasses usage limits', async () => {
+    const mockProfile = createMockProfile('developer', {
+      generations_this_month: 9999
+    });
+    const result = await checkUsageLimits(mockRequest, 'generations');
+    expect(result).toBeNull();
+  });
+  
+  test('handles unlimited tier correctly', async () => {
+    const mockProfile = createMockProfile('voyager', {
+      generations_this_month: 9999,
+      max_generations_monthly: 'unlimited'
+    });
+    const result = await checkUsageLimits(mockRequest, 'generations');
+    expect(result).toBeNull();
+  });
+});
+
+describe('incrementUsage Function', () => {
+  test('increments generation counter', async () => {
+    const userId = 'test-user-id';
+    await incrementUsage(userId, 'generations');
+    
+    const profile = await getUserProfile(userId);
+    expect(profile.subscription_metadata.usage.generations_this_month).toBe(1);
+  });
+  
+  test('increments saved starmaps counter', async () => {
+    const userId = 'test-user-id';
+    await incrementUsage(userId, 'saved_starmaps');
+    
+    const profile = await getUserProfile(userId);
+    expect(profile.subscription_metadata.usage.saved_starmaps).toBe(1);
+  });
+  
+  test('logs increment operation', async () => {
+    const logSpy = vi.spyOn(logger, 'info');
+    await incrementUsage('test-user-id', 'generations');
+    
+    expect(logSpy).toHaveBeenCalledWith(
+      'role.usage_increment.success',
+      expect.objectContaining({
+        userId: 'test-user-id',
+        type: 'generations'
+      })
+    );
+  });
+});
+```
+
+### 1.3 React Hook Tests
+**Location:** `/frontend/lib/hooks/__tests__/useUserRole.test.ts`
+
+**Test Cases:**
+```typescript
+describe('useUserRole Hook', () => {
+  test('returns correct role and limits', () => {
+    const mockUser = createMockUser('navigator');
+    const { result } = renderHook(() => useUserRole(), {
+      wrapper: createAuthWrapper(mockUser)
+    });
+    
+    expect(result.current.role).toBe('navigator');
+    expect(result.current.limits?.max_generations_monthly).toBe(15);
+    expect(result.current.limits?.max_saved_starmaps).toBe(30);
+  });
+  
+  test('hasFeature returns true for available features', () => {
+    const mockUser = createMockUser('navigator');
+    const { result } = renderHook(() => useUserRole(), {
+      wrapper: createAuthWrapper(mockUser)
+    });
+    
+    expect(result.current.hasFeature('export_word')).toBe(true);
+    expect(result.current.hasFeature('export_pdf')).toBe(true);
+  });
+  
+  test('hasFeature returns false for unavailable features', () => {
+    const mockUser = createMockUser('explorer');
+    const { result } = renderHook(() => useUserRole(), {
+      wrapper: createAuthWrapper(mockUser)
+    });
+    
+    expect(result.current.hasFeature('export_word')).toBe(false);
+    expect(result.current.hasFeature('api_access')).toBe(false);
+  });
+  
+  test('isUnderLimit checks generation limit correctly', () => {
+    const mockUser = createMockUser('navigator', {
+      generations_this_month: 10,
+      max_generations_monthly: 15
+    });
+    const { result } = renderHook(() => useUserRole(), {
+      wrapper: createAuthWrapper(mockUser)
+    });
+    
+    expect(result.current.isUnderLimit('generations')).toBe(true);
+  });
+  
+  test('getUsagePercentage calculates correctly', () => {
+    const mockUser = createMockUser('navigator', {
+      generations_this_month: 10,
+      max_generations_monthly: 15
+    });
+    const { result } = renderHook(() => useUserRole(), {
+      wrapper: createAuthWrapper(mockUser)
+    });
+    
+    expect(result.current.getUsagePercentage('generations')).toBe(67); // Math.round(10/15 * 100)
+  });
+  
+  test('developer role identified correctly', () => {
+    const mockUser = createMockUser('developer');
+    const { result } = renderHook(() => useUserRole(), {
+      wrapper: createAuthWrapper(mockUser)
+    });
+    
+    expect(result.current.isDeveloper).toBe(true);
+    expect(result.current.isUnderLimit('generations')).toBe(true); // Always true
+  });
+});
+```
+
+### 1.4 Component Tests
+**Location:** `/frontend/components/auth/__tests__/FeatureGate.test.tsx`
+
+**Test Cases:**
+```typescript
+describe('FeatureGate Component', () => {
+  test('renders children when user has feature', () => {
+    const mockUser = createMockUser('navigator');
+    const { getByText } = render(
+      <AuthProvider user={mockUser}>
+        <FeatureGate feature="export_word">
+          <button>Export to Word</button>
+        </FeatureGate>
+      </AuthProvider>
+    );
+    
+    expect(getByText('Export to Word')).toBeInTheDocument();
+  });
+  
+  test('shows upgrade prompt when user lacks feature', () => {
+    const mockUser = createMockUser('explorer');
+    const { getByText } = render(
+      <AuthProvider user={mockUser}>
+        <FeatureGate feature="export_word" showUpgradePrompt>
+          <button>Export to Word</button>
+        </FeatureGate>
+      </AuthProvider>
+    );
+    
+    expect(getByText('Feature Locked')).toBeInTheDocument();
+    expect(getByText(/not available on your current plan/i)).toBeInTheDocument();
+  });
+  
+  test('renders fallback when user lacks feature', () => {
+    const mockUser = createMockUser('explorer');
+    const { getByText } = render(
+      <AuthProvider user={mockUser}>
+        <FeatureGate 
+          feature="export_word" 
+          fallback={<div>Upgrade Required</div>}
+          showUpgradePrompt={false}
+        >
+          <button>Export to Word</button>
+        </FeatureGate>
+      </AuthProvider>
+    );
+    
+    expect(getByText('Upgrade Required')).toBeInTheDocument();
+  });
+});
+```
+
+### 1.5 Database Function Tests
+**Location:** `/supabase/tests/database-functions.test.sql`
+
+**Test Cases:**
+```sql
+-- Test reset_monthly_usage function
+BEGIN;
+  -- Setup test user with usage
+  INSERT INTO user_profiles (user_id, user_role, subscription_metadata)
+  VALUES (
+    'test-user-1',
+    'navigator',
+    jsonb_build_object(
+      'usage', jsonb_build_object(
+        'generations_this_month', 10,
+        'saved_starmaps', 5,
+        'last_reset', NOW() - INTERVAL '35 days'
+      ),
+      'renewal_date', NOW() - INTERVAL '1 day'
+    )
+  );
+  
+  -- Run reset function
+  SELECT reset_monthly_usage();
+  
+  -- Assert usage was reset
+  SELECT * FROM user_profiles WHERE user_id = 'test-user-1';
+  -- Expected: generations_this_month = 0, saved_starmaps = 5 (preserved)
+ROLLBACK;
+
+-- Test increment_usage function
+BEGIN;
+  -- Setup test user
+  INSERT INTO user_profiles (user_id, user_role, subscription_metadata)
+  VALUES (
+    'test-user-2',
+    'explorer',
+    jsonb_build_object(
+      'usage', jsonb_build_object(
+        'generations_this_month', 0,
+        'saved_starmaps', 0,
+        'last_reset', NOW()
+      )
+    )
+  );
+  
+  -- Increment generations
+  SELECT increment_usage('test-user-2', 'generations', 1);
+  
+  -- Assert increment worked
+  SELECT (subscription_metadata->'usage'->>'generations_this_month')::INT AS gens
+  FROM user_profiles 
+  WHERE user_id = 'test-user-2';
+  -- Expected: gens = 1
+ROLLBACK;
+
+-- Test user_has_feature function
+SELECT user_has_feature('test-developer-user', 'admin_dashboard'); -- Should return TRUE
+SELECT user_has_feature('test-explorer-user', 'export_word'); -- Should return FALSE
+```
+
+## 2. Integration Tests
+
+### 2.1 API Endpoint Tests
+**Location:** `/frontend/tests/api/__tests__/blueprints-generate.test.ts`
+
+**Test Cases:**
+```typescript
+describe('POST /api/blueprints/generate', () => {
+  test('allows generation when user under limit', async () => {
+    const user = await createTestUser('navigator', {
+      generations_this_month: 10,
+      max_generations_monthly: 15
+    });
+    
+    const response = await request(app)
+      .post('/api/blueprints/generate')
+      .set('Authorization', `Bearer ${user.token}`)
+      .send({ blueprintId: 'test-blueprint-id' })
+      .expect(200);
+    
+    expect(response.body.success).toBe(true);
+    
+    // Verify usage was incremented
+    const profile = await getUserProfile(user.id);
+    expect(profile.subscription_metadata.usage.generations_this_month).toBe(11);
+  });
+  
+  test('blocks generation when user at limit', async () => {
+    const user = await createTestUser('explorer', {
+      generations_this_month: 5,
+      max_generations_monthly: 5
+    });
+    
+    const response = await request(app)
+      .post('/api/blueprints/generate')
+      .set('Authorization', `Bearer ${user.token}`)
+      .send({ blueprintId: 'test-blueprint-id' })
+      .expect(429);
+    
+    expect(response.body.error).toContain('limit');
+    expect(response.body.upgrade_url).toBeDefined();
+  });
+  
+  test('developer bypasses generation limits', async () => {
+    const user = await createTestUser('developer', {
+      generations_this_month: 9999
+    });
+    
+    const response = await request(app)
+      .post('/api/blueprints/generate')
+      .set('Authorization', `Bearer ${user.token}`)
+      .send({ blueprintId: 'test-blueprint-id' })
+      .expect(200);
+    
+    expect(response.body.success).toBe(true);
+  });
+});
+
+describe('POST /api/export/word', () => {
+  test('allows word export for navigator tier', async () => {
+    const user = await createTestUser('navigator');
+    
+    const response = await request(app)
+      .post('/api/export/word')
+      .set('Authorization', `Bearer ${user.token}`)
+      .send({ blueprintId: 'test-blueprint-id' })
+      .expect(200);
+    
+    expect(response.body.downloadUrl).toBeDefined();
+  });
+  
+  test('blocks word export for explorer tier', async () => {
+    const user = await createTestUser('explorer');
+    
+    const response = await request(app)
+      .post('/api/export/word')
+      .set('Authorization', `Bearer ${user.token}`)
+      .send({ blueprintId: 'test-blueprint-id' })
+      .expect(403);
+    
+    expect(response.body.error).toContain('not available');
+    expect(response.body.required_tier).toBe('navigator');
+  });
+});
+
+describe('POST /api/admin/assign-role', () => {
+  test('developer can assign roles', async () => {
+    const developer = await createTestUser('developer');
+    const targetUser = await createTestUser('explorer');
+    
+    const response = await request(app)
+      .post('/api/admin/assign-role')
+      .set('Authorization', `Bearer ${developer.token}`)
+      .send({
+        targetUserId: targetUser.id,
+        newRole: 'navigator',
+        reason: 'Test upgrade'
+      })
+      .expect(200);
+    
+    expect(response.body.success).toBe(true);
+    
+    // Verify role was changed
+    const profile = await getUserProfile(targetUser.id);
+    expect(profile.user_role).toBe('navigator');
+    
+    // Verify audit log entry
+    const auditLog = await getAuditLog(targetUser.id);
+    expect(auditLog[0].action_type).toBe('role_assigned');
+    expect(auditLog[0].performed_by).toBe(developer.id);
+  });
+  
+  test('non-developer cannot assign roles', async () => {
+    const navigator = await createTestUser('navigator');
+    const targetUser = await createTestUser('explorer');
+    
+    const response = await request(app)
+      .post('/api/admin/assign-role')
+      .set('Authorization', `Bearer ${navigator.token}`)
+      .send({
+        targetUserId: targetUser.id,
+        newRole: 'developer',
+        reason: 'Attempting privilege escalation'
+      })
+      .expect(403);
+    
+    expect(response.body.error).toContain('Only developers');
+  });
+});
+```
+
+### 2.2 Database + Middleware Integration
+**Location:** `/frontend/tests/integration/__tests__/usage-tracking.test.ts`
+
+**Test Cases:**
+```typescript
+describe('Usage Tracking Integration', () => {
+  test('end-to-end generation with usage tracking', async () => {
+    const user = await createTestUser('navigator', {
+      generations_this_month: 5,
+      saved_starmaps: 10
+    });
+    
+    // Make 3 generation requests
+    for (let i = 0; i < 3; i++) {
+      await request(app)
+        .post('/api/blueprints/generate')
+        .set('Authorization', `Bearer ${user.token}`)
+        .send({ blueprintId: `test-${i}` })
+        .expect(200);
+    }
+    
+    // Verify final usage count
+    const profile = await getUserProfile(user.id);
+    expect(profile.subscription_metadata.usage.generations_this_month).toBe(8);
+    
+    // Verify history was recorded
+    const history = await getUserUsageHistory(user.id);
+    expect(history.starmaps_generated).toBeGreaterThanOrEqual(3);
+  });
+  
+  test('concurrent generation requests handled atomically', async () => {
+    const user = await createTestUser('navigator', {
+      generations_this_month: 0
+    });
+    
+    // Make 10 concurrent requests
+    const promises = Array(10).fill(null).map(() =>
+      request(app)
+        .post('/api/blueprints/generate')
+        .set('Authorization', `Bearer ${user.token}`)
+        .send({ blueprintId: 'concurrent-test' })
+    );
+    
+    await Promise.all(promises);
+    
+    // Verify count is exactly 10 (no race conditions)
+    const profile = await getUserProfile(user.id);
+    expect(profile.subscription_metadata.usage.generations_this_month).toBe(10);
+  });
+});
+```
+
+### 2.3 RLS Policy Tests
+**Location:** `/supabase/tests/rls-policies.test.sql`
+
+**Test Cases:**
+```sql
+-- Test users can only see own profiles
+BEGIN;
+  SET LOCAL ROLE authenticated;
+  SET LOCAL request.jwt.claims.sub TO 'user-1';
+  
+  SELECT * FROM user_profiles; -- Should only return user-1's profile
+  SELECT * FROM user_profiles WHERE user_id = 'user-2'; -- Should return empty
+ROLLBACK;
+
+-- Test developers can see all usage history
+BEGIN;
+  SET LOCAL ROLE authenticated;
+  SET LOCAL request.jwt.claims.sub TO 'developer-user';
+  
+  -- Developer's profile should have developer role
+  UPDATE user_profiles SET user_role = 'developer' WHERE user_id = 'developer-user';
+  
+  SELECT COUNT(*) FROM user_usage_history; -- Should return all records
+ROLLBACK;
+
+-- Test audit log insertion requires developer role
+BEGIN;
+  SET LOCAL ROLE authenticated;
+  SET LOCAL request.jwt.claims.sub TO 'regular-user';
+  
+  INSERT INTO role_audit_log (user_id, action_type)
+  VALUES ('test-user', 'role_assigned'); -- Should fail
+ROLLBACK;
+```
+
+## 3. End-to-End Tests
+
+### 3.1 User Journey Tests
+**Location:** `/frontend/tests/e2e/user-journeys.spec.ts` (Playwright)
+
+**Test Cases:**
+```typescript
+describe('Explorer Tier Journey', () => {
+  test('complete generation flow with limit enforcement', async ({ page }) => {
+    // Login as explorer user
+    await loginAs(page, 'explorer');
+    
+    // Navigate to dashboard
+    await page.goto('/dashboard');
+    
+    // Verify usage widget shows correct limits
+    await expect(page.locator('[data-testid="usage-widget"]')).toContainText('5/5');
+    
+    // Try to generate starmap (should be at limit)
+    await page.click('[data-testid="new-starmap-button"]');
+    
+    // Should see limit modal
+    await expect(page.locator('[data-testid="limit-modal"]')).toBeVisible();
+    await expect(page.locator('[data-testid="limit-modal"]')).toContainText('Monthly generation limit reached');
+    
+    // Verify upgrade CTA present
+    await expect(page.locator('[data-testid="upgrade-button"]')).toBeVisible();
+    await page.click('[data-testid="upgrade-button"]');
+    
+    // Should navigate to pricing page
+    await expect(page).toHaveURL('/pricing');
+    await expect(page.locator('[data-testid="current-tier-badge"]')).toContainText('explorer');
+  });
+});
+
+describe('Upgrade Flow E2E', () => {
+  test('upgrade from explorer to navigator', async ({ page }) => {
+    await loginAs(page, 'explorer');
+    
+    // Go to pricing page
+    await page.goto('/pricing');
+    
+    // Click upgrade on Navigator plan
+    await page.click('[data-testid="plan-card-navigator"] [data-testid="select-plan"]');
+    
+    // Should go to settings/billing
+    await expect(page).toHaveURL(/\/settings\/billing/);
+    
+    // Verify plan selection shown
+    await expect(page.locator('[data-testid="selected-plan"]')).toContainText('Navigator');
+    
+    // Complete upgrade (mock payment)
+    await page.fill('[data-testid="card-number"]', '4242424242424242');
+    await page.fill('[data-testid="card-expiry"]', '12/25');
+    await page.fill('[data-testid="card-cvc"]', '123');
+    await page.click('[data-testid="confirm-upgrade"]');
+    
+    // Wait for confirmation
+    await expect(page.locator('[data-testid="upgrade-success"]')).toBeVisible();
+    
+    // Verify new limits in dashboard
+    await page.goto('/dashboard');
+    await expect(page.locator('[data-testid="tier-badge"]')).toContainText('Navigator');
+    await expect(page.locator('[data-testid="usage-widget"]')).toContainText('15'); // New generation limit
+  });
+});
+
+describe('Feature Gate E2E', () => {
+  test('export button behavior per tier', async ({ page }) => {
+    // Test explorer - PDF only
+    await loginAs(page, 'explorer');
+    await page.goto('/blueprint/test-blueprint-id');
+    
+    await page.click('[data-testid="export-button"]');
+    await expect(page.locator('[data-testid="export-pdf"]')).toBeEnabled();
+    await expect(page.locator('[data-testid="export-word"]')).toBeDisabled();
+    await expect(page.locator('[data-testid="export-word"]')).toHaveAttribute('title', /Available on Navigator/);
+    
+    // Upgrade to navigator
+    await upgradeUser(page, 'navigator');
+    
+    // Refresh page
+    await page.reload();
+    await page.click('[data-testid="export-button"]');
+    await expect(page.locator('[data-testid="export-word"]')).toBeEnabled();
+    
+    // Click Word export
+    const downloadPromise = page.waitForEvent('download');
+    await page.click('[data-testid="export-word"]');
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/\.docx$/);
+  });
+});
+
+describe('Developer Role E2E', () => {
+  test('developer can access admin dashboard', async ({ page }) => {
+    await loginAs(page, 'developer');
+    
+    // Navigate to admin dashboard
+    await page.goto('/admin');
+    
+    // Should see admin interface
+    await expect(page.locator('[data-testid="admin-dashboard"]')).toBeVisible();
+    
+    // Search for user
+    await page.fill('[data-testid="user-search"]', 'test@example.com');
+    await page.click('[data-testid="search-button"]');
+    
+    // Should see user details
+    await expect(page.locator('[data-testid="user-details"]')).toBeVisible();
+    
+    // Assign new role
+    await page.selectOption('[data-testid="role-selector"]', 'navigator');
+    await page.fill('[data-testid="reason-field"]', 'Test role assignment');
+    await page.click('[data-testid="assign-role-button"]');
+    
+    // Should see success message
+    await expect(page.locator('[data-testid="success-message"]')).toContainText('Role assigned');
+  });
+  
+  test('developer bypasses all limits', async ({ page }) => {
+    await loginAs(page, 'developer');
+    await page.goto('/dashboard');
+    
+    // Usage widget should show unlimited
+    await expect(page.locator('[data-testid="usage-widget"]')).toContainText('Unlimited');
+    
+    // Generate 100 starmaps without limit errors
+    for (let i = 0; i < 100; i++) {
+      const response = await page.request.post('/api/blueprints/generate', {
+        data: { blueprintId: `dev-test-${i}` }
+      });
+      expect(response.status()).toBe(200);
+    }
+  });
+});
+```
+
+### 3.2 Cross-Browser Testing
+**Tools:** Playwright with multiple browser engines
+
+**Test Matrix:**
+- Chromium (Chrome, Edge)
+- Firefox
+- WebKit (Safari)
+- Mobile browsers (iOS Safari, Chrome Mobile)
+
+**Critical Flows to Test:**
+- Login/authentication
+- Generation with limit checks
+- Export functionality
+- Upgrade flow
+- Usage dashboard
+
+## 4. Security Tests
+
+### 4.1 Authorization Tests
+**Location:** `/frontend/tests/security/authorization.test.ts`
+
+**Test Cases:**
+```typescript
+describe('Security: Authorization', () => {
+  test('prevents privilege escalation via API tampering', async () => {
+    const explorer = await createTestUser('explorer');
+    
+    // Try to set own role to developer via API
+    const response = await request(app)
+      .post('/api/admin/assign-role')
+      .set('Authorization', `Bearer ${explorer.token}`)
+      .send({
+        targetUserId: explorer.id,
+        newRole: 'developer',
+        reason: 'Self-promotion attempt'
+      })
+      .expect(403);
+    
+    // Verify role unchanged
+    const profile = await getUserProfile(explorer.id);
+    expect(profile.user_role).toBe('explorer');
+  });
+  
+  test('prevents bypassing limits via direct database access', async () => {
+    const explorer = await createTestUser('explorer', {
+      generations_this_month: 5,
+      max_generations_monthly: 5
+    });
+    
+    // Attempt to generate via API should fail
+    await request(app)
+      .post('/api/blueprints/generate')
+      .set('Authorization', `Bearer ${explorer.token}`)
+      .send({ blueprintId: 'test' })
+      .expect(429);
+    
+    // Verify no blueprint was created
+    const blueprints = await getBlueprints(explorer.id);
+    const newBlueprintsCount = blueprints.filter(b => b.created_at > new Date()).length;
+    expect(newBlueprintsCount).toBe(0);
+  });
+  
+  test('prevents accessing other users data', async () => {
+    const user1 = await createTestUser('navigator');
+    const user2 = await createTestUser('navigator');
+    
+    // User1 tries to access user2's profile
+    const response = await request(app)
+      .get(`/api/users/${user2.id}/profile`)
+      .set('Authorization', `Bearer ${user1.token}`)
+      .expect(403);
+  });
+});
+
+describe('Security: RLS Enforcement', () => {
+  test('RLS prevents SQL injection via usage tracking', async () => {
+    const user = await createTestUser('navigator');
+    
+    // Attempt SQL injection in blueprint ID
+    const maliciousInput = "'; DROP TABLE user_profiles; --";
+    
+    const response = await request(app)
+      .post('/api/blueprints/generate')
+      .set('Authorization', `Bearer ${user.token}`)
+      .send({ blueprintId: maliciousInput })
+      .expect(400); // Should reject invalid input
+    
+    // Verify table still exists
+    const profiles = await countUserProfiles();
+    expect(profiles).toBeGreaterThan(0);
+  });
+});
+```
+
+### 4.2 Rate Limiting Tests
+**Location:** `/frontend/tests/security/rate-limiting.test.ts`
+
+**Test Cases:**
+```typescript
+describe('Security: Rate Limiting', () => {
+  test('enforces per-tier generation limits', async () => {
+    const explorer = await createTestUser('explorer', {
+      generations_this_month: 0,
+      max_generations_monthly: 5
+    });
+    
+    // Make 5 successful requests
+    for (let i = 0; i < 5; i++) {
+      await request(app)
+        .post('/api/blueprints/generate')
+        .set('Authorization', `Bearer ${explorer.token}`)
+        .send({ blueprintId: `test-${i}` })
+        .expect(200);
+    }
+    
+    // 6th request should fail
+    await request(app)
+      .post('/api/blueprints/generate')
+      .set('Authorization', `Bearer ${explorer.token}`)
+      .send({ blueprintId: 'test-6' })
+      .expect(429);
+  });
+  
+  test('prevents rapid-fire requests from single user', async () => {
+    const user = await createTestUser('voyager'); // Unlimited generations
+    
+    // Make 100 requests in 1 second
+    const promises = Array(100).fill(null).map((_, i) =>
+      request(app)
+        .post('/api/blueprints/generate')
+        .set('Authorization', `Bearer ${user.token}`)
+        .send({ blueprintId: `rapid-${i}` })
+    );
+    
+    const results = await Promise.allSettled(promises);
+    const rateLimited = results.filter(r => 
+      r.status === 'fulfilled' && r.value.status === 429
+    );
+    
+    // Some requests should be rate-limited
+    expect(rateLimited.length).toBeGreaterThan(0);
+  });
+});
+```
+
+## 5. Performance Tests
+
+### 5.1 Load Testing
+**Tool:** Artillery or k6
+
+**Scenarios:**
+```yaml
+# artillery-config.yml
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: 'Warm up'
+    - duration: 120
+      arrivalRate: 50
+      name: 'Sustained load'
+    - duration: 60
+      arrivalRate: 100
+      name: 'Peak load'
+
+scenarios:
+  - name: 'Generation flow with limit checks'
+    flow:
+      - post:
+          url: '/api/auth/login'
+          json:
+            email: '{{ $randomEmail }}'
+            password: 'test-password'
+          capture:
+            - json: '$.token'
+              as: 'authToken'
+      
+      - post:
+          url: '/api/blueprints/generate'
+          headers:
+            Authorization: 'Bearer {{ authToken }}'
+          json:
+            blueprintId: '{{ $randomString }}'
+          expect:
+            - statusCode: [200, 429] # Accept both success and limit
+      
+      - get:
+          url: '/api/usage/current'
+          headers:
+            Authorization: 'Bearer {{ authToken }}'
+          expect:
+            - statusCode: 200
+            - contentType: 'application/json'
+
+  - name: 'Role middleware performance'
+    flow:
+      - loop:
+          count: 10
+          flow:
+            - get:
+                url: '/api/features/check'
+                headers:
+                  Authorization: 'Bearer {{ authToken }}'
+                expect:
+                  - statusCode: 200
+                  - responseTime: < 100 # Should be fast
+```
+
+**Performance Targets:**
+- **Middleware latency:** < 50ms per request
+- **Usage check:** < 20ms
+- **Database increment:** < 30ms (including transaction)
+- **API response time (P95):** < 500ms
+- **API response time (P99):** < 1000ms
+- **Concurrent users:** Support 1000 concurrent users
+- **Throughput:** Handle 100 requests/second per instance
+
+### 5.2 Database Performance
+**Location:** `/supabase/tests/performance.test.sql`
+
+**Test Cases:**
+```sql
+-- Test query performance with indexes
+EXPLAIN ANALYZE
+SELECT * FROM user_profiles
+WHERE user_role = 'navigator'
+LIMIT 100;
+-- Should use idx_user_profiles_user_role index
+
+EXPLAIN ANALYZE
+SELECT * FROM user_usage_history
+WHERE user_id = 'test-user'
+  AND period_start >= NOW() - INTERVAL '6 months';
+-- Should use idx_usage_history_user_period index
+
+-- Test concurrent increment performance
+BEGIN;
+  SELECT increment_usage('test-user', 'generations', 1);
+COMMIT;
+-- Should complete in < 30ms
+
+-- Test reset function on 10K users
+DO $$
+DECLARE
+  start_time TIMESTAMP;
+  end_time TIMESTAMP;
+BEGIN
+  start_time := clock_timestamp();
+  PERFORM reset_monthly_usage();
+  end_time := clock_timestamp();
+  
+  RAISE NOTICE 'Reset completed in: %', end_time - start_time;
+END $$;
+-- Should complete in < 5 seconds for 10K users
+```
+
+## 6. Compatibility & Regression Tests
+
+### 6.1 Migration Tests
+**Location:** `/supabase/tests/migrations.test.ts`
+
+**Test Cases:**
+```typescript
+describe('Migration: 0026_add_subscription_and_roles', () => {
+  test('migrates existing users to default explorer role', async () => {
+    // Create legacy user without role fields
+    await createLegacyUser('legacy-user@example.com');
+    
+    // Run migration
+    await runMigration('0026_add_subscription_and_roles.sql');
+    
+    // Verify user has default role
+    const profile = await getUserProfile('legacy-user@example.com');
+    expect(profile.user_role).toBe('explorer');
+    expect(profile.subscription_tier).toBe('explorer');
+    expect(profile.subscription_metadata).toBeDefined();
+  });
+  
+  test('rollback restores previous state', async () => {
+    // Run migration
+    await runMigration('0026_add_subscription_and_roles.sql');
+    
+    // Run rollback
+    await runMigration('ROLLBACK_0026_add_subscription_and_roles.sql');
+    
+    // Verify columns removed
+    const columns = await getTableColumns('user_profiles');
+    expect(columns).not.toContain('user_role');
+    expect(columns).not.toContain('subscription_tier');
+  });
+});
+```
+
+### 6.2 Backward Compatibility
+**Test Cases:**
+```typescript
+describe('Backward Compatibility', () => {
+  test('existing API endpoints still work', async () => {
+    // Test pre-role-system endpoint behavior
+    const user = await createTestUser('navigator');
+    
+    const response = await request(app)
+      .post('/api/blueprints/generate')
+      .set('Authorization', `Bearer ${user.token}`)
+      .send({ blueprintId: 'test' })
+      .expect(200);
+    
+    // Response format unchanged
+    expect(response.body).toHaveProperty('success');
+    expect(response.body).toHaveProperty('blueprintId');
+  });
+});
+```
+
+## 7. Acceptance Testing
+
+### 7.1 User Acceptance Criteria
+**Per Phase from Development Roadmap:**
+
+**Phase 1 (Database Foundation) - Acceptance:**
+- ✅ All migrations run without errors on clean database
+- ✅ Rollback migrations restore previous state
+- ✅ All 8 tiers have complete role definitions in ROLE_LIMITS
+- ✅ Database functions execute correctly (reset, increment, validate)
+- ✅ RLS policies block unauthorized access
+- ✅ Test users created for each tier
+
+**Phase 2 (Backend Middleware) - Acceptance:**
+- ✅ API returns 403 for missing features
+- ✅ API returns 429 for exceeded limits
+- ✅ Developer role bypasses all checks (logged)
+- ✅ Usage counters increment atomically
+- ✅ All role checks logged to audit table
+- ✅ Error responses include upgrade URLs
+
+**Phase 3 (Frontend Hooks) - Acceptance:**
+- ✅ `useUserRole()` provides accurate role data
+- ✅ `<FeatureGate>` hides/shows features correctly
+- ✅ Usage widgets display real-time data
+- ✅ Upgrade prompts appear contextually
+- ✅ All tier-restricted features visually indicate status
+- ✅ Dashboard usage page shows accurate statistics
+
+**Phase 4 (Upgrade/Downgrade) - Acceptance:**
+- ✅ Upgrade applies new limits immediately
+- ✅ Downgrade preserves existing starmaps (read-only if over limit)
+- ✅ Cancellation provides 30-day grace period
+- ✅ All tier changes logged to audit table
+- ✅ Users receive email confirmations
+- ✅ Billing history displays correctly
+
+**Phase 5 (Developer Role) - Acceptance:**
+- ✅ Only developers can access admin dashboard
+- ✅ Role assignment requires authentication and reason
+- ✅ All developer actions logged to audit table
+- ✅ Developer mode visually distinct
+- ✅ Usage analytics display accurate data
+- ✅ Impersonation logs all actions
+
+**Phase 6 (Cron Jobs) - Acceptance:**
+- ✅ Cron job runs daily at midnight UTC
+- ✅ Usage counters reset on renewal date
+- ✅ Users receive alerts before hitting limits
+- ✅ Expired data cleaned up automatically
+- ✅ Cron job failures trigger alerts
+- ✅ All automated actions logged
+
+**Phase 7 (Integration Testing) - Acceptance:**
+- ✅ All E2E tests pass for every tier
+- ✅ Load tests show acceptable performance
+- ✅ No security vulnerabilities found
+- ✅ UAT feedback addressed
+- ✅ Documentation complete and accurate
+
+**Phase 8 (Deployment) - Acceptance:**
+- ✅ Production deployment successful
+- ✅ Zero data loss during deployment
+- ✅ Monitoring dashboards operational
+- ✅ Runbooks documented and accessible
+- ✅ Support team trained on new features
+- ✅ No critical bugs in first week
+
+### 7.2 Manual Testing Checklist
+
+**Test Each Tier:**
+```
+For each tier (Explorer, Navigator, Voyager, Crew, Fleet, Armada, Enterprise, Developer):
+
+[ ] User can login
+[ ] Dashboard shows correct tier badge
+[ ] Usage widget displays correct limits
+[ ] Generation limit enforced correctly
+[ ] Saved starmap limit enforced correctly
+[ ] Export buttons enabled/disabled correctly
+[ ] Attempting restricted feature shows upgrade prompt
+[ ] Processing speed matches tier (observable timing)
+[ ] Support level displayed correctly
+[ ] API access available/blocked correctly
+[ ] Version history available per tier specification
+```
+
+**Test Tier Transitions:**
+```
+[ ] Explorer → Navigator upgrade
+[ ] Navigator → Voyager upgrade
+[ ] Voyager → Navigator downgrade (data preserved)
+[ ] Navigator → Explorer downgrade (data preserved, limits applied)
+[ ] Any tier → Developer (via admin)
+[ ] Developer → Any tier (via admin)
+[ ] Subscription cancellation (grace period starts)
+[ ] Reactivation within grace period (data restored)
+```
+
+**Test Developer Role:**
+```
+[ ] Developer can access /admin
+[ ] Developer can assign any role
+[ ] Developer can view all users
+[ ] Developer can view all usage history
+[ ] Developer can impersonate users
+[ ] Developer actions logged
+[ ] Developer mode banner visible
+[ ] Developer bypasses all limits
+```
+
+## 8. Continuous Testing
+
+### 8.1 CI/CD Integration
+**GitHub Actions Workflow:**
+```yaml
+name: Role System Tests
+
+on: [push, pull_request]
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+      - run: npm ci
+      - run: npm run test:unit
+      - run: npm run test:coverage
+      - uses: codecov/codecov-action@v3
+  
+  integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: supabase/postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - run: npm run test:integration
+  
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - run: npx playwright install
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+  
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm audit
+      - run: npm run test:security
+```
+
+### 8.2 Test Coverage Requirements
+**Minimum Coverage Targets:**
+- Overall: 80%
+- Critical paths (role enforcement, usage tracking): 95%
+- Middleware functions: 90%
+- React components: 75%
+- Database functions: 85%
+
+### 8.3 Monitoring & Alerting
+**Production Monitoring:**
+- Track 429 response rate per tier
+- Monitor usage increment latency
+- Alert on failed role checks
+- Track upgrade conversion rates
+- Monitor cron job execution
+- Alert on audit log anomalies
+
+## 9. Test Data Management
+
+### Test User Factory
+```typescript
+// /frontend/tests/utils/testUserFactory.ts
+export async function createTestUser(
+  role: UserRole,
+  usageOverrides?: Partial<SubscriptionMetadata['usage']>
+): Promise<TestUser> {
+  const defaultUsage = {
+    generations_this_month: 0,
+    saved_starmaps: 0,
+    last_reset: new Date().toISOString()
+  };
+  
+  const limits = ROLE_LIMITS[role];
+  
+  const user = await supabase.auth.signUp({
+    email: `test-${role}-${Date.now()}@example.com`,
+    password: 'test-password-123'
+  });
+  
+  await supabase.from('user_profiles').upsert({
+    user_id: user.id,
+    subscription_tier: role,
+    user_role: role,
+    subscription_metadata: {
+      plan_id: `test-${role}`,
+      billing_cycle: 'monthly',
+      started_at: new Date().toISOString(),
+      renewal_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'active',
+      usage: { ...defaultUsage, ...usageOverrides },
+      limits: {
+        max_generations_monthly: limits.max_generations_monthly,
+        max_saved_starmaps: limits.max_saved_starmaps
+      }
+    }
+  });
+  
+  return {
+    id: user.id,
+    email: user.email!,
+    role,
+    token: user.session!.access_token
+  };
+}
+```
+
+## 10. Test Execution Schedule
+
+**Pre-Commit:** Fast unit tests only (< 30s)
+**PR:** All unit + integration tests (< 5 min)
+**Pre-Deploy:** Full suite including E2E (< 15 min)
+**Nightly:** Performance + security tests
+**Weekly:** Full regression suite + load tests
+
+---
+
+# Risks and Mitigations  
+
+## Technical Challenges
+
+### Risk 1: Database Migration Failures
+**Likelihood:** Medium  
+**Impact:** High
+
+**Mitigation:**
+- Write and test rollback migrations before deploying
+- Test migrations on production-sized dataset in staging
+- Use database transaction wrappers
+- Deploy during low-traffic windows
+- Have snapshot/backup immediately before migration
+- Canary deployment: test with single user first
+
+### Risk 2: Performance Degradation
+**Likelihood:** Medium  
+**Impact:** Medium
+
+**Mitigation:**
+- Add database indexes on role and tier columns
+- Cache user role/limits in session (5min TTL)
+- Use JSONB gin indexes for metadata queries
+- Monitor query performance with pg_stat_statements
+- Implement read replicas for usage queries (future)
+- Use connection pooling (Supabase already provides this)
+
+### Risk 3: Inconsistent Usage Counts
+**Likelihood:** Low  
+**Impact:** High
+
+**Mitigation:**
+- Use database-level increment functions (atomic)
+- Implement idempotency keys for generation requests
+- Add usage reconciliation job (weekly audit)
+- Log all usage increments for manual verification
+- Provide admin tools to manually adjust counts
+- Include usage audit trail in database
+
+### Risk 4: Developer Role Abuse
+**Likelihood:** Low  
+**Impact:** High
+
+**Mitigation:**
+- Require admin authentication for role assignment
+- Log all developer actions with user ID and timestamp
+- Require reason field for developer role assignment
+- Send Slack/email alert when developer role assigned
+- Periodic audit of developer role holders
+- Automatic expiration of developer role (90 days)
+
+## Product & Business Risks
+
+### Risk 5: User Confusion About Limits
+**Likelihood:** High  
+**Impact:** Medium
+
+**Mitigation:**
+- Clear, prominent usage widgets in dashboard
+- Warning notifications at 80%, 90% thresholds
+- Contextual tooltips explaining each limit
+- Comparison table on pricing page
+- Email digests with usage summaries
+- In-app onboarding tour highlighting limits
+
+### Risk 6: High Downgrade/Churn Rate
+**Likelihood:** Medium  
+**Impact:** High
+
+**Mitigation:**
+- 30-day grace period before data deletion
+- Read-only access to saved starmaps during grace
+- Multiple reminder emails before deletion
+- Exit survey to understand why users downgrade
+- Offer temporary discount/bonus generations to retain
+- Grandfathering for early adopters
+
+### Risk 7: Support Burden for Tier Questions
+**Likelihood:** High  
+**Impact:** Medium
+
+**Mitigation:**
+- Comprehensive FAQ on pricing page
+- Knowledge base articles for each tier
+- Chatbot for tier-related questions
+- Self-service usage dashboard
+- Clear error messages with upgrade CTAs
+- Template responses for common support tickets
+
+### Risk 8: Misaligned Pricing vs. Value
+**Likelihood:** Medium  
+**Impact:** High
+
+**Mitigation:**
+- A/B test different tier structures
+- Monitor conversion rates between tiers
+- User surveys on perceived value
+- Analytics on which features drive upgrades
+- Flexibility to adjust limits without code changes
+- Grandfather existing users on plan changes
+
+## MVP Scope Decisions
+
+### What's In MVP:
+- Core role system (all tiers defined)
+- Usage limit enforcement (generations, saved starmaps)
+- Feature gates (export formats, processing speed)
+- Usage dashboard
+- Developer role
+- Basic upgrade/downgrade flows
+- Audit logging
+
+### What's Deferred (Post-MVP):
+- Stripe integration (use manual tier assignment for MVP)
+- Team collaboration features (individual tiers only)
+- SSO/SAML (Enterprise feature)
+- Advanced analytics dashboard
+- Custom integrations/API
+- Prorated billing
+- Usage-based pricing
+- White-label options
+
+**Rationale:**
+- MVP proves role system works without payment complexity
+- Can manually assign tiers for early customers
+- Defer team features until individual tiers validated
+- Payment integration added once product-market fit confirmed
+
+# Appendix  
+
+## Research Findings
+
+### Industry Best Practices
+- **Freemium conversion rates:** 2-5% (source: ProfitWell)
+- **Monthly limit resets** perform better than rolling windows (simpler to understand)
+- **Tiered pricing** with 3-5 options optimal (paradox of choice)
+- **Usage warnings at 80%** reduce surprise limit hits
+- **30-day grace periods** standard for SaaS cancellations
+
+### Competitor Analysis
+- **Notion:** Blocks, members, version history tiers
+- **Canva:** Template access, export formats, storage limits
+- **Figma:** Files, projects, editors per plan
+- **Grammarly:** Suggestions count, tone detection by tier
+
+### User Research Insights
+- Users want **clear visibility** into usage before hitting limits
+- **Contextual upgrade prompts** more effective than banner ads
+- **Rollover/banking** of unused resources highly valued
+- Users accept **fair usage policies** on "unlimited" tiers if communicated clearly
+- **Export** and **collaboration** are most common upgrade drivers
+
+## Technical Specifications
+
+### API Error Response Format
+```json
+{
+  "error": "Usage limit exceeded",
+  "error_code": "LIMIT_EXCEEDED",
+  "limit_type": "generations",
+  "limit": 15,
+  "current_usage": 15,
+  "subscription_tier": "navigator",
+  "upgrade_url": "https://smartslate.io/pricing",
+  "upgrade_recommendation": "voyager",
+  "reset_date": "2025-02-15T00:00:00Z"
+}
+```
+
+### Subscription Metadata Schema
+```json
+{
+  "plan_id": "personal-pro",
+  "billing_cycle": "monthly",
+  "started_at": "2025-01-15T00:00:00Z",
+  "renewal_date": "2025-02-15T00:00:00Z",
+  "status": "active",
+  "trial_end": null,
+  "usage": {
+    "generations_this_month": 8,
+    "saved_starmaps": 15,
+    "last_reset": "2025-01-15T00:00:00Z"
+  },
+  "limits": {
+    "max_generations_monthly": 15,
+    "max_saved_starmaps": 30
+  },
+  "billing_info": {
+    "stripe_customer_id": "cus_...",
+    "stripe_subscription_id": "sub_...",
+    "payment_method": "card"
+  }
+}
+```
+
+### Audit Log Entry Format
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "action_type": "role_assigned",
+  "performed_by": "uuid",
+  "old_value": { "role": "navigator" },
+  "new_value": { "role": "developer" },
+  "reason": "Onboarding new engineer",
+  "metadata": {
+    "ip_address": "192.168.1.1",
+    "user_agent": "Mozilla/5.0...",
+    "request_id": "req_..."
+  },
+  "created_at": "2025-01-15T14:23:00Z"
+}
+```
+
+### Feature Flag Configuration (Future)
+```typescript
+interface FeatureFlag {
+  key: string;
+  enabled: boolean;
+  required_roles: UserRole[];
+  rollout_percentage?: number; // 0-100
+  overrides?: {
+    user_ids?: string[];
+    team_ids?: string[];
+  };
+}
+```
+
+## Reference Links
+
+- [Pricing Page](https://github.com/jitin-m-nair/polaris-v3/blob/main/frontend/app/pricing/page.tsx)
+- [Current User Profiles Schema](https://github.com/jitin-m-nair/polaris-v3/blob/main/supabase/migrations/0002_user_profiles.sql)
+- [Blueprint Generator Table](https://github.com/jitin-m-nair/polaris-v3/blob/main/supabase/migrations/0003_blueprint_generator.sql)
+- [Supabase Types](https://github.com/jitin-m-nair/polaris-v3/blob/main/frontend/types/supabase.ts)
+- [Logging Infrastructure](https://github.com/jitin-m-nair/polaris-v3/tree/main/frontend/lib/logging)
+
+## Glossary
+
+- **Starmap:** An AI-generated learning blueprint
+- **Generation:** The act of creating a new starmap via AI
+- **Saved Starmap:** A starmap stored in user's library (counts toward limit)
+- **Role:** User's assigned access level (explorer, navigator, voyager, etc.)
+- **Tier:** Subscription plan level (same as role in most cases)
+- **Fair Usage Policy:** "Unlimited" with reasonable limits to prevent abuse
+- **Developer Role:** Internal role with unrestricted access for development/support
+- **Grace Period:** 30-day window after cancellation to retain read-only access
+- **Rollover:** Unused saved starmaps carrying over month-to-month (up to limit)
+- **RLS:** Row-Level Security (Postgres/Supabase feature for data access control)
+
+</PRD>
+

@@ -1,0 +1,793 @@
+'use client';
+
+import { useState, useRef } from 'react';
+import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import Link from 'next/link';
+import {
+  Star,
+  Check,
+  Rocket,
+  Shield,
+  Cloud,
+  Clock,
+  Lock,
+  BarChart3,
+  Sparkles,
+  Zap,
+  TrendingUp,
+  Users,
+  ArrowRight,
+} from 'lucide-react';
+import { CurrencyProvider, useCurrency } from '@/contexts/CurrencyContext';
+import { formatPriceWithPeriod, formatAnnualSavings } from '@/lib/utils/formatPrice';
+
+const individualPlans = [
+  {
+    tier: 'Explorer',
+    subtitle: 'Perfect for getting started',
+    priceMonthly: 19,
+    maxStarmapGenerations: 5,
+    maxStarmaps: 5,
+    description: 'Perfect for individuals exploring Solara-powered learning design',
+    features: [
+      'Solara-powered blueprint generation',
+      'Professional templates & formatting',
+      'Export to PDF & Word',
+      'Community support',
+    ],
+    featured: false,
+    cta: 'Get Started',
+    ctaLink: '/auth/signup',
+  },
+  {
+    tier: 'Navigator',
+    subtitle: 'For professionals & creators',
+    priceMonthly: 39,
+    maxStarmapGenerations: 20,
+    maxStarmaps: 20,
+    description: 'For individual L&D professionals who need more capacity',
+    features: [
+      'Everything in Explorer',
+      'Save $1.85 per generation (49% cheaper)',
+      'Priority support (24h response)',
+    ],
+    featured: true,
+    popular: true,
+    cta: 'Get Started',
+    ctaLink: '/auth/signup',
+  },
+  {
+    tier: 'Voyager',
+    subtitle: 'For power users & consultants',
+    priceMonthly: 79,
+    maxStarmapGenerations: 40,
+    maxStarmaps: 40,
+    description: 'For power users who need more generation and storage capacity',
+    features: ['Everything in Navigator', 'Save $1.78 per generation (47% cheaper)'],
+    featured: false,
+    cta: 'Get Started',
+    ctaLink: '/auth/signup',
+  },
+];
+
+const teamPlans = [
+  {
+    tier: 'Crew',
+    subtitle: 'Small teams, big impact',
+    pricePerSeatMonthly: 24,
+    seatRange: '2-5 seats',
+    minSeats: 2,
+    maxSeats: 5,
+    maxStarmapGenerationsPerUser: 5,
+    maxStarmapsPerUser: 5,
+    description: 'Perfect for small teams just getting started with collaborative learning design',
+    features: [
+      'Shared team workspace',
+      'Real-time collaboration',
+      'Role-based permissions',
+      'Team analytics dashboard',
+      'Bulk export to Word & PDF',
+      'Priority email support',
+    ],
+    featured: false,
+    cta: 'Contact Sales',
+    ctaLink: '/contact',
+  },
+  {
+    tier: 'Fleet',
+    subtitle: 'Scale your operations',
+    pricePerSeatMonthly: 64,
+    seatRange: '6-15 seats',
+    minSeats: 6,
+    maxSeats: 15,
+    maxStarmapGenerationsPerUser: 20,
+    maxStarmapsPerUser: 10,
+    description: 'For growing L&D teams scaling their learning programs',
+    features: [
+      'Everything in Crew',
+      'SSO with OAuth/SAML',
+      'Advanced user management',
+      'Priority support SLA (4h response)',
+      'Custom onboarding session',
+      'Advanced team analytics',
+      'Audit logs',
+    ],
+    featured: true,
+    popular: true,
+    cta: 'Contact Sales',
+    ctaLink: '/contact',
+  },
+  {
+    tier: 'Armada',
+    subtitle: 'Department & organization scale',
+    pricePerSeatMonthly: 129,
+    seatRange: '16-50 seats',
+    minSeats: 16,
+    maxSeats: 50,
+    maxStarmapGenerationsPerUser: 40,
+    maxStarmapsPerUser: 40,
+    description: 'Enterprise-grade solution for large L&D organizations',
+    features: [
+      'Everything in Fleet',
+      'Dedicated success manager',
+      'Quarterly business reviews',
+      'Custom integrations & API',
+      'Advanced security controls',
+      'Custom usage alerts',
+      'SLA with uptime guarantee',
+      'Training & workshops',
+    ],
+    featured: false,
+    cta: 'Contact Sales',
+    ctaLink: '/contact',
+  },
+];
+
+const allPlansFeatures = [
+  {
+    icon: Sparkles,
+    title: 'AI-Powered Generation',
+    description: 'Advanced AI with intelligent processing',
+  },
+  {
+    icon: Shield,
+    title: 'Enterprise Security',
+    description: 'Bank-level encryption and data protection',
+  },
+  { icon: Cloud, title: 'Auto-Save', description: 'Never lose your progress with automatic saves' },
+  {
+    icon: BarChart3,
+    title: 'Comprehensive Blueprints',
+    description: 'Executive summaries, objectives, and KPIs',
+  },
+  { icon: Clock, title: 'Quick Generation', description: 'Complete blueprints in 2-3 minutes' },
+  { icon: Lock, title: 'Data Privacy', description: 'Your data never used for AI training' },
+];
+
+const heroStats = [
+  { value: '10,000+', label: 'Blueprints Created', icon: Sparkles },
+  { value: '5,000+', label: 'Active Users', icon: Users },
+  { value: '98%', label: 'Satisfaction Rate', icon: TrendingUp },
+];
+
+function CurrencyToggle() {
+  const { currency, setCurrency, loading } = useCurrency();
+
+  return (
+    <div className="inline-flex items-center gap-3">
+      <div className="inline-flex rounded-xl border border-white/10 bg-white/5 p-1 backdrop-blur-sm">
+        <button
+          onClick={() => !loading && setCurrency('USD')}
+          disabled={loading}
+          className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-300 ${
+            currency === 'USD'
+              ? 'border border-cyan-500/30 bg-gradient-to-r from-cyan-500/15 to-cyan-500/10 text-cyan-400'
+              : 'text-gray-400 hover:bg-white/5'
+          } disabled:cursor-not-allowed disabled:opacity-60`}
+        >
+          <span className="text-base">$</span>
+          USD
+        </button>
+        <button
+          onClick={() => !loading && setCurrency('INR')}
+          disabled={loading}
+          className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-300 ${
+            currency === 'INR'
+              ? 'border border-cyan-500/30 bg-gradient-to-r from-cyan-500/15 to-cyan-500/10 text-cyan-400'
+              : 'text-gray-400 hover:bg-white/5'
+          } disabled:cursor-not-allowed disabled:opacity-60`}
+        >
+          <span className="text-base">₹</span>
+          INR
+        </button>
+      </div>
+      {loading && <div className="h-1 w-1 animate-pulse rounded-full bg-cyan-400" />}
+    </div>
+  );
+}
+
+function HeroSection() {
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  });
+
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
+  const y = useTransform(scrollYProgress, [0, 0.5], [0, -50]);
+
+  return (
+    <section
+      ref={heroRef}
+      className="relative min-h-[90vh] overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950"
+    >
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        {/* Primary Gradient Orbs */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.4, 0.3],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className="absolute -right-20 -top-20 h-[600px] w-[600px] rounded-full bg-cyan-500/20 blur-3xl"
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.2, 0.3, 0.2],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 1,
+          }}
+          className="absolute -left-20 bottom-0 h-[500px] w-[500px] rounded-full bg-indigo-600/20 blur-3xl"
+        />
+
+        {/* Accent Gradients */}
+        <div className="absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-cyan-400/10 via-indigo-500/10 to-purple-500/10 blur-3xl" />
+
+        {/* Grid Pattern Overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.015]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(167, 218, 219, 0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(167, 218, 219, 0.1) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px',
+          }}
+        />
+      </div>
+
+      {/* Content */}
+      <motion.div style={{ opacity, scale, y }} className="relative z-10">
+        <div className="container mx-auto px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-5xl text-center">
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-purple-500/10 px-6 py-2.5 backdrop-blur-xl"
+            >
+              <Zap className="h-4 w-4 text-cyan-400" />
+              <span className="bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-400 bg-clip-text text-sm font-semibold text-transparent">
+                AI-Powered Learning Design Platform
+              </span>
+            </motion.div>
+
+            {/* Headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.1 }}
+              className="mb-6 font-heading text-5xl font-bold leading-[1.1] tracking-tight text-white sm:text-6xl lg:text-7xl"
+            >
+              Transform Learning.
+              <br />
+              <span className="bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-500 bg-clip-text text-transparent">
+                Unlock Potential.
+              </span>
+            </motion.h1>
+
+            {/* Subheadline */}
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="mx-auto mb-4 max-w-3xl text-xl leading-relaxed text-gray-300 sm:text-2xl"
+            >
+              From ideation to impact, create world-class learning blueprints with Solara AI in
+              minutes.
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="mx-auto mb-10 max-w-2xl text-base text-gray-400 sm:text-lg"
+            >
+              Choose your plan and revolutionize how you design learning experiences.
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="mb-16 flex flex-col items-center justify-center gap-4 sm:flex-row"
+            >
+              {/* Primary CTA - INDIGO ONLY */}
+              <Link
+                href="/auth/signup"
+                className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-8 py-4 font-semibold text-white shadow-xl shadow-indigo-500/25 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/40"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Start Building Free
+                  <Rocket className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+                </span>
+                {/* Shimmer Effect */}
+                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+              </Link>
+
+              {/* Secondary CTA */}
+              <Link
+                href="#plans"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-white/5 px-8 py-4 font-semibold text-cyan-400 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-cyan-500/50 hover:bg-white/10"
+              >
+                View Plans
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </motion.div>
+
+            {/* Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-8"
+            >
+              {heroStats.map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
+                    className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500/30 hover:bg-white/10"
+                  >
+                    {/* Icon */}
+                    <div className="mb-3 inline-flex rounded-xl bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 p-3">
+                      <Icon className="h-6 w-6 text-cyan-400" />
+                    </div>
+
+                    {/* Value */}
+                    <div className="mb-1 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-3xl font-bold text-transparent">
+                      {stat.value}
+                    </div>
+
+                    {/* Label */}
+                    <div className="text-sm font-medium text-gray-400">{stat.label}</div>
+
+                    {/* Hover Glow */}
+                    <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-cyan-500/20 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Bottom Fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 to-transparent" />
+    </section>
+  );
+}
+
+function PricingPageContent() {
+  const { currency, exchangeRate } = useCurrency();
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
+  const annualMultiplier = 0.8;
+
+  const pricingRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
+
+  const pricingInView = useInView(pricingRef, { once: true, amount: 0.2 });
+  const featuresInView = useInView(featuresRef, { once: true, amount: 0.2 });
+
+  return (
+    <div className="relative min-h-screen bg-slate-950">
+      {/* Hero Section */}
+      <HeroSection />
+
+      {/* Pricing Section */}
+      <section id="plans" ref={pricingRef} className="relative bg-slate-900/50 py-20">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-[0.02]">
+          <div
+            className="h-full w-full"
+            style={{
+              backgroundImage: `radial-gradient(circle, rgba(167, 218, 219, 0.3) 1px, transparent 1px)`,
+              backgroundSize: '30px 30px',
+            }}
+          />
+        </div>
+
+        <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={pricingInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ duration: 0.8 }}
+          >
+            {/* Section Header */}
+            <div className="mb-12 text-center">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 px-4 py-2 backdrop-blur-sm">
+                <Star className="h-4 w-4 text-cyan-400" />
+                <span className="text-sm font-semibold text-cyan-400">Solara Polaris</span>
+              </div>
+              <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+                Choose Your{' '}
+                <span className="bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent">
+                  Journey
+                </span>
+              </h2>
+              <p className="mx-auto mb-8 max-w-2xl text-lg text-gray-400">
+                AI-powered learning blueprint generation for individuals and teams
+              </p>
+
+              {/* Billing Toggle */}
+              <div className="mb-12 flex flex-wrap items-center justify-center gap-4">
+                <CurrencyToggle />
+
+                <div className="inline-flex rounded-xl border border-white/10 bg-white/5 p-1 backdrop-blur-sm">
+                  <button
+                    onClick={() => setBilling('monthly')}
+                    className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-300 ${
+                      billing === 'monthly'
+                        ? 'border border-cyan-500/30 bg-gradient-to-r from-cyan-500/15 to-cyan-500/10 text-cyan-400'
+                        : 'text-gray-400 hover:bg-white/5'
+                    }`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setBilling('annual')}
+                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-300 ${
+                      billing === 'annual'
+                        ? 'border border-cyan-500/30 bg-gradient-to-r from-cyan-500/15 to-cyan-500/10 text-cyan-400'
+                        : 'text-gray-400 hover:bg-white/5'
+                    }`}
+                  >
+                    Annual
+                    <span className="rounded bg-green-500 px-2 py-0.5 text-xs font-bold text-white">
+                      SAVE 20%
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Individual Plans */}
+            <div className="mb-16">
+              <h3 className="mb-8 text-2xl font-bold text-white">Individual Plans</h3>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                {individualPlans.map((plan, index) => (
+                  <motion.div
+                    key={plan.tier}
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={pricingInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+                    transition={{ duration: 0.6, delay: 0.1 + index * 0.1 }}
+                    className="relative"
+                  >
+                    <div
+                      className={`group relative h-full overflow-hidden rounded-2xl border bg-white/5 backdrop-blur-md transition-all duration-400 hover:-translate-y-2 hover:shadow-2xl ${
+                        plan.featured
+                          ? 'border-cyan-500 shadow-xl shadow-cyan-500/20'
+                          : 'border-white/10 hover:border-cyan-500/30'
+                      }`}
+                    >
+                      {plan.popular && (
+                        <div className="absolute -top-4 right-6 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 px-4 py-1.5 text-xs font-bold text-black shadow-lg">
+                          <Star className="h-3.5 w-3.5 fill-current" />
+                          MOST POPULAR
+                        </div>
+                      )}
+
+                      {/* Hover Glow Effect */}
+                      <div className="absolute inset-0 -translate-y-full bg-gradient-to-b from-cyan-500/10 to-transparent opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100" />
+
+                      <div className="relative p-6">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                          {plan.subtitle}
+                        </p>
+                        <h4 className="mb-4 text-2xl font-bold text-white">{plan.tier}</h4>
+
+                        <div className="mb-6 flex items-baseline">
+                          <motion.span
+                            key={`${currency}-${billing}-${plan.tier}`}
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-4xl font-bold text-transparent"
+                          >
+                            {formatPriceWithPeriod(
+                              billing === 'monthly'
+                                ? plan.priceMonthly
+                                : Math.ceil(plan.priceMonthly * annualMultiplier),
+                              { currency, exchangeRate, showSymbol: true },
+                              'monthly'
+                            ).replace('/month', '')}
+                          </motion.span>
+                          <span className="ml-2 text-gray-400">/month</span>
+                        </div>
+
+                        {billing === 'annual' && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="mb-4 text-sm font-semibold text-green-400"
+                          >
+                            Save{' '}
+                            {formatAnnualSavings(plan.priceMonthly, { currency, exchangeRate })}
+                            /year
+                          </motion.div>
+                        )}
+
+                        <div className="mb-4 flex items-center gap-2 rounded-xl border border-cyan-500/20 bg-gradient-to-r from-cyan-500/10 to-purple-500/5 p-3">
+                          <Star className="h-5 w-5 flex-shrink-0 text-cyan-400" />
+                          <div>
+                            <div className="text-sm font-bold text-white">
+                              {billing === 'monthly'
+                                ? `${plan.maxStarmapGenerations} Starmaps/month`
+                                : `${plan.maxStarmapGenerations * 12} Starmaps/year`}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {plan.maxStarmaps} saved (12-month rollover)
+                            </div>
+                          </div>
+                        </div>
+
+                        <p className="mb-6 min-h-[48px] text-sm text-gray-400">
+                          {plan.description}
+                        </p>
+
+                        <ul className="mb-6 space-y-3">
+                          {plan.features.map((feature, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm">
+                              <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-cyan-400" />
+                              <span className="text-gray-300">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        {/* CTA Button - INDIGO ONLY */}
+                        <Link
+                          href={plan.ctaLink}
+                          className={`inline-flex w-full items-center justify-center rounded-xl px-6 py-3 font-semibold transition-all duration-300 ${
+                            plan.featured
+                              ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/25 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/40'
+                              : 'border border-cyan-500/30 bg-white/5 text-cyan-400 hover:border-cyan-500/50 hover:bg-white/10'
+                          }`}
+                        >
+                          {plan.cta}
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="my-16 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+
+            {/* Team Plans */}
+            <div>
+              <h3 className="mb-8 text-2xl font-bold text-white">Team Plans</h3>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                {teamPlans.map((plan, index) => (
+                  <motion.div
+                    key={plan.tier}
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={pricingInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+                    transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+                    className="relative"
+                  >
+                    <div
+                      className={`group relative h-full overflow-hidden rounded-2xl border bg-white/5 backdrop-blur-md transition-all duration-400 hover:-translate-y-2 hover:shadow-2xl ${
+                        plan.featured
+                          ? 'border-indigo-500/50 shadow-xl shadow-indigo-500/20'
+                          : 'border-white/10 hover:border-indigo-500/30'
+                      }`}
+                    >
+                      {plan.popular && (
+                        <div className="absolute -top-4 right-6 flex items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 px-4 py-1.5 text-xs font-bold text-white shadow-lg">
+                          <Star className="h-3.5 w-3.5 fill-current" />
+                          POPULAR CHOICE
+                        </div>
+                      )}
+
+                      {/* Hover Glow Effect */}
+                      <div className="absolute inset-0 -translate-y-full bg-gradient-to-b from-indigo-500/10 to-transparent opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100" />
+
+                      <div className="relative p-6">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                          {plan.subtitle}
+                        </p>
+                        <h4 className="mb-2 text-2xl font-bold text-white">{plan.tier}</h4>
+
+                        <span className="mb-4 inline-block rounded-lg border border-cyan-500/30 bg-cyan-500/15 px-3 py-1 text-xs font-semibold text-cyan-400">
+                          {plan.seatRange}
+                        </span>
+
+                        <div className="mb-6 flex items-baseline">
+                          <motion.span
+                            key={`${currency}-${billing}-${plan.tier}-team`}
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-4xl font-bold text-transparent"
+                          >
+                            {formatPriceWithPeriod(
+                              billing === 'monthly'
+                                ? plan.pricePerSeatMonthly
+                                : Math.ceil(plan.pricePerSeatMonthly * annualMultiplier),
+                              { currency, exchangeRate, showSymbol: true },
+                              'seat'
+                            ).replace('/seat/month', '')}
+                          </motion.span>
+                          <span className="ml-2 text-gray-400">/seat/month</span>
+                        </div>
+
+                        {billing === 'annual' && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="mb-4 text-sm font-semibold text-green-400"
+                          >
+                            Save 20% annually
+                          </motion.div>
+                        )}
+
+                        <div className="mb-4 flex items-center gap-2 rounded-xl border border-cyan-500/20 bg-gradient-to-r from-cyan-500/10 to-purple-500/5 p-3">
+                          <Star className="h-5 w-5 flex-shrink-0 text-cyan-400" />
+                          <div>
+                            <div className="text-sm font-bold text-white">
+                              {billing === 'monthly'
+                                ? `${plan.maxStarmapGenerationsPerUser * plan.minSeats}-${plan.maxStarmapGenerationsPerUser * plan.maxSeats} Starmaps/month`
+                                : `${plan.maxStarmapGenerationsPerUser * plan.minSeats * 12}-${plan.maxStarmapGenerationsPerUser * plan.maxSeats * 12} Starmaps/year`}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              {plan.maxStarmapGenerationsPerUser}/user · {plan.maxStarmapsPerUser}{' '}
+                              saved/user
+                            </div>
+                          </div>
+                        </div>
+
+                        <p className="mb-6 min-h-[48px] text-sm text-gray-400">
+                          {plan.description}
+                        </p>
+
+                        <ul className="mb-6 space-y-3">
+                          {plan.features.map((feature, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm">
+                              <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-cyan-400" />
+                              <span className="text-gray-300">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        {/* CTA Button - INDIGO ONLY */}
+                        <Link
+                          href={plan.ctaLink}
+                          className={`inline-flex w-full items-center justify-center rounded-xl px-6 py-3 font-semibold transition-all duration-300 ${
+                            plan.featured
+                              ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/25 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/40'
+                              : 'border border-cyan-500/30 bg-white/5 text-cyan-400 hover:border-cyan-500/50 hover:bg-white/10'
+                          }`}
+                        >
+                          {plan.cta}
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section ref={featuresRef} className="relative bg-slate-950 py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={featuresInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="mb-12 text-center text-3xl font-bold text-white sm:text-4xl">
+              All Plans Include{' '}
+              <span className="bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent">
+                These Features
+              </span>
+            </h2>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {allPlansFeatures.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={featuresInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.6, delay: 0.1 + index * 0.1 }}
+                    className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/10"
+                  >
+                    {/* Hover Gradient */}
+                    <div className="absolute inset-0 -translate-y-full bg-gradient-to-br from-cyan-500/5 to-indigo-500/5 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100" />
+
+                    <div className="relative">
+                      <div className="mb-4 inline-flex rounded-xl bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 p-3">
+                        <Icon className="h-8 w-8 text-cyan-400" />
+                      </div>
+                      <h3 className="mb-2 text-lg font-bold text-white">{feature.title}</h3>
+                      <p className="text-sm text-gray-400">{feature.description}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-slate-900/50 to-slate-950 py-20">
+        {/* Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
+        </div>
+
+        <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="mb-4 text-3xl font-bold text-white">Questions About Pricing?</h2>
+            <p className="mb-8 text-lg text-gray-400">
+              Our team is here to help you find the perfect plan for your organization.
+            </p>
+            <div className="flex flex-col justify-center gap-4 sm:flex-row">
+              {/* Primary CTA - INDIGO ONLY */}
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-8 py-4 font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/40"
+              >
+                Contact Sales
+              </Link>
+              <Link
+                href="/features"
+                className="inline-flex items-center justify-center rounded-xl border border-cyan-500/30 bg-white/5 px-8 py-4 font-semibold text-cyan-400 transition-all duration-300 hover:scale-105 hover:border-cyan-500/50 hover:bg-white/10"
+              >
+                View All Features
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <CurrencyProvider>
+      <PricingPageContent />
+    </CurrencyProvider>
+  );
+}

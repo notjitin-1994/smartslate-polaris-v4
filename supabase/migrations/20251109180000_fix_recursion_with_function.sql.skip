@@ -1,0 +1,118 @@
+-- Fix: Admin Policy Recursion - Using Security Definer Function
+-- Completely eliminates recursion by using a function that bypasses RLS
+-- Created: 2025-11-09
+
+-- =====================================================
+-- 1. DROP EXISTING PROBLEMATIC POLICIES
+-- =====================================================
+
+DROP POLICY IF EXISTS "Admins can view all user profiles" ON public.user_profiles;
+DROP POLICY IF EXISTS "Admins can view all blueprints" ON public.blueprint_generator;
+DROP POLICY IF EXISTS "Admins can view all api usage logs" ON public.api_usage_logs;
+
+-- =====================================================
+-- 2. CREATE SECURITY DEFINER FUNCTION
+-- =====================================================
+
+-- This function runs with the privileges of the function owner (definer)
+-- and bypasses RLS, preventing recursion
+CREATE OR REPLACE FUNCTION public.is_admin_user(user_id_to_check UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  user_role_value TEXT;
+BEGIN
+  -- Query user_profiles directly without RLS interference
+  SELECT user_role INTO user_role_value
+  FROM public.user_profiles
+  WHERE user_id = user_id_to_check
+  LIMIT 1;
+
+  -- Check if user has admin role
+  RETURN user_role_value IN ('developer', 'enterprise', 'armada', 'fleet', 'crew');
+EXCEPTION
+  WHEN OTHERS THEN
+    RETURN FALSE;
+END;
+$$;
+
+-- Grant execute permission to authenticated users
+GRANT EXECUTE ON FUNCTION public.is_admin_user(UUID) TO authenticated;
+
+-- =====================================================
+-- 3. CREATE NON-RECURSIVE POLICIES USING FUNCTION
+-- =====================================================
+
+-- USER PROFILES: Allow own profile + all profiles for admins
+CREATE POLICY "Users can view profiles"
+  ON public.user_profiles
+  FOR SELECT
+  TO authenticated
+  USING (
+    user_id = auth.uid()  -- Users can see their own profile
+    OR
+    public.is_admin_user(auth.uid())  -- Admins can see all profiles
+  );
+
+-- BLUEPRINT GENERATOR: Allow own blueprints + all blueprints for admins
+CREATE POLICY "Users can view blueprints"
+  ON public.blueprint_generator
+  FOR SELECT
+  TO authenticated
+  USING (
+    user_id = auth.uid()  -- Users can see their own blueprints
+    OR
+    public.is_admin_user(auth.uid())  -- Admins can see all blueprints
+  );
+
+-- API USAGE LOGS: Allow own logs + all logs for admins
+CREATE POLICY "Users can view api logs"
+  ON public.api_usage_logs
+  FOR SELECT
+  TO authenticated
+  USING (
+    user_id = auth.uid()  -- Users can see their own logs
+    OR
+    public.is_admin_user(auth.uid())  -- Admins can see all logs
+  );
+
+-- =====================================================
+-- 4. COMMENTS AND DOCUMENTATION
+-- =====================================================
+
+COMMENT ON FUNCTION public.is_admin_user(UUID) IS
+  'SECURITY DEFINER function that checks if a user has admin privileges. Bypasses RLS to prevent infinite recursion in policies.';
+
+COMMENT ON POLICY "Users can view profiles" ON public.user_profiles IS
+  'Allows users to view their own profile, and admins to view all profiles. Uses is_admin_user() function to avoid recursion.';
+
+COMMENT ON POLICY "Users can view blueprints" ON public.blueprint_generator IS
+  'Allows users to view their own blueprints, and admins to view all blueprints. Uses is_admin_user() function to avoid recursion.';
+
+COMMENT ON POLICY "Users can view api logs" ON public.api_usage_logs IS
+  'Allows users to view their own API logs, and admins to view all logs. Uses is_admin_user() function to avoid recursion.';
+
+-- =====================================================
+-- 5. TECHNICAL EXPLANATION
+-- =====================================================
+
+-- WHY THIS WORKS:
+--
+-- 1. SECURITY DEFINER functions run with the privileges of the function creator
+-- 2. These functions bypass RLS policies entirely
+-- 3. When a policy calls is_admin_user(), it executes the function which:
+--    - Directly queries user_profiles WITHOUT triggering RLS
+--    - Returns a simple boolean
+--    - No recursive policy evaluation happens
+--
+-- 4. The policy then uses this boolean to decide access
+-- 5. This is a PostgreSQL best practice for handling complex RLS scenarios
+--
+-- SECURITY NOTES:
+-- - The function is carefully designed to only check roles, not return sensitive data
+-- - It uses SET search_path = public to prevent search_path attacks
+-- - Error handling ensures it fails securely (returns FALSE on error)
+-- - GRANT is limited to authenticated users only

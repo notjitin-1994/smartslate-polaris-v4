@@ -1,0 +1,513 @@
+/**
+ * Touch Device Compatibility Fixes
+ * Resolves rendering issues on iOS, iPadOS, and other touch devices
+ */
+
+/* ========================================
+   iOS/iPadOS BACKDROP-FILTER FIX
+   ======================================== */
+
+/* Fix for iOS Safari backdrop-filter black background issue */
+@supports (-webkit-touch-callout: none) {
+  /* iOS-specific fixes */
+  .glass-card,
+  .glass,
+  .glass-strong {
+    /* Force GPU acceleration */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+
+    /* Remove problematic backdrop-filter on iOS */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    /* Use layered background approach instead */
+    background: rgba(20, 36, 51, 0.85) !important; /* Solid fallback */
+    background-image: linear-gradient(
+      135deg,
+      rgba(167, 218, 219, 0.08) 0%,
+      rgba(167, 218, 219, 0.03) 100%
+    ) !important;
+    border: 1px solid rgba(167, 218, 219, 0.15) !important;
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  }
+
+  /* Stronger effect for glass-strong */
+  .glass-strong {
+    background: rgba(20, 36, 51, 0.95) !important;
+    border-color: rgba(167, 218, 219, 0.2) !important;
+  }
+
+  /* Dark mode glass card fix */
+  .dark .glass-card {
+    background: rgba(2, 12, 27, 0.9) !important;
+    background-image: linear-gradient(
+      135deg,
+      rgba(167, 218, 219, 0.1) 0%,
+      rgba(167, 218, 219, 0.04) 100%
+    ) !important;
+  }
+}
+
+/* iPad-specific optimizations */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1366px) and (-webkit-min-device-pixel-ratio: 2) {
+  .glass-card,
+  .glass,
+  .glass-strong {
+    /* Disable backdrop-filter completely on iPad */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    /* Enhanced fallback for iPad */
+    background: rgba(13, 27, 42, 0.95) !important;
+    background-image: linear-gradient(
+      135deg,
+      rgba(167, 218, 219, 0.12) 0%,
+      rgba(79, 70, 229, 0.05) 50%,
+      rgba(167, 218, 219, 0.03) 100%
+    ) !important;
+    border: 1px solid rgba(167, 218, 219, 0.2) !important;
+    box-shadow:
+      0 8px 24px rgba(0, 0, 0, 0.25),
+      inset 0 2px 4px rgba(255, 255, 255, 0.05),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* Fix glass-strong on iPad */
+  .glass-strong {
+    background: rgba(13, 27, 42, 0.98) !important;
+    border-color: rgba(167, 218, 219, 0.25) !important;
+  }
+}
+
+/* ========================================
+   TOUCH DEVICE VISIBILITY FIXES
+   ======================================== */
+
+/* Fix stat cards not appearing until interaction */
+.glass-card,
+[class*='MetricCard'],
+[class*='StatCard'] {
+  /* Force rendering on touch devices */
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: visible !important;
+  backface-visibility: visible !important;
+
+  /* Ensure opacity is set */
+  opacity: 1 !important;
+
+  /* Remove problematic will-change that can cause issues */
+  will-change: auto !important;
+}
+
+/* Fix expand/collapse buttons visibility - ONLY ON TOUCH DEVICES */
+@media (hover: none) and (pointer: coarse) {
+  button[aria-label*='Expand'],
+  button[aria-label*='Collapse'],
+  button[aria-expanded],
+  .pressable {
+    /* Force visibility */
+    opacity: 1 !important;
+    visibility: visible !important;
+
+    /* Ensure proper rendering */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-appearance: none;
+
+    /* Add explicit dimensions for touch targets */
+    min-width: 44px !important;
+    min-height: 44px !important;
+
+    /* Ensure touch events work properly */
+    -webkit-tap-highlight-color: rgba(167, 218, 219, 0.2);
+    touch-action: manipulation;
+  }
+}
+
+/* ========================================
+   ANIMATION OPTIMIZATION FOR TOUCH
+   ======================================== */
+
+/* Disable complex animations on touch devices for performance */
+@media (hover: none) and (pointer: coarse) {
+  /* Disable framer-motion animations that cause issues */
+  [data-framer-appear-id] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Simplify hover states to active states for touch */
+  .glass-card:hover {
+    transform: none !important;
+  }
+
+  .glass-card:active {
+    transform: scale(0.98) !important;
+    transition: transform 0.1s ease-out !important;
+  }
+
+  /* Disable complex animations */
+  * {
+    animation-duration: 0.3s !important;
+    animation-delay: 0s !important;
+  }
+
+  /* Ensure CountUp components show immediately */
+  [class*='CountUp'] {
+    opacity: 1 !important;
+  }
+}
+
+/* ========================================
+   SECTION CARD FIXES
+   ======================================== */
+
+/* Fix expandable section glass backgrounds */
+.glass-card.overflow-hidden {
+  /* Ensure proper rendering on touch devices */
+  -webkit-overflow-scrolling: touch;
+
+  /* Fix background rendering */
+  background-color: rgba(13, 27, 42, 0.9) !important;
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  ) !important;
+}
+
+/* iOS-specific section card fix */
+@supports (-webkit-touch-callout: none) {
+  .glass-card.overflow-hidden {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(20, 36, 51, 0.92) !important;
+  }
+}
+
+/* ========================================
+   INNER CARD FIXES (Infographics)
+   ======================================== */
+
+/* Fix all inner glass cards within expandable sections */
+.glass-card .glass-card,
+.glass-card [class*='glass'],
+.glass-card [class*='bg-white/'],
+.glass-card [class*='bg-black/'],
+.glass-card [class*='bg-opacity'],
+.glass-card [class*='backdrop-blur'],
+.glass-card [class*='backdrop-filter'] {
+  /* Remove backdrop-filter from all inner elements */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Force proper backgrounds on all semi-transparent elements */
+@supports (-webkit-touch-callout: none) {
+  /* Target Tailwind opacity utilities */
+  .glass-card [class*='/5']:not(img),
+  .glass-card [class*='/10']:not(img),
+  .glass-card [class*='/20']:not(img),
+  .glass-card [class*='/30']:not(img),
+  .glass-card [class*='/40']:not(img),
+  .glass-card [class*='/50']:not(img) {
+    /* Ensure these have solid fallback backgrounds */
+    background-color: rgba(20, 36, 51, 0.85) !important;
+  }
+}
+
+/* iOS-specific fixes for inner cards */
+@supports (-webkit-touch-callout: none) {
+  /* Fix all glass and glass-strong elements inside sections */
+  .glass-card .glass,
+  .glass-card .glass-strong,
+  .glass-card .glass-card {
+    /* Remove backdrop-filter and use solid backgrounds */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(20, 36, 51, 0.85) !important;
+    background-image: linear-gradient(
+      135deg,
+      rgba(167, 218, 219, 0.08) 0%,
+      rgba(167, 218, 219, 0.03) 100%
+    ) !important;
+  }
+
+  /* Target all potential glass-styled inner elements */
+  .glass-card .rounded-lg,
+  .glass-card .rounded-xl,
+  .glass-card .rounded-2xl,
+  .glass-card .border {
+    /* Force GPU acceleration */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  /* Fix backgrounds for inner cards that may use glass effects */
+  .glass-card div[class*='bg-white/'],
+  .glass-card div[class*='bg-black/'],
+  .glass-card div[class*='bg-opacity'],
+  .glass-card div[class*='backdrop'] {
+    /* Replace transparent backgrounds with solid fallbacks */
+    background-color: rgba(20, 36, 51, 0.85) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Specific fixes for infographic component cards */
+  .glass-card .p-4.rounded-lg,
+  .glass-card .p-5.rounded-lg,
+  .glass-card .p-6.rounded-lg,
+  .glass-card .p-4.rounded-xl,
+  .glass-card .p-5.rounded-xl,
+  .glass-card .p-6.rounded-xl {
+    background: rgba(20, 36, 51, 0.75) !important;
+    border: 1px solid rgba(167, 218, 219, 0.15) !important;
+  }
+
+  /* Dark mode inner cards */
+  .dark .glass-card div[class*='bg-white/'],
+  .dark .glass-card div[class*='bg-black/'] {
+    background-color: rgba(13, 27, 42, 0.85) !important;
+  }
+}
+
+/* iPad-specific fixes for inner cards */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1366px) and (-webkit-min-device-pixel-ratio: 2) {
+  /* All inner elements with potential glass effects */
+  .glass-card * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Infographic cards specifically */
+  .glass-card .space-y-4 > div,
+  .glass-card .space-y-3 > div,
+  .glass-card .grid > div {
+    background: rgba(20, 36, 51, 0.8) !important;
+    border-color: rgba(167, 218, 219, 0.12) !important;
+  }
+
+  /* Chart containers */
+  .glass-card .recharts-wrapper,
+  .glass-card [class*='chart'],
+  .glass-card [class*='Chart'] {
+    background: rgba(13, 27, 42, 0.9) !important;
+  }
+}
+
+/* ========================================
+   BUTTON INTERACTION FIXES
+   ======================================== */
+
+/* Fix touch interaction for buttons */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  [role='button'],
+  .pressable {
+    /* Ensure buttons are always visible */
+    opacity: 1 !important;
+    visibility: visible !important;
+
+    /* Better touch feedback */
+    transition: all 0.15s ease-out !important;
+  }
+
+  button:active,
+  [role='button']:active,
+  .pressable:active {
+    transform: scale(0.95) !important;
+    opacity: 0.9 !important;
+  }
+
+  /* Fix AI modify and edit buttons */
+  div[title='Modify with AI'],
+  div[title='Edit Section'] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: flex !important;
+  }
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/* Reduce paint areas on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .glass-card {
+    /* Use simpler shadows for performance */
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  }
+
+  /* Disable blur filters that cause performance issues */
+  * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* ========================================
+   INFOGRAPHIC COMPONENT SPECIFIC FIXES
+   ======================================== */
+
+/* Target all infographic components within expandable sections */
+@supports (-webkit-touch-callout: none) {
+  /* All infographic glass elements */
+  [class*="Infographic"] .glass,
+  [class*="Infographic"] .glass-strong,
+  [class*="Infographic"] .glass-card,
+  [class*="Infographic"] [class*="bg-white/"],
+  [class*="Infographic"] [class*="bg-black/"],
+  [class*="Infographic"] [class*="backdrop"],
+
+  /* Specific section infographics that were showing black */
+  /* Content Outline */
+  [class*="ContentOutlineInfographic"] .glass,
+  [class*="ContentOutlineInfographic"] .glass-strong,
+  [class*="ContentOutlineInfographic"] [class*="bg-white/"],
+
+  /* Resources & Budget */
+  [class*="BudgetResourcesInfographic"] .glass,
+  [class*="BudgetResourcesInfographic"] .glass-strong,
+  [class*="BudgetResourcesInfographic"] [class*="bg-white/"],
+
+  /* Assessment Strategy */
+  [class*="AssessmentStrategyInfographic"] .glass,
+  [class*="AssessmentStrategyInfographic"] .glass-strong,
+  [class*="AssessmentStrategyInfographic"] [class*="bg-white/"],
+
+  /* Implementation Timeline */
+  [class*="TimelineInfographic"] .glass,
+  [class*="TimelineInfographic"] .glass-strong,
+  [class*="TimelineInfographic"] [class*="bg-white/"],
+
+  /* Risk Mitigation */
+  [class*="RiskMitigationInfographic"] .glass,
+  [class*="RiskMitigationInfographic"] .glass-strong,
+  [class*="RiskMitigationInfographic"] [class*="bg-white/"],
+
+  /* Success Metrics */
+  [class*="SuccessMetricsInfographic"] .glass,
+  [class*="SuccessMetricsInfographic"] .glass-strong,
+  [class*="SuccessMetricsInfographic"] [class*="bg-white/"],
+
+  /* Instructional Strategy */
+  [class*="InstructionalStrategyInfographic"] .glass,
+  [class*="InstructionalStrategyInfographic"] .glass-strong,
+  [class*="InstructionalStrategyInfographic"] [class*="bg-white/"],
+
+  /* Sustainability Plan */
+  [class*="SustainabilityPlanInfographic"] .glass,
+  [class*="SustainabilityPlanInfographic"] .glass-strong,
+  [class*="SustainabilityPlanInfographic"] [class*="bg-white/"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(20, 36, 51, 0.85) !important;
+    border-color: rgba(167, 218, 219, 0.15) !important;
+  }
+
+  /* Fix nested cards in grids */
+  .glass-card .grid .rounded-lg,
+  .glass-card .grid .rounded-xl,
+  .glass-card .grid [class*='p-4'],
+  .glass-card .grid [class*='p-5'],
+  .glass-card .grid [class*='p-6'] {
+    background: rgba(20, 36, 51, 0.75) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* ========================================
+   CROSS-BROWSER COMPATIBILITY
+   ======================================== */
+
+/* Android Chrome/Firefox fixes */
+@supports not (-webkit-touch-callout: none) {
+  @media (hover: none) and (pointer: coarse) {
+    .glass-card {
+      /* Android-specific glass effect */
+      background: rgba(13, 27, 42, 0.88) !important;
+      backdrop-filter: none !important;
+    }
+  }
+}
+
+/* ========================================
+   UTILITY CLASSES FOR TOUCH DEVICES
+   ======================================== */
+
+/* Force GPU acceleration for problematic elements */
+.gpu-accelerated {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+}
+
+/* Touch-optimized glass card */
+.glass-card-touch {
+  background: rgba(13, 27, 42, 0.9) !important;
+  background-image: linear-gradient(
+    135deg,
+    rgba(167, 218, 219, 0.1) 0%,
+    rgba(167, 218, 219, 0.04) 100%
+  ) !important;
+  border: 1px solid rgba(167, 218, 219, 0.18) !important;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.25),
+    inset 0 1px 2px rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ========================================
+   CRITICAL RENDERING PATH OPTIMIZATION
+   ======================================== */
+
+/* Ensure initial paint shows all elements */
+@media (hover: none) and (pointer: coarse) {
+  /* Pre-render critical elements */
+  .glass-card,
+  button[aria-expanded],
+  [class*='MetricCard'] {
+    contain: layout style;
+    content-visibility: visible !important;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY IMPROVEMENTS FOR TOUCH
+   ======================================== */
+
+/* Ensure touch targets meet minimum size */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a,
+  [role='button'],
+  [tabindex='0'] {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Improve touch feedback */
+  button:active,
+  a:active,
+  [role='button']:active {
+    outline: 2px solid rgba(167, 218, 219, 0.5);
+    outline-offset: 2px;
+  }
+}

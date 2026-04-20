@@ -1,0 +1,93 @@
+-- Migration: 20251027010000_force_cleanup_tables.sql
+-- Description: FORCE cleanup of all non-essential tables (retry migration)
+-- This is a retry/force version of the cleanup migration
+-- Date: 2025-10-27
+
+-- ============================================
+-- Step 1: Drop all views
+-- ============================================
+DROP VIEW IF EXISTS feedback_analytics_summary CASCADE;
+DROP VIEW IF EXISTS response_time_metrics CASCADE;
+DROP VIEW IF EXISTS satisfaction_metrics CASCADE;
+
+-- ============================================
+-- Step 2: Drop all triggers
+-- ============================================
+DROP TRIGGER IF EXISTS feedback_status_change_trigger ON feedback_submissions CASCADE;
+DROP TRIGGER IF EXISTS update_feedback_types_updated_at ON feedback_types CASCADE;
+DROP TRIGGER IF EXISTS update_feedback_submissions_updated_at ON feedback_submissions CASCADE;
+DROP TRIGGER IF EXISTS update_feedback_responses_updated_at ON feedback_responses CASCADE;
+DROP TRIGGER IF EXISTS update_feedback_response_templates_updated_at ON feedback_response_templates CASCADE;
+
+-- ============================================
+-- Step 3: Drop all functions
+-- ============================================
+DROP FUNCTION IF EXISTS log_feedback_status_change() CASCADE;
+DROP FUNCTION IF EXISTS update_feedback_updated_at() CASCADE;
+
+-- ============================================
+-- Step 4: Drop all tables (CASCADE to handle dependencies)
+-- ============================================
+DROP TABLE IF EXISTS feedback_attachments CASCADE;
+DROP TABLE IF EXISTS feedback_responses CASCADE;
+DROP TABLE IF EXISTS feedback_status_history CASCADE;
+DROP TABLE IF EXISTS feedback_response_templates CASCADE;
+DROP TABLE IF EXISTS feedback_submissions CASCADE;
+DROP TABLE IF EXISTS feedback_types CASCADE;
+DROP TABLE IF EXISTS user_satisfaction_surveys CASCADE;
+DROP TABLE IF EXISTS user_usage_history CASCADE;
+DROP TABLE IF EXISTS migration_log CASCADE;
+
+-- ============================================
+-- Step 5: Clean up storage policies
+-- ============================================
+DROP POLICY IF EXISTS "Users can upload feedback attachments" ON storage.objects;
+DROP POLICY IF EXISTS "Users can view own feedback attachments" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can manage all feedback attachments" ON storage.objects;
+
+-- ============================================
+-- Step 6: Remove storage bucket
+-- ============================================
+DELETE FROM storage.buckets WHERE id = 'feedback-attachments';
+
+-- ============================================
+-- Step 7: Verify cleanup
+-- ============================================
+DO $$
+DECLARE
+    table_record RECORD;
+    table_count INTEGER := 0;
+BEGIN
+    RAISE NOTICE '===========================================';
+    RAISE NOTICE 'CLEANUP VERIFICATION';
+    RAISE NOTICE '===========================================';
+
+    -- Count and list all remaining tables in public schema
+    FOR table_record IN
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'public'
+        ORDER BY tablename
+    LOOP
+        table_count := table_count + 1;
+        RAISE NOTICE 'Table %: %', table_count, table_record.tablename;
+    END LOOP;
+
+    RAISE NOTICE '-------------------------------------------';
+    RAISE NOTICE 'Total tables in public schema: %', table_count;
+    RAISE NOTICE '===========================================';
+
+    -- Verify we have exactly 3 tables
+    IF table_count = 3 THEN
+        RAISE NOTICE '✓ SUCCESS: Only 3 core tables remain';
+    ELSE
+        RAISE WARNING '✗ UNEXPECTED: Expected 3 tables, found %', table_count;
+    END IF;
+END $$;
+
+-- ============================================
+-- Step 8: Add documentation comments
+-- ============================================
+COMMENT ON TABLE blueprint_generator IS 'CORE TABLE: Stores all blueprint questionnaire data and generated blueprints';
+COMMENT ON TABLE user_profiles IS 'CORE TABLE: User subscription tiers, roles, and usage limits';
+COMMENT ON TABLE role_audit_log IS 'CORE TABLE: Security audit trail for role changes';

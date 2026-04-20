@@ -1,0 +1,982 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
+import {
+  Bell,
+  AlertTriangle,
+  CheckCircle2,
+  VolumeX,
+  Search,
+  Filter,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  Clock,
+  User,
+  TrendingUp,
+  TrendingDown,
+  Sparkles,
+  Calendar,
+  Eye,
+  Check,
+  X,
+  BellOff,
+  Trash2,
+  Server,
+  Shield,
+  Zap,
+  DollarSign,
+  Database,
+  Activity,
+} from "lucide-react";
+
+// Types
+interface Alert {
+  id: string;
+  name: string;
+  description: string;
+  severity: "critical" | "high" | "medium" | "low";
+  type: "system" | "security" | "performance" | "cost" | "database" | "api";
+  status: "active" | "acknowledged" | "resolved" | "muted";
+  triggeredAt: string;
+  owner: string;
+  affectedResources?: string[];
+  timeline?: Array<{
+    timestamp: string;
+    action: string;
+    actor: string;
+  }>;
+}
+
+// Mock Data
+const generateMockAlerts = (): Alert[] => {
+  const names = {
+    critical: [
+      "Database Connection Pool Exhausted",
+      "API Gateway Down - Production",
+      "SSL Certificate Expiring in 24 Hours",
+      "Memory Usage Critical - Server 3",
+      "Authentication Service Unresponsive",
+    ],
+    high: [
+      "High Error Rate on Blueprint Generation",
+      "Slow Query Performance Detected",
+      "Unusual Login Activity from Unknown Location",
+      "Storage Space Running Low - 85% Used",
+      "API Rate Limit Approaching Threshold",
+    ],
+    medium: [
+      "Cache Hit Rate Below Target",
+      "Background Job Queue Building Up",
+      "Third-Party API Latency Increased",
+      "User Session Timeout Rate Elevated",
+      "Email Delivery Delays Detected",
+    ],
+    low: [
+      "Scheduled Maintenance Reminder",
+      "New Feature Flag Available",
+      "Monthly Usage Report Ready",
+      "Database Backup Completed",
+      "System Health Check Passed",
+    ],
+  };
+
+  const types: Alert["type"][] = [
+    "system",
+    "security",
+    "performance",
+    "cost",
+    "database",
+    "api",
+  ];
+  const statuses: Alert["status"][] = [
+    "active",
+    "acknowledged",
+    "resolved",
+    "muted",
+  ];
+  const owners = [
+    "DevOps Team",
+    "Security Team",
+    "Engineering Team",
+    "Database Admin",
+    "System Monitor",
+  ];
+
+  const alerts: Alert[] = [];
+  let id = 1;
+
+  // Generate alerts for each severity
+  Object.entries(names).forEach(([severity, nameList]) => {
+    nameList.forEach((name, index) => {
+      const type = types[Math.floor(Math.random() * types.length)];
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+      const owner = owners[Math.floor(Math.random() * owners.length)];
+      const hoursAgo = Math.floor(Math.random() * 48);
+      const triggeredAt = new Date(
+        Date.now() - hoursAgo * 60 * 60 * 1000
+      ).toISOString();
+
+      alerts.push({
+        id: `ALERT-${id.toString().padStart(4, "0")}`,
+        name,
+        description: `Alert triggered for ${name.toLowerCase()}. Requires ${severity} priority attention.`,
+        severity: severity as Alert["severity"],
+        type,
+        status,
+        triggeredAt,
+        owner,
+        affectedResources:
+          severity === "critical"
+            ? ["prod-server-01", "api-gateway", "db-primary"]
+            : undefined,
+        timeline: [
+          {
+            timestamp: triggeredAt,
+            action: "Alert triggered",
+            actor: "System Monitor",
+          },
+          ...(status !== "active"
+            ? [
+                {
+                  timestamp: new Date(
+                    Date.now() - (hoursAgo - 1) * 60 * 60 * 1000
+                  ).toISOString(),
+                  action: `Alert ${status}`,
+                  actor: owner,
+                },
+              ]
+            : []),
+        ],
+      });
+      id++;
+    });
+  });
+
+  return alerts.sort(
+    (a, b) =>
+      new Date(b.triggeredAt).getTime() - new Date(a.triggeredAt).getTime()
+  );
+};
+
+const ALERTS = generateMockAlerts();
+
+// Severity Config
+const severityConfig = {
+  critical: {
+    color: "text-red-400",
+    bg: "bg-red-500/10",
+    border: "border-red-500/20",
+    dot: "bg-red-500",
+    glow: "shadow-red-500/20",
+  },
+  high: {
+    color: "text-orange-400",
+    bg: "bg-orange-500/10",
+    border: "border-orange-500/20",
+    dot: "bg-orange-500",
+    glow: "shadow-orange-500/20",
+  },
+  medium: {
+    color: "text-amber-400",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/20",
+    dot: "bg-amber-500",
+    glow: "shadow-amber-500/20",
+  },
+  low: {
+    color: "text-blue-400",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/20",
+    dot: "bg-blue-500",
+    glow: "shadow-blue-500/20",
+  },
+};
+
+const statusConfig = {
+  active: { label: "Active", color: "bg-red-500/20 text-red-400" },
+  acknowledged: {
+    label: "Acknowledged",
+    color: "bg-amber-500/20 text-amber-400",
+  },
+  resolved: { label: "Resolved", color: "bg-emerald-500/20 text-emerald-400" },
+  muted: { label: "Muted", color: "bg-gray-500/20 text-gray-400" },
+};
+
+const typeIcons = {
+  system: Server,
+  security: Shield,
+  performance: Zap,
+  cost: DollarSign,
+  database: Database,
+  api: Activity,
+};
+
+export default function AlertsPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [severityFilter, setSeverityFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+  const [selectedAlerts, setSelectedAlerts] = useState<Set<string>>(new Set());
+  const itemsPerPage = 10;
+
+  // Filter and search alerts
+  const filteredAlerts = useMemo(() => {
+    return ALERTS.filter((alert) => {
+      const matchesSearch =
+        alert.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        alert.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSeverity =
+        severityFilter === "all" || alert.severity === severityFilter;
+      const matchesStatus =
+        statusFilter === "all" || alert.status === statusFilter;
+      const matchesType = typeFilter === "all" || alert.type === typeFilter;
+
+      return matchesSearch && matchesSeverity && matchesStatus && matchesType;
+    });
+  }, [searchQuery, severityFilter, statusFilter, typeFilter]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAlerts.length / itemsPerPage);
+  const paginatedAlerts = filteredAlerts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Summary stats
+  const stats = useMemo(() => {
+    const critical = ALERTS.filter(
+      (a) => a.severity === "critical" && a.status === "active"
+    ).length;
+    const active = ALERTS.filter((a) => a.status === "active").length;
+    const resolvedToday = ALERTS.filter(
+      (a) =>
+        a.status === "resolved" &&
+        new Date(a.triggeredAt).toDateString() === new Date().toDateString()
+    ).length;
+    const muted = ALERTS.filter((a) => a.status === "muted").length;
+
+    return { critical, active, resolvedToday, muted };
+  }, []);
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  // Select all handler
+  const handleSelectAll = () => {
+    if (selectedAlerts.size === paginatedAlerts.length) {
+      setSelectedAlerts(new Set());
+    } else {
+      setSelectedAlerts(new Set(paginatedAlerts.map((a) => a.id)));
+    }
+  };
+
+  // Toggle selection
+  const toggleSelection = (id: string) => {
+    const newSelected = new Set(selectedAlerts);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedAlerts(newSelected);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#020c1b] via-[#0d1b2a] to-[#020c1b]">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center gap-4 mb-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400/30 to-pink-600/30 backdrop-blur-xl border border-white/10">
+              <Bell className="h-8 w-8 text-rose-400" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#a7dadb] via-[#b0c5c6] to-[#a7dadb] bg-clip-text text-transparent">
+                System Alerts
+              </h1>
+              <p className="text-[#7a8a8b] mt-1">
+                Monitor, manage, and respond to system alerts and notifications
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="flex gap-3 mt-4">
+            <button className="px-4 py-2 rounded-lg bg-[#a7dadb]/10 border border-[#a7dadb]/20 text-[#a7dadb] hover:bg-[#a7dadb]/20 transition-all min-h-[44px]">
+              Configure Alerts
+            </button>
+            <button className="px-4 py-2 rounded-lg bg-[#0d1b2a]/60 border border-white/10 text-[#b0c5c6] hover:border-white/20 transition-all min-h-[44px]">
+              View Alert History
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[
+            {
+              icon: AlertTriangle,
+              label: "Critical Alerts",
+              value: stats.critical,
+              trend: -12,
+              color: "from-red-400/30 to-red-600/30",
+              textColor: "text-red-400",
+            },
+            {
+              icon: Bell,
+              label: "Active Warnings",
+              value: stats.active,
+              trend: 8,
+              color: "from-amber-400/30 to-amber-600/30",
+              textColor: "text-amber-400",
+            },
+            {
+              icon: CheckCircle2,
+              label: "Resolved Today",
+              value: stats.resolvedToday,
+              trend: 23,
+              color: "from-emerald-400/30 to-emerald-600/30",
+              textColor: "text-emerald-400",
+            },
+            {
+              icon: VolumeX,
+              label: "Muted Alerts",
+              value: stats.muted,
+              trend: 0,
+              color: "from-gray-400/30 to-gray-600/30",
+              textColor: "text-gray-400",
+            },
+          ].map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="group relative"
+            >
+              <div className="border border-white/10 bg-[#0d1b2a]/60 backdrop-blur-xl rounded-xl p-6 hover:scale-[1.02] hover:border-white/20 hover:shadow-lg hover:shadow-white/5 transition-all duration-300">
+                {/* Sparkle effect */}
+                <Sparkles className="absolute top-3 right-3 h-4 w-4 text-[#a7dadb]/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${stat.color} backdrop-blur-xl border border-white/10`}
+                  >
+                    <stat.icon className={`h-6 w-6 ${stat.textColor}`} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-2xl font-bold text-[#e0e0e0]">
+                      {stat.value}
+                    </p>
+                    <p className="text-sm text-[#7a8a8b]">{stat.label}</p>
+                  </div>
+                </div>
+
+                {/* Trend */}
+                <div className="mt-4 flex items-center gap-2">
+                  {stat.trend !== 0 && (
+                    <>
+                      {stat.trend > 0 ? (
+                        <TrendingUp className="h-4 w-4 text-red-400" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4 text-emerald-400" />
+                      )}
+                      <span
+                        className={`text-sm ${
+                          stat.trend > 0 ? "text-red-400" : "text-emerald-400"
+                        }`}
+                      >
+                        {Math.abs(stat.trend)}% vs last week
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Filters Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="border border-white/10 bg-[#0d1b2a]/60 backdrop-blur-xl rounded-xl p-6 mb-8"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <Filter className="h-5 w-5 text-[#a7dadb]" />
+            <h3 className="text-lg font-semibold text-[#e0e0e0]">
+              Filter Alerts
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Search */}
+            <div className="lg:col-span-2 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8a8b]" />
+              <input
+                type="text"
+                placeholder="Search alerts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-[#020c1b]/50 border border-white/10 rounded-lg text-[#e0e0e0] placeholder-[#7a8a8b] focus:outline-none focus:border-[#a7dadb]/50 focus:ring-2 focus:ring-[#a7dadb]/20 min-h-[44px]"
+                aria-label="Search alerts"
+              />
+            </div>
+
+            {/* Severity Filter */}
+            <div className="relative">
+              <select
+                value={severityFilter}
+                onChange={(e) => setSeverityFilter(e.target.value)}
+                className="w-full px-4 py-2 bg-[#020c1b]/50 border border-white/10 rounded-lg text-[#e0e0e0] focus:outline-none focus:border-[#a7dadb]/50 focus:ring-2 focus:ring-[#a7dadb]/20 appearance-none cursor-pointer min-h-[44px]"
+                aria-label="Filter by severity"
+              >
+                <option value="all">All Severities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8a8b] pointer-events-none" />
+            </div>
+
+            {/* Status Filter */}
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-4 py-2 bg-[#020c1b]/50 border border-white/10 rounded-lg text-[#e0e0e0] focus:outline-none focus:border-[#a7dadb]/50 focus:ring-2 focus:ring-[#a7dadb]/20 appearance-none cursor-pointer min-h-[44px]"
+                aria-label="Filter by status"
+              >
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="acknowledged">Acknowledged</option>
+                <option value="resolved">Resolved</option>
+                <option value="muted">Muted</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8a8b] pointer-events-none" />
+            </div>
+
+            {/* Type Filter */}
+            <div className="relative">
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="w-full px-4 py-2 bg-[#020c1b]/50 border border-white/10 rounded-lg text-[#e0e0e0] focus:outline-none focus:border-[#a7dadb]/50 focus:ring-2 focus:ring-[#a7dadb]/20 appearance-none cursor-pointer min-h-[44px]"
+                aria-label="Filter by type"
+              >
+                <option value="all">All Types</option>
+                <option value="system">System</option>
+                <option value="security">Security</option>
+                <option value="performance">Performance</option>
+                <option value="cost">Cost</option>
+                <option value="database">Database</option>
+                <option value="api">API</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8a8b] pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Quick Filter Chips */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            <button
+              onClick={() => {
+                setSeverityFilter("critical");
+                setStatusFilter("active");
+              }}
+              className="px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-sm hover:bg-red-500/20 transition-all min-h-[36px]"
+            >
+              Critical Unresolved
+            </button>
+            <button
+              onClick={() => {
+                setStatusFilter("active");
+              }}
+              className="px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm hover:bg-amber-500/20 transition-all min-h-[36px]"
+            >
+              All Active
+            </button>
+            <button
+              onClick={() => {
+                setTypeFilter("security");
+                setStatusFilter("active");
+              }}
+              className="px-3 py-1.5 rounded-full bg-[#a7dadb]/10 border border-[#a7dadb]/20 text-[#a7dadb] text-sm hover:bg-[#a7dadb]/20 transition-all min-h-[36px]"
+            >
+              Security Alerts
+            </button>
+          </div>
+
+          {/* Results Count */}
+          <div className="mt-4 text-sm text-[#7a8a8b]">
+            Showing {filteredAlerts.length} of {ALERTS.length} alerts
+          </div>
+        </motion.div>
+
+        {/* Bulk Actions */}
+        {selectedAlerts.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-4 border border-[#a7dadb]/20 bg-[#a7dadb]/5 backdrop-blur-xl rounded-xl"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-[#e0e0e0]">
+                {selectedAlerts.size} alert(s) selected
+              </span>
+              <div className="flex gap-2">
+                <button className="px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-all text-sm min-h-[40px]">
+                  <Check className="h-4 w-4 inline mr-2" />
+                  Acknowledge
+                </button>
+                <button className="px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-all text-sm min-h-[40px]">
+                  <CheckCircle2 className="h-4 w-4 inline mr-2" />
+                  Resolve
+                </button>
+                <button className="px-4 py-2 rounded-lg bg-gray-500/20 border border-gray-500/30 text-gray-400 hover:bg-gray-500/30 transition-all text-sm min-h-[40px]">
+                  <BellOff className="h-4 w-4 inline mr-2" />
+                  Mute
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Alerts Table */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="border border-white/10 bg-[#0d1b2a]/60 backdrop-blur-xl rounded-xl overflow-hidden"
+        >
+          {/* Table Header */}
+          <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-[#e0e0e0]">
+              Alert List
+            </h3>
+            <div className="flex items-center gap-2 text-sm text-[#7a8a8b]">
+              <div className="flex items-center gap-1">
+                <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Live</span>
+              </div>
+              <span>•</span>
+              <span>Updated just now</span>
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/5">
+                  <th className="px-4 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedAlerts.size === paginatedAlerts.length &&
+                        paginatedAlerts.length > 0
+                      }
+                      onChange={handleSelectAll}
+                      className="h-5 w-5 rounded border-white/20 bg-[#020c1b]/50 cursor-pointer"
+                      aria-label="Select all alerts"
+                    />
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8a8b] uppercase tracking-wider">
+                    Severity
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8a8b] uppercase tracking-wider">
+                    Alert Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8a8b] uppercase tracking-wider">
+                    Type
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8a8b] uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8a8b] uppercase tracking-wider">
+                    Triggered
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8a8b] uppercase tracking-wider">
+                    Owner
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#7a8a8b] uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {paginatedAlerts.map((alert, index) => {
+                  const TypeIcon = typeIcons[alert.type];
+                  return (
+                    <motion.tr
+                      key={alert.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="hover:bg-white/5 cursor-pointer transition-colors group"
+                      onClick={() => setSelectedAlert(alert)}
+                    >
+                      <td
+                        className="px-4 py-4"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedAlerts.has(alert.id)}
+                          onChange={() => toggleSelection(alert.id)}
+                          className="h-5 w-5 rounded border-white/20 bg-[#020c1b]/50 cursor-pointer"
+                          aria-label={`Select alert ${alert.name}`}
+                        />
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`h-2 w-2 rounded-full ${
+                              severityConfig[alert.severity].dot
+                            } ${
+                              alert.status === "active" ? "animate-pulse" : ""
+                            }`}
+                          />
+                          <span
+                            className={`text-sm font-medium capitalize ${
+                              severityConfig[alert.severity].color
+                            }`}
+                          >
+                            {alert.severity}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div>
+                          <p className="text-sm font-medium text-[#e0e0e0] group-hover:text-[#a7dadb] transition-colors">
+                            {alert.name}
+                          </p>
+                          <p className="text-xs text-[#7a8a8b] mt-1 line-clamp-1">
+                            {alert.description}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <TypeIcon className="h-4 w-4 text-[#a7dadb]" />
+                          <span className="text-sm text-[#b0c5c6] capitalize">
+                            {alert.type}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span
+                          className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                            statusConfig[alert.status].color
+                          }`}
+                        >
+                          {statusConfig[alert.status].label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-[#7a8a8b]" />
+                          <span className="text-sm text-[#b0c5c6]">
+                            {formatDate(alert.triggeredAt)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-[#7a8a8b]" />
+                          <span className="text-sm text-[#b0c5c6]">
+                            {alert.owner}
+                          </span>
+                        </div>
+                      </td>
+                      <td
+                        className="px-4 py-4"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setSelectedAlert(alert)}
+                            className="p-2 rounded-lg hover:bg-white/10 transition-colors min-h-[36px] min-w-[36px]"
+                            aria-label="View alert details"
+                          >
+                            <Eye className="h-4 w-4 text-[#a7dadb]" />
+                          </button>
+                          <button
+                            className="p-2 rounded-lg hover:bg-white/10 transition-colors min-h-[36px] min-w-[36px]"
+                            aria-label="More actions"
+                          >
+                            <MoreHorizontal className="h-4 w-4 text-[#7a8a8b]" />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Empty State */}
+          {filteredAlerts.length === 0 && (
+            <div className="p-12 text-center">
+              <Bell className="h-12 w-12 text-[#7a8a8b] mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-[#e0e0e0] mb-2">
+                No alerts found
+              </h3>
+              <p className="text-[#7a8a8b]">
+                Try adjusting your filters or search query
+              </p>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {filteredAlerts.length > 0 && (
+            <div className="p-4 border-t border-white/10 flex items-center justify-between">
+              <div className="text-sm text-[#7a8a8b]">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                {Math.min(currentPage * itemsPerPage, filteredAlerts.length)} of{" "}
+                {filteredAlerts.length} results
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border border-white/10 bg-[#020c1b]/50 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[40px] min-w-[40px]"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="h-5 w-5 text-[#b0c5c6]" />
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(
+                      (page) =>
+                        page === 1 ||
+                        page === totalPages ||
+                        Math.abs(page - currentPage) <= 1
+                    )
+                    .map((page, index, arr) => (
+                      <div key={page} className="flex items-center gap-1">
+                        {index > 0 && arr[index - 1] !== page - 1 && (
+                          <span className="px-2 text-[#7a8a8b]">...</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1.5 rounded-lg transition-all min-h-[36px] min-w-[36px] ${
+                            currentPage === page
+                              ? "bg-[#a7dadb]/20 border border-[#a7dadb]/30 text-[#a7dadb]"
+                              : "border border-white/10 bg-[#020c1b]/50 text-[#b0c5c6] hover:bg-white/5"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      </div>
+                    ))}
+                </div>
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg border border-white/10 bg-[#020c1b]/50 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all min-h-[40px] min-w-[40px]"
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="h-5 w-5 text-[#b0c5c6]" />
+                </button>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* Alert Detail Modal */}
+      {selectedAlert && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedAlert(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="bg-[#0d1b2a]/95 backdrop-blur-xl border border-white/10 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-6 border-b border-white/10">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-4 flex-1">
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-xl ${
+                      severityConfig[selectedAlert.severity].bg
+                    } border ${
+                      severityConfig[selectedAlert.severity].border
+                    }`}
+                  >
+                    <AlertTriangle
+                      className={`h-6 w-6 ${
+                        severityConfig[selectedAlert.severity].color
+                      }`}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span
+                        className={`inline-flex px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                          severityConfig[selectedAlert.severity].bg
+                        } ${severityConfig[selectedAlert.severity].color}`}
+                      >
+                        {selectedAlert.severity}
+                      </span>
+                      <span
+                        className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                          statusConfig[selectedAlert.status].color
+                        }`}
+                      >
+                        {statusConfig[selectedAlert.status].label}
+                      </span>
+                    </div>
+                    <h2 className="text-xl font-semibold text-[#e0e0e0] mb-2">
+                      {selectedAlert.name}
+                    </h2>
+                    <p className="text-sm text-[#7a8a8b] mb-3">
+                      {selectedAlert.description}
+                    </p>
+                    <div className="flex items-center gap-4 text-sm text-[#7a8a8b]">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        <span>{formatDate(selectedAlert.triggeredAt)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        <span>{selectedAlert.owner}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedAlert(null)}
+                  className="p-2 rounded-lg hover:bg-white/10 transition-colors min-h-[40px] min-w-[40px]"
+                  aria-label="Close modal"
+                >
+                  <X className="h-5 w-5 text-[#7a8a8b]" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+              {/* Affected Resources */}
+              {selectedAlert.affectedResources &&
+                selectedAlert.affectedResources.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-[#e0e0e0] mb-3 flex items-center gap-2">
+                      <Server className="h-4 w-4 text-[#a7dadb]" />
+                      Affected Resources
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedAlert.affectedResources.map((resource) => (
+                        <span
+                          key={resource}
+                          className="px-3 py-1.5 rounded-lg bg-[#020c1b]/50 border border-white/10 text-sm text-[#b0c5c6]"
+                        >
+                          {resource}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* Timeline */}
+              {selectedAlert.timeline && selectedAlert.timeline.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-[#e0e0e0] mb-3 flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-[#a7dadb]" />
+                    Timeline
+                  </h3>
+                  <div className="space-y-3">
+                    {selectedAlert.timeline.map((event, index) => (
+                      <div key={index} className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="h-2 w-2 rounded-full bg-[#a7dadb]" />
+                          {index < selectedAlert.timeline!.length - 1 && (
+                            <div className="flex-1 w-px bg-white/10 my-1" />
+                          )}
+                        </div>
+                        <div className="flex-1 pb-4">
+                          <p className="text-sm text-[#e0e0e0] mb-1">
+                            {event.action}
+                          </p>
+                          <div className="flex items-center gap-3 text-xs text-[#7a8a8b]">
+                            <span>{formatDate(event.timestamp)}</span>
+                            <span>•</span>
+                            <span>{event.actor}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-white/10 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[#7a8a8b]">
+                  Alert ID: {selectedAlert.id}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {selectedAlert.status === "active" && (
+                  <button className="px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-all text-sm min-h-[40px]">
+                    <Check className="h-4 w-4 inline mr-2" />
+                    Acknowledge
+                  </button>
+                )}
+                {selectedAlert.status !== "resolved" && (
+                  <button className="px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 transition-all text-sm min-h-[40px]">
+                    <CheckCircle2 className="h-4 w-4 inline mr-2" />
+                    Resolve
+                  </button>
+                )}
+                <button className="px-4 py-2 rounded-lg bg-gray-500/20 border border-gray-500/30 text-gray-400 hover:bg-gray-500/30 transition-all text-sm min-h-[40px]">
+                  <BellOff className="h-4 w-4 inline mr-2" />
+                  Mute
+                </button>
+                <button className="px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all text-sm min-h-[40px]">
+                  <Trash2 className="h-4 w-4 inline mr-2" />
+                  Delete
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </div>
+  );
+}

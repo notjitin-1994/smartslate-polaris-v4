@@ -1,0 +1,141 @@
+{
+	"meta": {
+		"generatedAt": "2025-10-28T18:43:42.542Z",
+		"tasksAnalyzed": 16,
+		"totalTasks": 16,
+		"analysisCount": 16,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Razorpay Account Setup and Environment Configuration",
+			"complexityScore": 4,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into account setup, KYC verification, API key generation, dependency installation, and environment configuration steps",
+			"reasoning": "Moderate complexity due to external account setup, KYC processes, and multiple configuration steps, but mostly administrative tasks"
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "TypeScript Type Definitions and Razorpay Client Setup",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Separate into type definition creation, client initialization, configuration setup, and testing/validation tasks",
+			"reasoning": "Medium complexity involving TypeScript interfaces, SDK integration, singleton pattern implementation, and error handling"
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Database Schema Migration - Subscriptions Table",
+			"complexityScore": 7,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break into table design, constraint creation, index optimization, RLS policy implementation, testing, and rollback preparation",
+			"reasoning": "High complexity due to database design considerations, RLS policies, constraints, indexing strategy, and data integrity requirements"
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Database Schema Migration - Payments Table",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Divide into table structure design, foreign key relationships, RLS policies, constraint implementation, and validation testing",
+			"reasoning": "Moderately high complexity with foreign key relationships, payment data modeling, and security considerations"
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Database Schema Migration - Webhook Events and User Profiles Extension",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Separate webhook events table creation, user profiles extension, helper function implementation, constraint setup, and testing",
+			"reasoning": "Complex due to idempotency requirements, multiple table modifications, and custom function creation"
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "API Route - Create Subscription",
+			"complexityScore": 8,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Break into validation setup, authentication handling, Razorpay integration, database operations, error handling, rate limiting, and testing",
+			"reasoning": "High complexity with external API integration, comprehensive validation, security measures, rate limiting, and multiple error scenarios"
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "API Route - Verify Payment",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Divide into HMAC signature implementation, constant-time comparison, validation logic, security measures, error handling, and testing",
+			"reasoning": "High complexity due to cryptographic signature verification, security-critical constant-time comparison, and payment verification logic"
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Webhook Handler Implementation",
+			"complexityScore": 9,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Break into signature verification, idempotency handling, event routing, individual event handlers, state management, logging, error handling, and comprehensive testing",
+			"reasoning": "Very high complexity with multiple event types, idempotency requirements, signature verification, state transitions, and critical business logic"
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Frontend Razorpay Integration Components",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Separate script loading, provider component, checkout hook, TypeScript declarations, and error handling implementation",
+			"reasoning": "Moderately complex frontend integration with dynamic script loading, React patterns, and third-party SDK integration"
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Checkout Button Component",
+			"complexityScore": 5,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break into component structure, API integration, modal handling, state management, and error handling implementation",
+			"reasoning": "Medium complexity React component with API calls, loading states, and user interaction handling"
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "API Route - Cancel Subscription",
+			"complexityScore": 7,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Divide into validation setup, authentication, cancellation logic, immediate vs end-of-cycle handling, database updates, and testing",
+			"reasoning": "High complexity with two cancellation modes, business logic for tier management, and Razorpay SDK integration"
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "Subscription Management Page Components",
+			"complexityScore": 6,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break into subscription info component, payment history with pagination, cancellation component, page layout, authentication handling, and state management",
+			"reasoning": "Moderately complex with multiple components, pagination, data fetching, and user interaction patterns"
+		},
+		{
+			"taskId": 13,
+			"taskTitle": "Razorpay Live Plans Creation and Configuration",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Separate live plan creation, configuration updates, automation script development, and environment setup",
+			"reasoning": "Medium complexity involving production setup, configuration management, and automation scripting"
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Comprehensive Testing Suite Implementation",
+			"complexityScore": 9,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Break into unit test suite, integration testing, E2E testing, mocking setup, test fixtures, coverage analysis, security testing, and performance testing",
+			"reasoning": "Very high complexity requiring comprehensive test coverage across multiple layers, mocking strategies, and various testing frameworks"
+		},
+		{
+			"taskId": 15,
+			"taskTitle": "Security Audit and Performance Optimization",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Divide into security audit checklist, performance benchmarking, load testing, optimization implementation, monitoring setup, and documentation",
+			"reasoning": "High complexity requiring security expertise, performance analysis, optimization techniques, and comprehensive auditing"
+		},
+		{
+			"taskId": 16,
+			"taskTitle": "Production Deployment and Go-Live",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Break into environment configuration, database migration deployment, production deployment, smoke testing, monitoring setup, rollback procedures, and post-launch monitoring",
+			"reasoning": "High complexity production deployment with database migrations, monitoring setup, and critical go-live procedures requiring careful coordination"
+		}
+	]
+}

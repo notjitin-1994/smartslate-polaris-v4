@@ -1,0 +1,128 @@
+---
+description: Vercel CLI workflow, environments, and Next.js build rules for SmartSlate Polaris monorepo
+globs: vercel.json, frontend/**/*
+alwaysApply: true
+---
+
+- **Project structure and entrypoint**
+  - The repository root contains `vercel.json` that routes builds to the Next.js app in `frontend/` using `@vercel/next`.
+  - Project Settings in the Vercel dashboard are ignored when `builds` exist in `vercel.json` (you will see the warning). Keep root answers as `./` when linking.
+  - Reference: [vercel.json](mdc:vercel.json)
+
+- **Linking and syncing project**
+  - First-time link:
+    ```bash
+    vercel link --new --yes
+    # Scope: choose your team
+    # Project name: any (e.g., smartslate-polaris-v3)
+    # Root Directory: ./
+    ```
+  - Pull settings and environment variables:
+    ```bash
+    vercel pull --environment=preview
+    # or production
+    vercel pull --environment=production
+    ```
+
+- **Environment variables (used in this repo)**
+  - **Public (client-visible)**:
+    - `NEXT_PUBLIC_SUPABASE_URL`
+    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+    - (optional) `NEXT_PUBLIC_LOG_LEVEL`
+  - **Server-side**:
+    - `SUPABASE_SERVICE_ROLE_KEY`
+    - `ANTHROPIC_API_KEY`
+    - (optional) `PERPLEXITY_API_KEY`, `PERPLEXITY_BASE_URL`
+    - (optional) `ANTHROPIC_BASE_URL`, `ANTHROPIC_VERSION`
+  - Manage with CLI:
+    ```bash
+    vercel env ls
+    vercel env add NAME production
+    vercel env rm NAME
+    ```
+  - Code references: [frontend/next.config.ts](mdc:frontend/next.config.ts), [frontend/package.json](mdc:frontend/package.json)
+
+- **Builds and deploys (CLI v48+)**
+  - Preview deploy:
+    ```bash
+    vercel --yes
+    ```
+  - Production deploy:
+    ```bash
+    vercel --prod --yes
+    ```
+  - Build locally with Vercel builder (generates `.vercel/output`):
+    ```bash
+    vercel build --debug
+    ```
+  - Deploy prebuilt output (no rebuild in cloud):
+    ```bash
+    vercel build --yes
+    vercel deploy --prebuilt --yes
+    ```
+  - Inspect and logs:
+    ```bash
+    vercel inspect <deployment-url-or-id> --logs
+    vercel logs <deployment-url-or-id> --since 20m
+    ```
+
+- **Local development**
+  - Primary (Next.js dev server):
+    ```bash
+    cd frontend
+    npm run dev
+    # or
+    next dev -p 3000
+    ```
+  - Vercel Dev (when needed for Edge/Functions parity):
+    ```bash
+    vercel dev -p 3000
+    # Note: in CLI v48, `serve` and `dev --prebuilt` flags may not be available.
+    # Prefer `vercel deploy --prebuilt` for testing prebuilt output remotely.
+    ```
+
+- **Next.js configuration gotchas**
+  - Avoid the warning "Both `outputFileTracingRoot` and `turbopack.root` are set" by ensuring they match or by removing `turbopack.root`.
+    - Current file: [frontend/next.config.ts](mdc:frontend/next.config.ts)
+    - Simplest fix: remove `turbopack.root` so Next infers consistent roots under Vercel.
+  - TypeScript and ESLint:
+    - This project intentionally skips type and lint blocking during builds for CI speed (`ignoreBuildErrors`, `ignoreDuringBuilds`). Fix issues locally before enabling.
+
+- **Monorepo and `vercel.json` rules**
+  - With the following `vercel.json`, the Next.js app is built from `frontend/`:
+    ```json
+    {
+      "version": 2,
+      "builds": [
+        { "src": "frontend/package.json", "use": "@vercel/next" }
+      ]
+    }
+    ```
+  - Keep `vercel.json` at the repo root. If you choose to make `frontend/` the project root instead, delete `vercel.json` and re-link from `frontend/`.
+
+- **Common commands**
+  ```bash
+  # Link and pull env
+  vercel link --new --yes
+  vercel pull --environment=production
+
+  # Build locally like Vercel (fast signal)
+  vercel build --debug
+
+  # Deploy (preview / prod)
+  vercel --yes
+  vercel --prod --yes
+
+  # Deploy prebuilt
+  vercel build --yes
+  vercel deploy --prebuilt --yes
+
+  # Logs and inspect
+  vercel inspect <deployment> --logs
+  vercel logs <deployment> --since 20m
+  ```
+
+- **Troubleshooting notes**
+  - If you see "Due to `builds` existing... settings will not apply", this is expected and correct for this repo.
+  - If `vercel serve` errors ("Can't deploy more than one path"), you're on a CLI without `serve`. Use `vercel dev` for local testing or `vercel deploy --prebuilt` for remote testing.
+  - 404s on routes like `/login` are usually runtime issues (env/auth/middleware). Check logs with `vercel logs` and verify production env vars.

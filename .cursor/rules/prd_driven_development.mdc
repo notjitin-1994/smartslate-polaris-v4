@@ -1,0 +1,34 @@
+---
+description: Enforce PRD-as-source-of-truth with task/test alignment and real-time status updates
+globs: **/*
+alwaysApply: true
+---
+
+- **PRD is the single source of truth**
+  - Derive tasks, subtasks, acceptance criteria, and test strategy directly from the active PRD.
+  - If code or tests diverge from PRD, update tasks to reconcile and bring implementation back to the PRD.
+  - Reference PRD sections/clauses when writing tasks and commit messages.
+
+- **Tag-per-branch context**
+  - Mirror current git branch to an isolated Taskmaster tag for work.
+  - Parse the selected PRD into the active tag when starting or when PRD changes materially.
+
+- **Execution loop is test-gated**
+  - Plan from PRD → implement minimal edits → add/update tests from PRD acceptance criteria → run tests → update statuses.
+  - Do not mark tasks done until relevant tests pass.
+
+- **Real-time task status & logs**
+  - Set task/subtask to in-progress at start; append timestamped notes for plans/findings.
+  - Mark done only after acceptance criteria pass and tests are green.
+
+- **Consistency with project standards**
+  - Next 15 App Router with server components by default; add "use client" only when needed.
+  - TypeScript strict typing; avoid any; explicit return types for exported APIs.
+  - Tailwind v4 token utilities; no hardcoded colors; accessible focus-visible states.
+
+- **Environment & security**
+  - Never commit secrets; use .env.local and .env.example placeholders; rotate if exposure detected.
+
+- **Exit criteria for a PRD scope**
+  - All tasks/subtasks derived from PRD are done and all tests pass; produce a brief summary citing PRD file and tag.
+

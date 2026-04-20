@@ -1,0 +1,353 @@
+---
+description: Supabase database patterns, RLS policies, and PostgreSQL best practices
+globs: supabase/**/*.sql, frontend/lib/db/**/*.ts, frontend/lib/supabase/**/*.ts
+alwaysApply: false
+---
+
+## **Supabase Architecture**
+
+- **Database First Approach**
+  - Define schema in migrations under `supabase/migrations/`
+  - Use sequential numbering: `0026_add_subscription_and_roles.sql`
+  - Always include rollback logic in migrations
+  - Test migrations locally before production deployment
+
+- **Client Configuration**
+  - Server Client: Use `SUPABASE_SERVICE_ROLE_KEY` for admin operations
+  - Browser Client: Use `NEXT_PUBLIC_SUPABASE_ANON_KEY` for user operations
+  - Never expose service role key to client
+  - Initialize clients in separate files: `lib/supabase/server.ts` and `lib/supabase/client.ts`
+
+## **Schema Design Patterns**
+
+- **Table Conventions**
+  - Use snake_case for table and column names
+  - Include `created_at` and `updated_at` timestamps with defaults
+  - Use UUIDs for primary keys: `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - Add proper foreign key constraints with ON DELETE CASCADE/SET NULL
+
+- **PostgreSQL 15+ Features**
+  - Use JSONB for flexible metadata storage
+  - Use generated columns for computed values
+  - Use ENUM types or CHECK constraints for fixed value sets
+  - Leverage array types for list data
+
+- **Indexes**
+  - Create indexes on foreign keys automatically
+  - Add indexes on frequently queried columns (user_id, status, created_at)
+  - Use partial indexes for common WHERE clauses
+  - Create composite indexes for multi-column queries
+  ```sql
+  CREATE INDEX idx_user_profiles_subscription_tier 
+    ON user_profiles(subscription_tier) 
+    WHERE subscription_tier IS NOT NULL;
+  ```
+
+## **Row Level Security (RLS)**
+
+- **Always Enable RLS**
+  - Enable RLS on all tables containing user data
+  - Use `ALTER TABLE table_name ENABLE ROW LEVEL SECURITY;`
+  - Create policies for SELECT, INSERT, UPDATE, DELETE separately
+
+- **Policy Patterns**
+  ```sql
+  -- Users can read their own data
+  CREATE POLICY "Users can view own profile"
+    ON user_profiles FOR SELECT
+    USING (auth.uid() = user_id);
+
+  -- Developers can do anything
+  CREATE POLICY "Developers have full access"
+    ON user_profiles FOR ALL
+    USING (
+      EXISTS (
+        SELECT 1 FROM user_profiles
+        WHERE user_id = auth.uid()
+        AND user_role = 'developer'
+      )
+    );
+
+  -- Service role bypasses RLS (automatic)
+  -- Use service role client for admin operations
+  ```
+
+- **Policy Testing**
+  - Test policies by impersonating users with different roles
+  - Verify developers can access all data
+  - Verify users can only access their own data
+  - Test edge cases like NULL values and missing auth
+
+## **Database Functions**
+
+- **Atomic Operations**
+  - Create functions for complex operations
+  - Use transactions within functions
+  - Return structured data with RETURNS TABLE or RETURNS SETOF
+  ```sql
+  CREATE OR REPLACE FUNCTION increment_usage(
+    p_user_id UUID,
+    p_usage_type TEXT,
+    p_amount INTEGER DEFAULT 1
+  ) RETURNS BOOLEAN AS $$
+  BEGIN
+    UPDATE user_profiles
+    SET usage_metadata = jsonb_set(
+      usage_metadata,
+      ARRAY[p_usage_type],
+      to_jsonb((usage_metadata->p_usage_type)::int + p_amount)
+    )
+    WHERE user_id = p_user_id;
+    
+    RETURN FOUND;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RETURN FALSE;
+  END;
+  $$ LANGUAGE plpgsql SECURITY DEFINER;
+  ```
+
+- **Security Context**
+  - Use `SECURITY DEFINER` for admin functions
+  - Use `SECURITY INVOKER` for user-level functions
+  - Always validate inputs within functions
+  - Log sensitive operations
+
+## **JSONB Best Practices**
+
+- **Metadata Storage**
+  - Use JSONB for flexible, evolving data structures
+  - Define a schema in TypeScript that matches JSONB structure
+  - Use `->>` for text values, `->` for objects
+  - Use `jsonb_set` for updates
+  ```typescript
+  // TypeScript type
+  type SubscriptionMetadata = {
+    generations_used: number;
+    generations_limit: number;
+    reset_date: string;
+    features: string[];
+  };
+
+  // SQL query
+  SELECT 
+    id,
+    subscription_metadata->>'generations_used' as generations_used,
+    subscription_metadata->'features' as features
+  FROM user_profiles;
+  ```
+
+- **Indexing JSONB**
+  - Create GIN indexes for JSONB columns used in queries
+  ```sql
+  CREATE INDEX idx_user_profiles_metadata 
+    ON user_profiles USING GIN (subscription_metadata);
+  ```
+
+## **Query Optimization**
+
+- **Use EXPLAIN ANALYZE**
+  - Always check query plans for slow queries
+  - Look for sequential scans on large tables
+  - Verify indexes are being used
+  ```sql
+  EXPLAIN ANALYZE
+  SELECT * FROM user_profiles 
+  WHERE subscription_tier = 'voyager';
+  ```
+
+- **Pagination Patterns**
+  - Use cursor-based pagination for large datasets
+  - Limit results with LIMIT and OFFSET
+  - Order by indexed columns for better performance
+  ```typescript
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(0, 49); // First 50 results
+  ```
+
+## **Migration Best Practices**
+
+- **Migration Structure**
+  ```sql
+  -- Migration: 0026_add_subscription_and_roles.sql
+  -- Description: Add subscription tier and role columns
+  -- Author: [Your Name]
+  -- Date: 2025-10-09
+
+  BEGIN;
+
+  -- Add columns
+  ALTER TABLE user_profiles
+  ADD COLUMN subscription_tier TEXT,
+  ADD COLUMN user_role TEXT DEFAULT 'explorer',
+  ADD COLUMN subscription_metadata JSONB DEFAULT '{}'::jsonb,
+  ADD COLUMN role_assigned_at TIMESTAMPTZ DEFAULT NOW(),
+  ADD COLUMN role_assigned_by UUID REFERENCES user_profiles(user_id);
+
+  -- Add constraints
+  ALTER TABLE user_profiles
+  ADD CONSTRAINT check_subscription_tier 
+    CHECK (subscription_tier IN ('explorer', 'navigator', 'voyager', 'crew', 'fleet', 'armada', 'enterprise'));
+
+  ALTER TABLE user_profiles
+  ADD CONSTRAINT check_user_role
+    CHECK (user_role IN ('explorer', 'navigator', 'voyager', 'crew', 'fleet', 'armada', 'enterprise', 'developer'));
+
+  -- Create indexes
+  CREATE INDEX idx_user_profiles_subscription_tier ON user_profiles(subscription_tier);
+  CREATE INDEX idx_user_profiles_user_role ON user_profiles(user_role);
+  CREATE INDEX idx_user_profiles_metadata USING GIN (subscription_metadata);
+
+  -- Update RLS policies (see RLS section above)
+
+  COMMIT;
+
+  -- Rollback script (run separately if needed)
+  -- BEGIN;
+  -- ALTER TABLE user_profiles DROP COLUMN subscription_tier;
+  -- ALTER TABLE user_profiles DROP COLUMN user_role;
+  -- ALTER TABLE user_profiles DROP COLUMN subscription_metadata;
+  -- ALTER TABLE user_profiles DROP COLUMN role_assigned_at;
+  -- ALTER TABLE user_profiles DROP COLUMN role_assigned_by;
+  -- COMMIT;
+  ```
+
+- **Migration Testing**
+  - Test on local Supabase instance first
+  - Verify rollback works correctly
+  - Check data integrity after migration
+  - Test with production-like data volumes
+
+## **TypeScript Integration**
+
+- **Type Generation**
+  - Generate types from schema using Supabase CLI
+  ```bash
+  npx supabase gen types typescript --project-id [project-ref] > types/supabase.ts
+  ```
+  - Commit generated types to git
+  - Regenerate after schema changes
+
+- **Type-Safe Queries**
+  ```typescript
+  import { Database } from '@/types/supabase';
+  
+  type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
+  type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert'];
+  type UserProfileUpdate = Database['public']['Tables']['user_profiles']['Update'];
+
+  // Fully typed query
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('id, email, subscription_tier, user_role')
+    .eq('user_id', userId)
+    .single();
+
+  if (data) {
+    // data is typed as UserProfile
+    console.log(data.subscription_tier);
+  }
+  ```
+
+## **Audit Logging**
+
+- **Immutable Logs**
+  - Create append-only tables for audit logs
+  - Never allow UPDATE or DELETE on audit tables
+  - Use triggers for automatic logging
+  ```sql
+  CREATE TABLE role_audit_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    admin_user_id UUID NOT NULL REFERENCES user_profiles(user_id),
+    target_user_id UUID NOT NULL REFERENCES user_profiles(user_id),
+    old_role TEXT,
+    new_role TEXT NOT NULL,
+    reason TEXT,
+    ip_address INET,
+    user_agent TEXT
+  );
+
+  -- No UPDATE or DELETE policies
+  ALTER TABLE role_audit_log ENABLE ROW LEVEL SECURITY;
+  
+  CREATE POLICY "Developers can view audit logs"
+    ON role_audit_log FOR SELECT
+    USING (
+      EXISTS (
+        SELECT 1 FROM user_profiles
+        WHERE user_id = auth.uid()
+        AND user_role = 'developer'
+      )
+    );
+
+  CREATE POLICY "Audit logs are insert-only"
+    ON role_audit_log FOR INSERT
+    WITH CHECK (true);
+  ```
+
+## **Error Handling**
+
+- **Handle Database Errors Gracefully**
+  ```typescript
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update({ subscription_tier: 'voyager' })
+    .eq('user_id', userId);
+
+  if (error) {
+    // Log error with context
+    console.error('Failed to update subscription:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+
+    // Return user-friendly error
+    throw new Error('Unable to update subscription. Please try again.');
+  }
+  ```
+
+- **Unique Constraint Violations**
+  - Check for `23505` error code (unique_violation)
+  - Provide specific error messages
+  - Suggest corrective actions
+
+## **Performance Monitoring**
+
+- **Query Performance**
+  - Monitor slow queries via Supabase dashboard
+  - Set up alerts for queries > 1s
+  - Review and optimize regularly
+
+- **Connection Pooling**
+  - Configure max connections in Supabase project settings
+  - Use connection pooling in high-traffic scenarios
+  - Monitor connection usage in dashboard
+
+- **Database Size**
+  - Monitor table sizes and growth trends
+  - Archive old data when appropriate
+  - Use partitioning for large tables (user_usage_history by month)
+
+## **Common Pitfalls to Avoid**
+
+- ❌ **DON'T expose service role key to client**
+- ❌ **DON'T forget to enable RLS on new tables**
+- ❌ **DON'T use SELECT * in production queries**
+- ❌ **DON'T store sensitive data unencrypted**
+- ❌ **DON'T create indexes without testing performance impact**
+- ❌ **DON'T use SECURITY DEFINER without careful validation**
+- ❌ **DON'T rely on client-side validation alone**
+
+- ✅ **DO use parameterized queries always**
+- ✅ **DO test RLS policies thoroughly**
+- ✅ **DO use transactions for multi-step operations**
+- ✅ **DO create indexes on foreign keys and query columns**
+- ✅ **DO use JSONB for flexible data structures**
+- ✅ **DO log all admin operations**
+- ✅ **DO validate inputs at database level**

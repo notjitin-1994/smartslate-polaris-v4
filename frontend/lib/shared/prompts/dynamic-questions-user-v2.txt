@@ -1,0 +1,354 @@
+Generate a comprehensive, hyper-personalized learning blueprint dynamic questionnaire based on the following comprehensive context:
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    COMPLETE PROJECT CONTEXT ANALYSIS                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 SECTION 1: ROLE & EXPERIENCE INTELLIGENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Current Role:             {current_role}
+Years in Role:            {years_in_role} years
+Previous Roles:           {previous_roles}
+Industry Experience:      {industry_experience}
+Team Size:                {team_size}
+Technical Skills:         {technical_skills}
+
+💡 PERSONALIZATION INSIGHT:
+This {current_role} with {years_in_role} years experience managing a {team_size} team
+needs questions that leverage their {technical_skills} capabilities and are designed
+within the context of their {budget_available} training budget.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏢 SECTION 2: ORGANIZATIONAL CONTEXT & COMPLIANCE LANDSCAPE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Organization Name:        {organization_name}
+Industry Sector:          {industry_sector}
+Organization Size:        {organization_size} employees
+Geographic Regions:       {geographic_regions}
+Compliance Requirements:  {compliance_requirements}
+Data Sharing Policies:    {data_sharing_policies}
+Security Clearance:       {security_clearance}
+Legal Restrictions:       {legal_restrictions}
+
+💡 COMPLIANCE INTELLIGENCE:
+{organization_name} operates in {industry_sector} with {compliance_requirements}
+compliance requirements. Data sharing policy is {data_sharing_policies}.
+CRITICAL: All questions MUST respect these compliance constraints.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 SECTION 3: LEARNING GAP, AUDIENCE PROFILE & SUCCESS CRITERIA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Learning Gap Description:
+{learning_gap_description}
+
+Total Learners:           {total_learners_range}
+Current Knowledge Level:  {current_knowledge_level}/5 (1=Novice, 5=Expert)
+Motivation Factors:       {motivation_factors}
+Learning Location:        {learning_location}
+Devices Used:             {devices_used}
+Hours Per Week:           {hours_per_week}
+Learning Deadline:        {learning_deadline}
+Budget Available:         {budget_available}
+
+💡 AUDIENCE INTELLIGENCE:
+Designing for {total_learners_range} learners at {current_knowledge_level}/5 knowledge level
+who are motivated by {motivation_factors}. They will learn in {learning_location} settings
+using {devices_used} with {hours_per_week} available per week.
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         YOUR GENERATION MISSION                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+TASK: Generate exactly 10 sections with 5-7 questions each (50-70 total questions)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 MANDATORY 10-SECTION STRUCTURE (PRD-ALIGNED)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SECTION 1: Learning Objectives & Outcomes
+- Focus: Specific, measurable outcomes addressing {learning_gap_description}
+- Questions: SMART objectives, Bloom's levels, business impact, stakeholder criteria
+- Personalization: Align with {current_role} success metrics and {industry_sector} KPIs
+- Questions to generate: 5-7
+
+SECTION 2: Target Audience Analysis
+- Focus: Deep learner characteristics beyond {total_learners_range} and {current_knowledge_level}
+- Questions: Demographics, learning styles, accessibility, cultural considerations
+- Personalization: Build on {motivation_factors} and {devices_used}
+- Questions to generate: 5-7
+
+SECTION 3: Content Scope & Structure
+- Focus: Content breadth, depth, sequencing for {industry_sector}
+- Questions: Topics, structure, prerequisites, chunking strategy
+- Personalization: Match {learning_gap_description} and {hours_per_week} availability
+- Questions to generate: 5-7
+
+SECTION 4: Instructional Strategy & Methods
+- Focus: Pedagogical approaches for {team_size} team capacity
+- Questions: Methods, balance, social learning, active strategies
+- Personalization: Align with {organization_size} and {motivation_factors}
+- Questions to generate: 5-7
+
+SECTION 5: Learning Activities & Interactions
+- Focus: Engagement activities for {devices_used} and {learning_location}
+- Questions: Activity types, practice, collaboration, real-world scenarios
+- Personalization: Design for {current_knowledge_level} and {compliance_requirements}
+- Questions to generate: 5-7
+
+SECTION 6: Assessment & Evaluation
+- Focus: Measurement strategies complying with {compliance_requirements}
+- Questions: Formative/summative assessments, certifications, feedback, data usage
+- Personalization: Align with {data_sharing_policies} and {motivation_factors}
+- Questions to generate: 5-7
+
+SECTION 7: Resources & Materials
+- Focus: Learning resources within {budget_available} budget
+- Questions: Existing materials, new resources, external content, tools
+- Personalization: Match {technical_skills} and {budget_available}
+- Questions to generate: 5-7
+
+SECTION 8: Technology & Platform
+- Focus: Technical infrastructure meeting {data_sharing_policies} security
+- Questions: LMS requirements, authoring tools, integrations, analytics
+- Personalization: Filter by {security_clearance} and {geographic_regions}
+- Questions to generate: 5-7
+
+SECTION 9: Implementation & Rollout
+- Focus: Deployment by {learning_deadline} with {team_size} support
+- Questions: Pilot approach, timeline, communication, change management
+- Personalization: Match {organization_size} and {years_in_role} sophistication
+- Questions to generate: 5-7
+
+SECTION 10: Success Metrics & Continuous Improvement
+- Focus: KPIs aligned with {current_role} reporting needs
+- Questions: KPIs, data collection, reporting, iteration, sustainability
+- Personalization: Match {budget_available} ROI needs and {compliance_requirements}
+- Questions to generate: 5-7
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 INPUT TYPE REQUIREMENTS (MODERN UX ONLY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ FORBIDDEN INPUT TYPES (Poor UX):
+- select (use radio_pills or radio_cards instead)
+- multiselect (use checkbox_pills or checkbox_cards instead)
+
+✅ REQUIRED INPUT TYPE MIX (Use All):
+- radio_pills: 20-30% of questions (2-6 options, short labels)
+- checkbox_pills: 15-20% of questions (2-8 options, multiple selection)
+- radio_cards: 10-15% of questions (2-4 options with descriptions)
+- checkbox_cards: 10-15% of questions (2-6 options with descriptions)
+- toggle_switch: 5-10% of questions (exactly 2 binary options)
+- scale: 10-15% of questions (1-10 range ratings)
+- enhanced_scale: 5-10% of questions (visual feedback scales)
+- labeled_slider: 5-10% of questions (continuous values with units)
+- textarea: 10-15% of questions (detailed descriptions)
+- text: 5-10% of questions (short answers)
+- currency: 2-5% of questions (budget amounts)
+- number_spinner: 2-5% of questions (countable items)
+- date: 2-5% of questions (deadlines, milestones)
+
+ENSURE: Every section has diverse input types. Never use same type for all questions in a section.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧠 HYPER-PERSONALIZATION REQUIREMENTS (CRITICAL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EVERY QUESTION MUST:
+1. Reference at least 2 context variables in the label or helpText
+   Example: "As {current_role} at {organization_name}, what are your primary objectives?"
+
+2. Use industry-specific terminology from {industry_sector}
+   Healthcare: PHI, patient outcomes, clinical protocols
+   Finance: Risk management, regulatory reporting, audit trails
+   Tech: Sandbox environments, CI/CD, technical debt
+
+3. Adapt language to {current_role} sophistication
+   C-Suite: Strategic impact, board reporting, competitive advantage
+   Manager: Implementation, team development, operational efficiency
+   ID/LXD: Pedagogical approaches, learning science, engagement
+
+4. Filter options based on {compliance_requirements}
+   GDPR: Include data residency, consent management options
+   HIPAA: Add PHI handling, BAA requirements options
+   SOX: Include audit trail, immutable records options
+
+5. Consider scale: {organization_size}
+   1-50: Agile solutions, single-vendor, rapid iteration
+   1000+: Enterprise governance, phased rollout, global deployment
+
+6. Respect {data_sharing_policies}
+   Highly Restricted: Exclude cloud-only options, add air-gapped
+   Unrestricted: Include full range of modern SaaS solutions
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📤 STRICT OUTPUT FORMAT REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRUCTURE REQUIREMENTS:
+✓ Return ONLY valid JSON - NO markdown code fences, NO preamble, NO explanatory text
+✓ Start directly with { and end with }
+✓ Exactly 10 sections, each with "id", "title", "description", "order"
+✓ Each section has 5-7 questions array
+✓ Total questions: 50-70
+
+QUESTION ID FORMAT:
+✓ Use format: s{section}_q{number}
+✓ Examples: s1_q1, s1_q2, s2_q1, s10_q7
+✓ Section IDs: s1, s2, s3, s4, s5, s6, s7, s8, s9, s10
+
+QUESTION STRUCTURE (ALL REQUIRED):
+{
+  "id": "s1_q1",
+  "label": "Question text with {context_variables}",
+  "type": "radio_pills|checkbox_cards|scale|etc",
+  "required": true,
+  "helpText": "Guidance referencing {specific_context}",
+  "placeholder": "Example placeholder when applicable",
+  "options": [...], // For selection types
+  "scaleConfig": {...}, // For scale/slider types
+  "validation": [
+    {"rule": "minSelections", "value": 1, "message": "Error message"}
+  ],
+  "metadata": {
+    "contextSource": "Derived from role={current_role}, etc",
+    "complianceCheck": "Verified against {compliance_requirements}"
+  }
+}
+
+REQUIRED CONFIGS BY TYPE:
+- radio_pills/checkbox_pills: options array (2-8 items with value, label, optional icon)
+- radio_cards/checkbox_cards: options array (2-6 items with value, label, description)
+- toggle_switch: options array (exactly 2 items)
+- scale: scaleConfig {min, max, minLabel, maxLabel, step}
+- enhanced_scale: scaleConfig {min, max, minLabel, maxLabel, labels array, step}
+- labeled_slider: sliderConfig {min, max, step, unit, markers array}
+- currency: currencySymbol, min, max
+- number_spinner: numberConfig {min, max, step}
+- textarea: rows (3-10), maxLength
+- text: maxLength (typically 200)
+- date: No special config needed
+- email/url: No special config needed
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ CRITICAL COMPLIANCE RULES (NEVER VIOLATE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COMPLIANCE CONTEXT: {compliance_requirements}
+DATA POLICY: {data_sharing_policies}
+SECURITY LEVEL: {security_clearance}
+
+MANDATORY FILTERS:
+1. IF HIPAA in compliance_requirements:
+   - NEVER ask for unencrypted PHI collection
+   - ALWAYS include BAA requirement options
+   - ADD questions about audit trails and access controls
+
+2. IF GDPR in compliance_requirements:
+   - NEVER suggest unrestricted data collection without consent
+   - ALWAYS include data residency questions
+   - ADD right-to-erasure and consent management options
+
+3. IF data_sharing_policies = "Highly Restricted" or "Classified":
+   - NEVER include cloud-only vendor options
+   - ALWAYS provide on-premise alternatives
+   - EXCLUDE questions about unrestricted data sharing
+
+4. IF security_clearance = "Secret" or "Top Secret":
+   - ADD compartmentalization questions
+   - INCLUDE need-to-know access options
+   - FILTER out non-secure collaboration tools
+
+5. IF SOX or PCI-DSS in compliance_requirements:
+   - ADD audit trail requirements
+   - INCLUDE immutable record options
+   - ASK about role-based access controls
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ QUALITY VALIDATION CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before returning JSON, verify:
+☑ Exactly 10 sections (s1 through s10)
+☑ Each section has 5-7 questions
+☑ Total questions: 50-70
+☑ All question IDs use s{section}_q{number} format
+☑ All questions reference {organization_name} or {current_role} or {industry_sector}
+☑ Every helpText provides personalized context
+☑ Input types are diverse (not all radio_pills)
+☑ No select or multiselect types used
+☑ All selection types have options array
+☑ All scale types have proper config
+☑ All questions have validation array
+☑ All questions have metadata object
+☑ Compliance requirements are respected in ALL questions
+☑ No questions violate {data_sharing_policies}
+☑ Language matches {current_role} sophistication level
+☑ Industry terminology from {industry_sector} is used
+☑ Scale matches {organization_size} (startup vs enterprise)
+☑ Questions consider {learning_deadline} urgency
+☑ Questions leverage {technical_skills} where relevant
+☑ Valid JSON (no trailing commas, proper escaping)
+☑ No markdown code fences (no ```json)
+☑ Starts with { and ends with }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 EXAMPLE PERSONALIZATION (Follow This Pattern)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+POOR (Generic):
+{
+  "id": "s1_q1",
+  "label": "What are your learning objectives?",
+  "type": "checkbox_pills",
+  "helpText": "Select your objectives"
+}
+
+EXCELLENT (Hyper-Personalized):
+{
+  "id": "s1_q1",
+  "label": "As {current_role} at {organization_name}, what are your primary learning objectives for addressing: '{learning_gap_description}'?",
+  "type": "checkbox_cards",
+  "required": true,
+  "helpText": "Given your {total_learners_range} learners at {current_knowledge_level}/5 knowledge level and {budget_available} training budget, select objectives that align with your {industry_sector} compliance requirements: {compliance_requirements}",
+  "options": [
+    {
+      "value": "knowledge",
+      "label": "Knowledge Acquisition",
+      "description": "Build foundational understanding of {industry_sector}-specific concepts for your {total_learners_range} audience"
+    },
+    {
+      "value": "skills",
+      "label": "Practical Skill Development",
+      "description": "Develop hands-on abilities that {current_role} roles need, accessible on {devices_used}"
+    },
+    {
+      "value": "performance",
+      "label": "Performance Improvement",
+      "description": "Measurable job performance gains within {learning_deadline} deadline"
+    }
+  ],
+  "validation": [
+    {"rule": "minSelections", "value": 1, "message": "Select at least one objective"}
+  ],
+  "metadata": {
+    "contextSource": "role={current_role}, org={organization_name}, gap={learning_gap_description}, sector={industry_sector}",
+    "complianceCheck": "Verified against {compliance_requirements}"
+  }
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REMEMBER: You are creating a BESPOKE questionnaire for:
+- {current_role} with {years_in_role} years experience
+- At {organization_name} in {industry_sector}
+- Managing {team_size} team with {budget_available} training budget
+- Addressing: {learning_gap_description}
+- For {total_learners_range} learners at {current_knowledge_level}/5 level
+- Complying with: {compliance_requirements}
+- Under {data_sharing_policies} data policy
+
+Every question should feel custom-built for THIS specific context. No generic templates.
+
+GENERATE NOW. RETURN ONLY VALID JSON. START WITH { END WITH }.

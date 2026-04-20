@@ -1,0 +1,1808 @@
+# Product Requirements Document (PRD)
+
+## Razorpay Payment Gateway Integration - Polaris v3 SmartSlate Platform
+
+**Document Version:** 1.0
+**Date:** October 28, 2025
+**Priority:** P0 - Critical Path
+**Sprint:** Weeks 45-46 (Nov 4-15, 2025)
+**Status:** Ready for Engineering
+**Owner:** Platform Engineering Team
+
+---
+
+## 1. Executive Summary
+
+### 1.1 Mission Statement
+Integrate Razorpay payment gateway into Polaris v3's existing subscription infrastructure to enable automated billing, subscription management, and revenue generation for the 7-tier SmartSlate Blueprint platform.
+
+### 1.2 Strategic Impact
+- **Revenue Activation**: Convert existing subscription infrastructure to revenue-generating system
+- **Market Fit**: Native Indian payment support (UPI, cards, netbanking, wallets)
+- **User Experience**: Seamless upgrade flow from free to paid tiers
+- **Operational Efficiency**: Automated billing reduces manual admin work by 95%
+- **Scalability**: Support for 1000+ concurrent subscription transactions
+
+### 1.3 Current State Assessment
+
+**✅ Complete Infrastructure**:
+- 7 subscription tiers fully implemented (free, explorer, navigator, voyager, crew, fleet, armada)
+- Monthly rollover system with 12-month carryover
+- Atomic usage tracking with database functions
+- Admin APIs for tier management
+- Pricing page with INR/USD currency support
+- RLS policies and security model
+
+**❌ Missing Payment Layer**:
+- No payment gateway integration
+- No automated subscription billing
+- No checkout flow
+- No webhook handlers for payment events
+- No invoice generation
+- Manual tier upgrades only
+
+### 1.4 Success Metrics
+
+| Metric | Baseline | Target | Measurement Method |
+|--------|----------|--------|-------------------|
+| Successful Payment Rate | N/A | >95% | Razorpay dashboard |
+| Checkout Completion | N/A | >80% | Analytics funnel |
+| Failed Payment Recovery | N/A | >60% within 7 days | Webhook tracking |
+| Subscription Activation Time | N/A | <2 minutes | End-to-end timing |
+| Webhook Processing Success | N/A | >99.5% | Event log analysis |
+| Payment Method Auth Success | N/A | >90% | Razorpay analytics |
+| User Upgrade Conversion | N/A | >15% from free tier | Conversion tracking |
+
+---
+
+## 2. Technical Architecture
+
+### 2.1 System Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Frontend (Next.js)                        │
+│                                                                   │
+│  ┌───────────────┐    ┌────────────────┐    ┌────────────────┐ │
+│  │ Pricing Page  │───▶│ Checkout Flow  │───▶│   Dashboard    │ │
+│  └───────────────┘    └────────────────┘    └────────────────┘ │
+│         │                     │                      │           │
+└─────────┼─────────────────────┼──────────────────────┼───────────┘
+          │                     │                      │
+          ▼                     ▼                      ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     API Routes (Next.js)                         │
+│                                                                   │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  /api/subscriptions/                                     │   │
+│  │  ├─ create-plan          (Admin: Create Razorpay plans) │   │
+│  │  ├─ create-subscription  (User: Start subscription)     │   │
+│  │  ├─ verify-payment       (User: Confirm payment)        │   │
+│  │  ├─ cancel              (User: Cancel subscription)     │   │
+│  │  └─ update-payment-method (User: Update card)           │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                   │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  /api/webhooks/razorpay (Razorpay → Server)            │   │
+│  │  ├─ subscription.activated                              │   │
+│  │  ├─ subscription.charged                                │   │
+│  │  ├─ subscription.completed                              │   │
+│  │  ├─ subscription.cancelled                              │   │
+│  │  ├─ subscription.halted                                 │   │
+│  │  ├─ payment.authorized                                  │   │
+│  │  ├─ payment.captured                                    │   │
+│  │  └─ payment.failed                                      │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                   │
+└───────────────────────────────┬───────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  Supabase PostgreSQL Database                    │
+│                                                                   │
+│  ┌─────────────────┐    ┌─────────────────────────────────┐    │
+│  │ user_profiles   │    │  NEW: subscriptions table       │    │
+│  ├─────────────────┤    ├─────────────────────────────────┤    │
+│  │ user_id         │    │ subscription_id (PK)            │    │
+│  │ subscription_tier│◀──│ user_id (FK)                    │    │
+│  │ billing_cycle_* │    │ razorpay_subscription_id        │    │
+│  │ usage_counts    │    │ razorpay_plan_id                │    │
+│  │ limits          │    │ status                          │    │
+│  │ rollover_data   │    │ start_date, end_date            │    │
+│  └─────────────────┘    │ next_billing_date               │    │
+│                          │ payment_method                  │    │
+│                          └─────────────────────────────────┘    │
+│                                                                   │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  NEW: payments table (transaction history)             │    │
+│  ├─────────────────────────────────────────────────────────┤    │
+│  │ payment_id (PK)                                         │    │
+│  │ subscription_id (FK)                                    │    │
+│  │ razorpay_payment_id                                     │    │
+│  │ amount, currency, status                                │    │
+│  │ payment_date, method, card_last4                        │    │
+│  │ error_details (if failed)                               │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                                                                   │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  NEW: webhook_events table (idempotency)               │    │
+│  ├─────────────────────────────────────────────────────────┤    │
+│  │ event_id (unique), event_type, payload                  │    │
+│  │ processed_at, created_at                                │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Razorpay Platform                            │
+│                                                                   │
+│  ┌──────────┐  ┌──────────┐  ┌────────────┐  ┌──────────────┐ │
+│  │  Plans   │  │Subscript.│  │  Payments  │  │   Webhooks   │ │
+│  └──────────┘  └──────────┘  └────────────┘  └──────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 2.2 Subscription Lifecycle Flow
+
+**Phase 1: Subscription Creation**
+1. User selects tier on pricing page (e.g., "Navigator - ₹3,900/month")
+2. Click "Upgrade Now" → Frontend calls `POST /api/subscriptions/create-subscription`
+3. Backend creates/retrieves Razorpay customer ID
+4. Backend creates Razorpay subscription with plan ID
+5. Backend inserts record in `subscriptions` table (status: 'created')
+6. Backend returns subscription ID and short URL to frontend
+7. Frontend loads Razorpay Checkout modal
+
+**Phase 2: Payment Authorization**
+8. User completes payment in Razorpay modal (₹0 or ₹1 authentication charge)
+9. Razorpay returns payment ID, subscription ID, and signature
+10. Frontend calls `POST /api/subscriptions/verify-payment`
+11. Backend verifies HMAC signature
+12. Backend updates subscription status to 'authenticated'
+13. User sees "Processing..." loading state
+
+**Phase 3: Subscription Activation (via Webhook)**
+14. Razorpay sends `subscription.activated` webhook
+15. Webhook handler verifies signature
+16. Webhook checks idempotency (duplicate event detection)
+17. Webhook updates `subscriptions` table (status: 'active')
+18. Webhook calls `handle_tier_upgrade()` function (applies carryover if from free tier)
+19. Webhook updates `user_profiles` (tier, billing dates, resets monthly counters)
+20. Webhook inserts payment record in `payments` table
+21. User redirected to dashboard with new tier limits
+
+**Phase 4: Monthly Billing Cycle**
+22. Razorpay auto-charges card on billing cycle date
+23. Webhook `payment.captured` arrives (success)
+24. Webhook inserts payment record
+25. Webhook extends `next_billing_cycle_date` by 1 month
+26. Webhook calls `reset_monthly_limits()` (reset usage counters)
+27. OR Webhook `payment.failed` arrives (failure)
+28. Webhook updates subscription status to 'past_due'
+29. Razorpay auto-retries payment (3 attempts over 7 days)
+30. If all retries fail → Webhook `subscription.halted`
+31. Webhook downgrades user to free tier
+
+### 2.3 Database Schema Additions
+
+**New Table: subscriptions**
+```sql
+CREATE TABLE public.subscriptions (
+  subscription_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  -- Razorpay identifiers
+  razorpay_subscription_id TEXT UNIQUE NOT NULL,
+  razorpay_plan_id TEXT NOT NULL,
+  razorpay_customer_id TEXT,
+
+  -- Subscription details
+  status TEXT NOT NULL DEFAULT 'created',
+  -- statuses: created | authenticated | active | halted | cancelled | completed | expired
+
+  -- Plan snapshot (denormalized for historical record)
+  plan_name TEXT NOT NULL,
+  plan_amount INTEGER NOT NULL, -- paise (₹100 = 10000 paise)
+  plan_currency TEXT NOT NULL DEFAULT 'INR',
+  plan_period TEXT NOT NULL, -- 'monthly' | 'yearly'
+  plan_interval INTEGER NOT NULL DEFAULT 1,
+
+  -- Billing dates
+  start_date TIMESTAMPTZ,
+  end_date TIMESTAMPTZ,
+  current_start TIMESTAMPTZ,
+  current_end TIMESTAMPTZ,
+  next_billing_date TIMESTAMPTZ,
+  charge_at TIMESTAMPTZ,
+
+  -- Payment tracking
+  total_count INTEGER NOT NULL, -- Total billing cycles (e.g., 12 for annual)
+  paid_count INTEGER NOT NULL DEFAULT 0,
+  remaining_count INTEGER NOT NULL,
+
+  -- Payment method snapshot (masked)
+  payment_method JSONB, -- {type, card_last4, card_network, bank, upi_id}
+
+  -- Metadata
+  metadata JSONB DEFAULT '{}'::jsonb,
+  short_url TEXT,
+
+  -- Timestamps
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  -- Constraints
+  CONSTRAINT valid_status CHECK (status IN ('created', 'authenticated', 'active', 'halted', 'cancelled', 'completed', 'expired', 'paused')),
+  CONSTRAINT valid_period CHECK (plan_period IN ('monthly', 'yearly')),
+  CONSTRAINT valid_amount CHECK (plan_amount > 0),
+  CONSTRAINT one_active_subscription_per_user UNIQUE (user_id) WHERE status = 'active'
+);
+
+CREATE INDEX idx_subscriptions_user_id ON public.subscriptions(user_id);
+CREATE INDEX idx_subscriptions_razorpay_id ON public.subscriptions(razorpay_subscription_id);
+CREATE INDEX idx_subscriptions_status ON public.subscriptions(status);
+CREATE INDEX idx_subscriptions_next_billing ON public.subscriptions(next_billing_date) WHERE status = 'active';
+```
+
+**New Table: payments**
+```sql
+CREATE TABLE public.payments (
+  payment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Foreign keys
+  subscription_id UUID REFERENCES public.subscriptions(subscription_id) ON DELETE SET NULL,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  -- Razorpay identifiers
+  razorpay_payment_id TEXT UNIQUE NOT NULL,
+  razorpay_order_id TEXT,
+  razorpay_invoice_id TEXT,
+
+  -- Payment details
+  amount INTEGER NOT NULL, -- paise
+  currency TEXT NOT NULL DEFAULT 'INR',
+  status TEXT NOT NULL,
+  -- statuses: created | authorized | captured | refunded | failed | pending
+
+  -- Payment method details
+  method TEXT, -- card | upi | netbanking | wallet | emi
+  card_network TEXT, -- Visa | Mastercard | RuPay | etc.
+  card_last4 TEXT,
+  bank TEXT,
+  wallet TEXT,
+  upi_id TEXT,
+
+  -- Billing period reference
+  billing_period_start TIMESTAMPTZ,
+  billing_period_end TIMESTAMPTZ,
+
+  -- Error details (if failed)
+  error_code TEXT,
+  error_description TEXT,
+  error_source TEXT,
+  error_step TEXT,
+  error_reason TEXT,
+
+  -- Refund details
+  refund_status TEXT,
+  refund_amount INTEGER,
+  refunded_at TIMESTAMPTZ,
+
+  -- Metadata
+  metadata JSONB DEFAULT '{}'::jsonb,
+
+  -- Timestamps
+  payment_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  -- Constraints
+  CONSTRAINT valid_status CHECK (status IN ('created', 'authorized', 'captured', 'refunded', 'failed', 'pending')),
+  CONSTRAINT valid_amount CHECK (amount >= 0)
+);
+
+CREATE INDEX idx_payments_user_id ON public.payments(user_id);
+CREATE INDEX idx_payments_subscription_id ON public.payments(subscription_id);
+CREATE INDEX idx_payments_razorpay_id ON public.payments(razorpay_payment_id);
+CREATE INDEX idx_payments_status ON public.payments(status);
+CREATE INDEX idx_payments_date ON public.payments(payment_date DESC);
+```
+
+**New Table: webhook_events (idempotency)**
+```sql
+CREATE TABLE public.webhook_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  payload JSONB NOT NULL,
+  processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT unique_event UNIQUE (event_id, event_type)
+);
+
+CREATE INDEX idx_webhook_events_event_id ON public.webhook_events(event_id);
+CREATE INDEX idx_webhook_events_event_type ON public.webhook_events(event_type);
+CREATE INDEX idx_webhook_events_processed_at ON public.webhook_events(processed_at DESC);
+```
+
+**Extension to user_profiles**
+```sql
+ALTER TABLE public.user_profiles
+ADD COLUMN IF NOT EXISTS razorpay_customer_id TEXT UNIQUE,
+ADD COLUMN IF NOT EXISTS active_subscription_id UUID REFERENCES public.subscriptions(subscription_id) ON DELETE SET NULL,
+ADD COLUMN IF NOT EXISTS subscription_status TEXT DEFAULT 'none',
+ADD COLUMN IF NOT EXISTS payment_method_last4 TEXT,
+ADD COLUMN IF NOT EXISTS payment_method_brand TEXT;
+
+CREATE INDEX idx_user_profiles_razorpay_customer ON public.user_profiles(razorpay_customer_id);
+CREATE INDEX idx_user_profiles_active_subscription ON public.user_profiles(active_subscription_id);
+
+ALTER TABLE public.user_profiles
+ADD CONSTRAINT valid_subscription_status
+CHECK (subscription_status IN ('none', 'active', 'past_due', 'cancelled', 'expired'));
+```
+
+### 2.4 Razorpay Plan Configuration
+
+**6 Paid Plans to Create in Razorpay Dashboard**:
+
+| Tier | Plan ID | Amount (INR) | Amount (Paise) | Monthly Blueprints |
+|------|---------|--------------|----------------|-------------------|
+| Explorer | `plan_explorer_monthly` | ₹1,900 | 190000 | 5 |
+| Navigator | `plan_navigator_monthly` | ₹3,900 | 390000 | 25 |
+| Voyager | `plan_voyager_monthly` | ₹7,900 | 790000 | 50 |
+| Crew | `plan_crew_monthly` | ₹2,400 | 240000 | 10 per user |
+| Fleet | `plan_fleet_monthly` | ₹6,400 | 640000 | 30 per user |
+| Armada | `plan_armada_monthly` | ₹12,900 | 1290000 | 60 per user |
+
+**Plan Configuration**:
+```typescript
+// frontend/lib/config/razorpayPlans.ts
+export const RAZORPAY_PLANS = {
+  explorer: {
+    monthly: 'plan_XXXXXXXXX', // Replace with actual plan ID after creation
+    yearly: null, // Phase 2
+  },
+  navigator: {
+    monthly: 'plan_XXXXXXXXX',
+    yearly: null,
+  },
+  voyager: {
+    monthly: 'plan_XXXXXXXXX',
+    yearly: null,
+  },
+  crew: {
+    monthly: 'plan_XXXXXXXXX',
+    yearly: null,
+  },
+  fleet: {
+    monthly: 'plan_XXXXXXXXX',
+    yearly: null,
+  },
+  armada: {
+    monthly: 'plan_XXXXXXXXX',
+    yearly: null,
+  },
+} as const;
+
+export function getPlanId(tier: string, billing: 'monthly' | 'yearly'): string {
+  return RAZORPAY_PLANS[tier as keyof typeof RAZORPAY_PLANS]?.[billing] || '';
+}
+```
+
+### 2.5 Environment Variables
+
+**Required for Development**:
+```bash
+# Razorpay Credentials (Test Mode)
+NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_XXXXXXXXXXXXX
+RAZORPAY_KEY_SECRET=YYYYYYYYYYYYYYYY           # Server-side only
+RAZORPAY_WEBHOOK_SECRET=whsec_ZZZZZZZZZZZZZZ  # Server-side only
+
+# App URLs
+NEXT_PUBLIC_APP_URL=http://localhost:3000      # For redirects
+
+# Feature Flags
+NEXT_PUBLIC_ENABLE_PAYMENTS=true               # Toggle payment features
+```
+
+**Required for Production**:
+```bash
+# Razorpay Credentials (Live Mode)
+NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_live_XXXXXXXXXXXXX
+RAZORPAY_KEY_SECRET=YYYYYYYYYYYYYYYY
+RAZORPAY_WEBHOOK_SECRET=whsec_ZZZZZZZZZZZZZZ
+
+# App URLs
+NEXT_PUBLIC_APP_URL=https://polaris.smartslate.io
+
+# Feature Flags
+NEXT_PUBLIC_ENABLE_PAYMENTS=true
+```
+
+**Security Rules**:
+- ✅ `NEXT_PUBLIC_*` variables are safe for client (key_id only)
+- ❌ **NEVER** expose `RAZORPAY_KEY_SECRET` to client
+- ❌ **NEVER** expose `RAZORPAY_WEBHOOK_SECRET` to client
+- ✅ Always validate webhook signatures server-side
+- ✅ Use environment-specific keys (test vs. live)
+
+---
+
+## 3. Implementation Roadmap
+
+### 3.1 Phase 1: Foundation & Setup (Day 1-2, 8 hours)
+
+**DEV ACTIONS**:
+
+1. **Razorpay Account Setup**
+   - [ ] Create Razorpay business account at https://razorpay.com/
+   - [ ] Complete KYC verification (PAN, GST, bank details)
+   - [ ] Wait for approval (24-48 hours)
+   - [ ] Generate test mode API keys
+   - [ ] Enable Subscriptions feature in dashboard
+   - [ ] Configure webhook URL: `https://<vercel-url>/api/webhooks/razorpay`
+   - [ ] Save webhook secret
+   - **Verification**: Login to Razorpay dashboard, navigate to Settings → API Keys, confirm keys generated
+
+2. **NPM Package Installation**
+   ```bash
+   cd frontend
+   npm install razorpay@^2.9.4
+   npm install @types/razorpay@^2.0.0 --save-dev
+   ```
+   - **Verification**: Check `package.json` for dependencies, run `npm list razorpay`
+
+3. **Environment Variables Setup**
+   - [ ] Create `frontend/.env.local` if not exists
+   - [ ] Add Razorpay credentials (test mode first)
+   - [ ] Add webhook secret
+   - [ ] Add app URL
+   - [ ] Add feature flag `NEXT_PUBLIC_ENABLE_PAYMENTS=true`
+   - **Verification**: Print env vars in a test file (then remove), ensure server-side-only vars not exposed to client
+
+4. **TypeScript Type Definitions**
+   - [ ] Create `frontend/types/razorpay.d.ts` with interface definitions
+   - [ ] Add global Window.Razorpay type
+   - [ ] Add RazorpayOrder, RazorpaySubscription, RazorpayPlan, RazorpayWebhookEvent interfaces
+   - **Verification**: Run `npm run typecheck`, ensure no TypeScript errors
+
+**AGENT ACTIONS** (after dev completes above):
+
+1. **Create Plan Configuration Module**
+   - **Agent**: Create `frontend/lib/config/razorpayPlans.ts`
+   - **Agent**: Implement `RAZORPAY_PLANS` constant with placeholder IDs
+   - **Agent**: Implement `getPlanId(tier, billing)` function
+   - **Agent**: Add JSDoc comments
+   - **Verification**: Import in a test file, verify function returns correct structure
+
+2. **Create Razorpay SDK Initialization Module**
+   - **Agent**: Create `frontend/lib/razorpay/client.ts`
+   - **Agent**: Initialize Razorpay SDK with key_id and key_secret
+   - **Agent**: Export singleton instance
+   - **Agent**: Add error handling for missing credentials
+   - **Verification**: Import in API route, call `razorpay.plans.all()`, expect valid response
+
+**Acceptance Criteria**:
+- [ ] All dependencies installed with locked versions
+- [ ] Environment variables accessible in server-side code only
+- [ ] TypeScript compilation successful with no errors
+- [ ] Razorpay SDK initializes without errors
+- [ ] Test API call to Razorpay succeeds (list plans)
+
+**Risks**:
+- **Risk**: KYC approval delay (24-48 hours)
+  - **Mitigation**: Start KYC process immediately, continue with test mode while waiting
+- **Risk**: Wrong environment variables exposed to client
+  - **Mitigation**: Code review checklist, automated env var audit script
+
+---
+
+### 3.2 Phase 2: Database Migrations (Day 2-3, 4 hours)
+
+**DEV ACTIONS**:
+
+1. **Create Migration Files**
+   - [ ] Create `supabase/migrations/0034_razorpay_subscriptions.sql`
+   - [ ] Create `supabase/migrations/0035_razorpay_payments.sql`
+   - [ ] Create `supabase/migrations/0036_razorpay_webhook_events.sql`
+   - [ ] Create `supabase/migrations/0037_extend_user_profiles_razorpay.sql`
+   - **Verification**: Files created in correct directory with sequential numbering
+
+2. **Apply Migrations Locally**
+   ```bash
+   npm run db:reset  # from project root
+   ```
+   - [ ] Verify no errors during migration
+   - [ ] Verify tables created successfully
+   - **Verification**: Run `SELECT * FROM pg_tables WHERE schemaname = 'public'`, confirm new tables exist
+
+3. **Test RLS Policies**
+   - [ ] Login as regular user, try to SELECT from subscriptions table (should succeed for own records)
+   - [ ] Login as regular user, try to INSERT into subscriptions table (should fail)
+   - [ ] Use service role key, try to INSERT into subscriptions table (should succeed)
+   - **Verification**: RLS prevents unauthorized access, service role bypasses RLS
+
+**AGENT ACTIONS**:
+
+1. **Create subscriptions Table Migration**
+   - **Agent**: Write SQL for subscriptions table with all columns (see section 2.3)
+   - **Agent**: Add indexes for user_id, razorpay_subscription_id, status, next_billing_date
+   - **Agent**: Add RLS policies (users SELECT own, service role ALL)
+   - **Agent**: Add updated_at trigger
+   - **Agent**: Add constraints (valid_status, valid_period, valid_amount, one_active_subscription_per_user)
+   - **Agent**: Add COMMENT ON TABLE and COMMENT ON COLUMN for documentation
+   - **Agent**: Add rollback section at bottom
+   - **Verification**: Run migration, SELECT from subscriptions, verify structure
+
+2. **Create payments Table Migration**
+   - **Agent**: Write SQL for payments table with all columns (see section 2.3)
+   - **Agent**: Add indexes for user_id, subscription_id, razorpay_payment_id, status, payment_date
+   - **Agent**: Add RLS policies (users SELECT own, service role ALL)
+   - **Agent**: Add updated_at trigger
+   - **Agent**: Add constraints (valid_status, valid_amount)
+   - **Agent**: Add COMMENT ON TABLE and COMMENT ON COLUMN
+   - **Agent**: Add rollback section
+   - **Verification**: Run migration, SELECT from payments, verify structure
+
+3. **Create webhook_events Table Migration**
+   - **Agent**: Write SQL for webhook_events table (see section 2.3)
+   - **Agent**: Add indexes for event_id, event_type, processed_at
+   - **Agent**: Add unique constraint on (event_id, event_type)
+   - **Agent**: No RLS policies needed (service role only access)
+   - **Agent**: Add COMMENT ON TABLE
+   - **Agent**: Add rollback section
+   - **Verification**: Run migration, INSERT duplicate event, expect unique constraint violation
+
+4. **Extend user_profiles Table Migration**
+   - **Agent**: Write SQL to add Razorpay-related columns to user_profiles
+   - **Agent**: Add razorpay_customer_id (UNIQUE), active_subscription_id (FK), subscription_status, payment_method_last4, payment_method_brand
+   - **Agent**: Add indexes for razorpay_customer_id, active_subscription_id
+   - **Agent**: Add constraint for valid_subscription_status
+   - **Agent**: Add COMMENT ON COLUMN
+   - **Agent**: Add rollback section
+   - **Verification**: Run migration, SELECT from user_profiles, verify new columns exist
+
+5. **Create Database Helper Functions**
+   - **Agent**: Create `get_user_payment_history(user_id, limit, offset)` function
+   - **Agent**: Returns payment history with pagination
+   - **Agent**: Add SECURITY DEFINER to allow authenticated users to call
+   - **Agent**: Add COMMENT ON FUNCTION
+   - **Verification**: Call function with test user_id, expect empty array or payment records
+
+**Acceptance Criteria**:
+- [ ] All migrations applied successfully with no errors
+- [ ] Tables created with correct schema
+- [ ] Indexes created for performance
+- [ ] RLS policies enforce security
+- [ ] Triggers auto-update updated_at timestamps
+- [ ] Foreign key constraints work correctly
+- [ ] Rollback scripts tested and working
+
+**Risks**:
+- **Risk**: Migration conflicts with existing data
+  - **Mitigation**: Test migrations on local database first, backup production before applying
+- **Risk**: RLS policies too restrictive or too permissive
+  - **Mitigation**: Comprehensive RLS test suite, security audit
+
+---
+
+### 3.3 Phase 3: API Route - Create Subscription (Day 3-4, 6 hours)
+
+**DEV ACTIONS**:
+
+1. **Create API Route File**
+   - [ ] Create `frontend/app/api/subscriptions/create-subscription/route.ts`
+   - **Verification**: File created in correct location
+
+2. **Test with Razorpay Test Cards**
+   - [ ] Use test card: 4111 1111 1111 1111 (success)
+   - [ ] Use test card: 4000 0000 0000 0002 (declined)
+   - [ ] Use test UPI: success@razorpay
+   - **Verification**: Test transactions appear in Razorpay test dashboard
+
+**AGENT ACTIONS**:
+
+1. **Implement POST Handler**
+   - **Agent**: Import Razorpay SDK, Supabase client, Zod
+   - **Agent**: Define Zod validation schema for request body (planId, tier)
+   - **Agent**: Implement POST function:
+     - Parse and validate request body
+     - Authenticate user (check session)
+     - Check if user already has active subscription (return 400 if yes)
+     - Get or create Razorpay customer ID
+     - Create Razorpay subscription via SDK
+     - Insert subscription record in database (status: 'created')
+     - Return subscription ID and short URL
+   - **Agent**: Add comprehensive error handling (try/catch)
+   - **Agent**: Add structured logging (logInfo, logError)
+   - **Agent**: Add JSDoc comments
+   - **Verification**: Send POST request, verify subscription created in database and Razorpay dashboard
+
+2. **Implement Error Handling**
+   - **Agent**: Handle Zod validation errors (return 400)
+   - **Agent**: Handle authentication errors (return 401)
+   - **Agent**: Handle duplicate subscription errors (return 400)
+   - **Agent**: Handle Razorpay API errors (return 500)
+   - **Agent**: Handle database errors (return 500)
+   - **Agent**: Log all errors with correlation IDs
+   - **Verification**: Send invalid requests, verify correct error responses and logs
+
+3. **Add Rate Limiting**
+   - **Agent**: Create `frontend/lib/middleware/rateLimit.ts`
+   - **Agent**: Implement LRU cache-based rate limiting (10 requests per minute per IP)
+   - **Agent**: Apply to create-subscription route
+   - **Verification**: Send 11 requests rapidly, expect 11th to return 429
+
+**Acceptance Criteria**:
+- [ ] POST /api/subscriptions/create-subscription accepts valid requests
+- [ ] Creates Razorpay customer if not exists
+- [ ] Creates Razorpay subscription successfully
+- [ ] Inserts record in subscriptions table
+- [ ] Returns correct response format
+- [ ] Handles errors gracefully with appropriate status codes
+- [ ] Rate limiting prevents abuse
+- [ ] Logs structured events for monitoring
+
+**Risks**:
+- **Risk**: Razorpay API timeout during subscription creation
+  - **Mitigation**: Implement 60s timeout, retry logic, return user to loading state
+- **Risk**: Race condition if user clicks button twice
+  - **Mitigation**: Client-side button disable, idempotency check in API
+
+**Testing Strategy**:
+```typescript
+// Unit Tests (Agent to implement)
+describe('POST /api/subscriptions/create-subscription', () => {
+  it('should create subscription for valid request');
+  it('should return 401 for unauthenticated user');
+  it('should return 400 for invalid planId');
+  it('should return 400 for user with existing active subscription');
+  it('should create Razorpay customer if not exists');
+  it('should reuse existing Razorpay customer ID');
+  it('should handle Razorpay API errors gracefully');
+  it('should insert subscription record with correct fields');
+  it('should return subscription ID and short URL');
+  it('should respect rate limits (429 after 10 requests/min)');
+});
+```
+
+---
+
+### 3.4 Phase 4: API Route - Verify Payment (Day 4-5, 4 hours)
+
+**DEV ACTIONS**:
+
+1. **Create API Route File**
+   - [ ] Create `frontend/app/api/subscriptions/verify-payment/route.ts`
+   - **Verification**: File created
+
+**AGENT ACTIONS**:
+
+1. **Implement POST Handler**
+   - **Agent**: Import crypto, Supabase client, Zod
+   - **Agent**: Define Zod validation schema (razorpayPaymentId, razorpaySubscriptionId, razorpaySignature)
+   - **Agent**: Implement POST function:
+     - Parse and validate request body
+     - Authenticate user
+     - Verify HMAC signature (crypto.createHmac('sha256', secret).update(text).digest('hex'))
+     - Update subscription status to 'authenticated'
+     - Return success response
+   - **Agent**: Add error handling
+   - **Agent**: Add logging
+   - **Verification**: Send POST request with valid signature, verify subscription updated
+
+2. **Implement Signature Verification**
+   - **Agent**: Create text string: `razorpayPaymentId + '|' + razorpaySubscriptionId`
+   - **Agent**: Calculate HMAC SHA256 signature using RAZORPAY_KEY_SECRET
+   - **Agent**: Compare calculated signature with provided signature (constant-time comparison)
+   - **Agent**: Return 400 if signature mismatch
+   - **Verification**: Send POST with invalid signature, expect 400 error
+
+3. **Add Security Measures**
+   - **Agent**: Use constant-time comparison for signatures (prevent timing attacks)
+   - **Agent**: Rate limit (5 requests per minute per user)
+   - **Agent**: Log all signature verification attempts (success and failure)
+   - **Verification**: Test timing attack resistance, verify rate limiting works
+
+**Acceptance Criteria**:
+- [ ] POST /api/subscriptions/verify-payment accepts valid requests
+- [ ] Verifies Razorpay signature correctly
+- [ ] Updates subscription status to 'authenticated'
+- [ ] Returns 400 for invalid signature
+- [ ] Returns 401 for unauthenticated user
+- [ ] Logs all verification attempts
+- [ ] Rate limiting prevents brute force attacks
+
+**Risks**:
+- **Risk**: Signature verification timing attack
+  - **Mitigation**: Use constant-time comparison library
+- **Risk**: Replay attack (same signature used multiple times)
+  - **Mitigation**: Check subscription status before updating, idempotency in webhook
+
+**Testing Strategy**:
+```typescript
+// Unit Tests (Agent to implement)
+describe('POST /api/subscriptions/verify-payment', () => {
+  it('should verify valid signature successfully');
+  it('should return 400 for invalid signature');
+  it('should return 401 for unauthenticated user');
+  it('should return 400 for missing fields');
+  it('should update subscription status to authenticated');
+  it('should not update if subscription already authenticated');
+  it('should log signature verification success');
+  it('should log signature verification failure');
+  it('should respect rate limits (429 after 5 requests/min)');
+  it('should use constant-time comparison for signatures');
+});
+```
+
+---
+
+### 3.5 Phase 5: Webhook Handler (Day 5-7, 10 hours)
+
+**DEV ACTIONS**:
+
+1. **Create API Route File**
+   - [ ] Create `frontend/app/api/webhooks/razorpay/route.ts`
+   - **Verification**: File created
+
+2. **Configure Webhook in Razorpay Dashboard**
+   - [ ] Navigate to Settings → Webhooks
+   - [ ] Add webhook URL: `https://<vercel-url>/api/webhooks/razorpay`
+   - [ ] Select events: subscription.activated, subscription.charged, subscription.completed, subscription.cancelled, subscription.halted, payment.authorized, payment.captured, payment.failed
+   - [ ] Save webhook secret
+   - **Verification**: Webhook appears in dashboard, secret saved in .env.local
+
+3. **Test with Razorpay Webhook Simulator**
+   - [ ] Navigate to Webhooks → Test Webhook
+   - [ ] Select event type (e.g., subscription.activated)
+   - [ ] Send test webhook
+   - [ ] Verify webhook received and processed successfully
+   - **Verification**: Check Vercel logs, verify webhook event logged
+
+**AGENT ACTIONS**:
+
+1. **Implement POST Handler Skeleton**
+   - **Agent**: Import crypto, Supabase service role client
+   - **Agent**: Implement POST function:
+     - Get raw body as text (for signature verification)
+     - Get signature from headers
+     - Verify signature
+     - Parse event payload
+     - Check idempotency
+     - Route to event-specific handler
+     - Log event processing
+     - Insert event record in webhook_events table
+     - Return 200 OK
+   - **Agent**: Add error handling (catch all, log, return 500)
+   - **Verification**: Send test webhook, verify 200 OK response
+
+2. **Implement Signature Verification**
+   - **Agent**: Create function `verifyWebhookSignature(payload: string, signature: string): boolean`
+   - **Agent**: Calculate HMAC SHA256 using RAZORPAY_WEBHOOK_SECRET
+   - **Agent**: Compare signatures (constant-time)
+   - **Agent**: Return true if match, false otherwise
+   - **Agent**: Log verification result
+   - **Verification**: Send webhook with invalid signature, expect 401 error
+
+3. **Implement Idempotency Check**
+   - **Agent**: Create function `checkIdempotency(eventId: string, eventType: string): boolean`
+   - **Agent**: Query webhook_events table for existing event
+   - **Agent**: Return true if duplicate (skip processing), false if new
+   - **Agent**: Log duplicate events
+   - **Verification**: Send same webhook twice, second should return 200 but skip processing
+
+4. **Implement Event Handler: subscription.activated**
+   - **Agent**: Create async function `handleSubscriptionActivated(event)`
+   - **Agent**: Extract subscription data from payload
+   - **Agent**: Query subscriptions table by razorpay_subscription_id
+   - **Agent**: Update subscriptions table:
+     - status = 'active'
+     - start_date, current_start, current_end, next_billing_date from Razorpay data
+   - **Agent**: Determine tier from plan_id (use tierMap)
+   - **Agent**: Call `handle_tier_upgrade(user_id, tier)` database function
+   - **Agent**: Update user_profiles:
+     - subscription_tier = tier
+     - subscription_status = 'active'
+     - active_subscription_id = subscription_id
+   - **Agent**: Insert payment record in payments table
+   - **Agent**: Log activation
+   - **Verification**: Send subscription.activated webhook, verify tier upgraded in database
+
+5. **Implement Event Handler: subscription.charged**
+   - **Agent**: Create async function `handleSubscriptionCharged(event)`
+   - **Agent**: Extract payment and subscription data
+   - **Agent**: Query subscriptions table
+   - **Agent**: Insert payment record in payments table (status: 'captured')
+   - **Agent**: Call `reset_monthly_limits(user_id)` database function
+   - **Agent**: Log charge
+   - **Verification**: Send subscription.charged webhook, verify payment recorded and limits reset
+
+6. **Implement Event Handler: subscription.completed**
+   - **Agent**: Create async function `handleSubscriptionCompleted(event)`
+   - **Agent**: Update subscriptions table (status: 'completed')
+   - **Agent**: Log completion
+   - **Verification**: Send webhook, verify subscription marked completed
+
+7. **Implement Event Handler: subscription.cancelled**
+   - **Agent**: Create async function `handleSubscriptionCancelled(event)`
+   - **Agent**: Update subscriptions table (status: 'cancelled')
+   - **Agent**: Downgrade user_profiles:
+     - subscription_tier = 'free'
+     - subscription_status = 'cancelled'
+     - active_subscription_id = NULL
+   - **Agent**: Log cancellation
+   - **Verification**: Send webhook, verify user downgraded to free tier
+
+8. **Implement Event Handler: subscription.halted**
+   - **Agent**: Create async function `handleSubscriptionHalted(event)`
+   - **Agent**: Update subscriptions table (status: 'halted')
+   - **Agent**: Downgrade user_profiles (same as cancelled)
+   - **Agent**: Log halt (payment failures exhausted)
+   - **Verification**: Send webhook, verify user downgraded
+
+9. **Implement Event Handler: payment.failed**
+   - **Agent**: Create async function `handlePaymentFailed(event)`
+   - **Agent**: Extract payment error details
+   - **Agent**: Insert payment record (status: 'failed', error_code, error_description)
+   - **Agent**: Update subscriptions table (status: 'past_due')
+   - **Agent**: Log failure with error details
+   - **Verification**: Send webhook, verify payment failure recorded
+
+10. **Implement Event Handler: payment.captured**
+    - **Agent**: Create async function `handlePaymentCaptured(event)`
+    - **Agent**: Insert payment record (status: 'captured')
+    - **Agent**: Log capture
+    - **Verification**: Send webhook, verify payment recorded
+
+11. **Implement Event Handler: payment.authorized**
+    - **Agent**: Create async function `handlePaymentAuthorized(event)`
+    - **Agent**: Log authorization (informational only)
+    - **Verification**: Send webhook, verify logged
+
+**Acceptance Criteria**:
+- [ ] POST /api/webhooks/razorpay accepts valid webhooks
+- [ ] Verifies webhook signature correctly
+- [ ] Checks idempotency (prevents duplicate processing)
+- [ ] Routes events to correct handlers
+- [ ] subscription.activated upgrades user tier and applies carryover
+- [ ] subscription.charged records payment and resets limits
+- [ ] subscription.cancelled/halted downgrades user to free tier
+- [ ] payment.failed records error details
+- [ ] All events logged with structured logging
+- [ ] Inserts event record in webhook_events table
+- [ ] Returns 200 OK within 10 seconds
+- [ ] Handles errors gracefully without crashing
+
+**Risks**:
+- **Risk**: Webhook timeout (Razorpay retries if no response in 60s)
+  - **Mitigation**: Implement async processing, return 200 immediately, process in background
+- **Risk**: Duplicate webhook delivery
+  - **Mitigation**: Idempotency check with unique constraint
+- **Risk**: Webhook signature verification failure
+  - **Mitigation**: Log all verification attempts, alert on failures
+
+**Testing Strategy**:
+```typescript
+// Integration Tests (Agent to implement)
+describe('POST /api/webhooks/razorpay', () => {
+  describe('Signature Verification', () => {
+    it('should accept valid signature');
+    it('should reject invalid signature (401)');
+    it('should reject missing signature (400)');
+  });
+
+  describe('Idempotency', () => {
+    it('should process event first time');
+    it('should skip duplicate event second time');
+    it('should log duplicate event');
+  });
+
+  describe('subscription.activated', () => {
+    it('should update subscription status to active');
+    it('should upgrade user tier');
+    it('should apply free tier carryover if applicable');
+    it('should insert payment record');
+    it('should log activation');
+  });
+
+  describe('subscription.charged', () => {
+    it('should insert payment record');
+    it('should reset monthly limits');
+    it('should log charge');
+  });
+
+  describe('subscription.cancelled', () => {
+    it('should update subscription status to cancelled');
+    it('should downgrade user to free tier');
+    it('should log cancellation');
+  });
+
+  describe('subscription.halted', () => {
+    it('should update subscription status to halted');
+    it('should downgrade user to free tier');
+    it('should log halt');
+  });
+
+  describe('payment.failed', () => {
+    it('should insert payment record with error details');
+    it('should update subscription status to past_due');
+    it('should log failure');
+  });
+
+  describe('Error Handling', () => {
+    it('should return 500 for database errors');
+    it('should log errors with correlation IDs');
+    it('should not crash on invalid payload');
+  });
+});
+```
+
+---
+
+### 3.6 Phase 6: Frontend - Razorpay Provider (Day 7-8, 4 hours)
+
+**DEV ACTIONS**:
+
+1. **Add Razorpay Checkout Script to Root Layout**
+   - [ ] Edit `frontend/app/layout.tsx`
+   - [ ] Add `<script src="https://checkout.razorpay.com/v1/checkout.js" async></script>` to head
+   - **Verification**: Load page, check network tab, verify script loaded
+
+**AGENT ACTIONS**:
+
+1. **Create Razorpay Provider Component**
+   - **Agent**: Create `frontend/components/providers/RazorpayProvider.tsx`
+   - **Agent**: Mark as 'use client'
+   - **Agent**: Implement useEffect to load Razorpay checkout script
+   - **Agent**: Add cleanup function to remove script on unmount
+   - **Agent**: Export provider component
+   - **Verification**: Import in layout, verify script loaded dynamically
+
+2. **Create Razorpay Checkout Hook**
+   - **Agent**: Create `frontend/lib/hooks/useRazorpayCheckout.ts`
+   - **Agent**: Implement hook with following methods:
+     - `openCheckout(subscriptionId, planName, onSuccess, onFailure)`
+     - Load Razorpay options (key, subscription_id, name, description, handler)
+     - Open Razorpay modal
+     - Handle success callback (verify payment)
+     - Handle failure callback
+     - Handle modal close
+   - **Agent**: Add TypeScript types
+   - **Agent**: Add JSDoc comments
+   - **Verification**: Use hook in component, verify modal opens and handles callbacks
+
+3. **Add Global TypeScript Declaration**
+   - **Agent**: Update `frontend/types/razorpay.d.ts`
+   - **Agent**: Add `declare global { interface Window { Razorpay: any; } }`
+   - **Verification**: TypeScript recognizes Window.Razorpay without errors
+
+**Acceptance Criteria**:
+- [ ] Razorpay Checkout script loaded on all pages
+- [ ] RazorpayProvider component wraps app
+- [ ] useRazorpayCheckout hook exposes checkout functions
+- [ ] TypeScript types defined correctly
+- [ ] Modal opens when openCheckout called
+- [ ] Success/failure callbacks invoked correctly
+
+**Risks**:
+- **Risk**: Script load failure (CDN down, blocked by ad blocker)
+  - **Mitigation**: Show fallback UI with error message, retry mechanism
+- **Risk**: Modal blocked by browser popup blocker
+  - **Mitigation**: User-initiated action required, show instructions
+
+---
+
+### 3.7 Phase 7: Frontend - Checkout Button Component (Day 8-9, 6 hours)
+
+**AGENT ACTIONS**:
+
+1. **Create CheckoutButton Component**
+   - **Agent**: Create `frontend/components/pricing/CheckoutButton.tsx`
+   - **Agent**: Mark as 'use client'
+   - **Agent**: Props: planId (string), tier (string), disabled (boolean)
+   - **Agent**: Import useRazorpayCheckout, useRouter, toast
+   - **Agent**: Implement handleCheckout async function:
+     - Set loading state
+     - Call POST /api/subscriptions/create-subscription
+     - Handle response (subscription ID)
+     - Open Razorpay checkout modal
+     - Handle success (verify payment, show toast, redirect to dashboard)
+     - Handle failure (show toast error)
+     - Clear loading state
+   - **Agent**: Render button with loading spinner
+   - **Agent**: Add TypeScript types
+   - **Verification**: Click button, verify subscription created and modal opens
+
+2. **Integrate with Pricing Page**
+   - **Agent**: Edit `frontend/app/pricing/page.tsx`
+   - **Agent**: Replace "Upgrade Now" buttons with CheckoutButton component
+   - **Agent**: Pass correct planId and tier for each card
+   - **Agent**: Conditionally render based on NEXT_PUBLIC_ENABLE_PAYMENTS flag
+   - **Verification**: Load pricing page, verify CheckoutButton renders for each plan
+
+3. **Add Loading State UI**
+   - **Agent**: Update CheckoutButton to show loading spinner during checkout
+   - **Agent**: Disable button during loading
+   - **Agent**: Show "Processing..." text
+   - **Verification**: Click button, verify loading state shows
+
+4. **Add Error Handling UI**
+   - **Agent**: Show toast notification on error
+   - **Agent**: Log error to console
+   - **Agent**: Re-enable button after error
+   - **Verification**: Simulate error (invalid plan ID), verify toast shows
+
+**Acceptance Criteria**:
+- [ ] CheckoutButton component renders on pricing page
+- [ ] Click triggers subscription creation API call
+- [ ] Razorpay modal opens on success
+- [ ] User can complete payment in modal
+- [ ] Success redirects to dashboard with upgraded tier
+- [ ] Failure shows error toast
+- [ ] Loading state shows during processing
+- [ ] Button disabled during processing
+
+**Risks**:
+- **Risk**: User closes modal mid-payment
+  - **Mitigation**: Show confirmation dialog, allow resume later
+- **Risk**: Payment succeeds but webhook delayed
+  - **Mitigation**: Show "Processing..." message, poll for status
+
+---
+
+### 3.8 Phase 8: API Route - Cancel Subscription (Day 9-10, 4 hours)
+
+**DEV ACTIONS**:
+
+1. **Create API Route File**
+   - [ ] Create `frontend/app/api/subscriptions/cancel/route.ts`
+   - **Verification**: File created
+
+**AGENT ACTIONS**:
+
+1. **Implement POST Handler**
+   - **Agent**: Import Razorpay SDK, Supabase client, Zod
+   - **Agent**: Define Zod validation schema (cancelAtCycleEnd: boolean)
+   - **Agent**: Implement POST function:
+     - Parse and validate request body
+     - Authenticate user
+     - Get active subscription from database
+     - Cancel subscription in Razorpay via SDK
+     - Update subscriptions table (status: 'cancelled')
+     - If immediate cancellation, downgrade user to free tier
+     - Return success response with cancelled_at date
+   - **Agent**: Add error handling
+   - **Agent**: Add logging
+   - **Verification**: Send POST request, verify subscription cancelled in Razorpay and database
+
+2. **Implement Cancellation Logic**
+   - **Agent**: Support two modes: cancel at cycle end (default) or immediate
+   - **Agent**: If cancelAtCycleEnd = true:
+     - User retains access until next_billing_cycle_date
+     - No downgrade until cycle ends
+   - **Agent**: If cancelAtCycleEnd = false:
+     - Immediate downgrade to free tier
+     - Update user_profiles
+   - **Verification**: Test both modes, verify correct behavior
+
+**Acceptance Criteria**:
+- [ ] POST /api/subscriptions/cancel accepts valid requests
+- [ ] Cancels subscription in Razorpay
+- [ ] Updates subscription status in database
+- [ ] Supports cancel at cycle end or immediate
+- [ ] Downgrades user tier if immediate cancellation
+- [ ] Returns correct response
+- [ ] Handles errors gracefully
+
+**Risks**:
+- **Risk**: User cancels accidentally
+  - **Mitigation**: Require confirmation dialog in UI
+- **Risk**: Razorpay cancellation fails but database updated
+  - **Mitigation**: Transaction rollback, retry mechanism
+
+---
+
+### 3.9 Phase 9: Frontend - Subscription Management Page (Day 10-11, 8 hours)
+
+**AGENT ACTIONS**:
+
+1. **Create Subscription Info Component**
+   - **Agent**: Create `frontend/components/subscription/SubscriptionInfo.tsx`
+   - **Agent**: Fetch active subscription from database
+   - **Agent**: Display:
+     - Current tier
+     - Subscription status
+     - Next billing date
+     - Payment amount
+     - Payment method (last4, brand)
+   - **Agent**: Add loading state
+   - **Agent**: Add error handling
+   - **Verification**: Load page, verify subscription info displays correctly
+
+2. **Create Cancel Subscription Button**
+   - **Agent**: Create `frontend/components/subscription/CancelSubscriptionButton.tsx`
+   - **Agent**: Show confirmation dialog on click
+   - **Agent**: Call POST /api/subscriptions/cancel on confirm
+   - **Agent**: Show success toast
+   - **Agent**: Refresh subscription data
+   - **Verification**: Click cancel button, confirm, verify subscription cancelled
+
+3. **Create Payment History Component**
+   - **Agent**: Create `frontend/components/subscription/PaymentHistory.tsx`
+   - **Agent**: Fetch payment history from database (call RPC function)
+   - **Agent**: Display table:
+     - Payment date
+     - Amount
+     - Status
+     - Payment method
+     - Invoice link (if available)
+   - **Agent**: Add pagination (10 per page)
+   - **Agent**: Add loading state
+   - **Verification**: Load page, verify payment history displays
+
+4. **Create Subscription Management Page**
+   - **Agent**: Create `frontend/app/(auth)/subscription/page.tsx`
+   - **Agent**: Use SubscriptionInfo, CancelSubscriptionButton, PaymentHistory components
+   - **Agent**: Add page layout with title and sections
+   - **Agent**: Add authentication check (redirect if not logged in)
+   - **Verification**: Navigate to /subscription, verify all components render
+
+**Acceptance Criteria**:
+- [ ] Subscription management page accessible at /subscription
+- [ ] Displays current subscription info
+- [ ] Displays payment history with pagination
+- [ ] Cancel button works correctly
+- [ ] Confirmation dialog prevents accidental cancellation
+- [ ] Success/error toasts show for all actions
+- [ ] Authenticated users only access
+
+---
+
+### 3.10 Phase 10: Testing & QA (Day 12-14, 12 hours)
+
+**DEV ACTIONS**:
+
+1. **Manual End-to-End Testing**
+   - **Test Scenario 1: New Subscription (Explorer → Navigator)**
+     - [ ] Login as free tier user
+     - [ ] Navigate to pricing page
+     - [ ] Click "Upgrade Now" on Navigator plan
+     - [ ] Complete payment in Razorpay modal (test card)
+     - [ ] Verify redirected to dashboard
+     - [ ] Verify tier upgraded to Navigator (25 blueprints/month)
+     - [ ] Verify free tier carryover applied (if eligible)
+     - [ ] Verify billing dates set correctly
+     - **Expected Result**: User upgraded successfully, webhook processed
+
+   - **Test Scenario 2: Subscription Cancellation**
+     - [ ] Login as paid tier user
+     - [ ] Navigate to /subscription
+     - [ ] Click "Cancel Subscription"
+     - [ ] Choose "Cancel at end of cycle"
+     - [ ] Verify subscription status = 'cancelled' but tier unchanged
+     - [ ] Wait until next_billing_cycle_date
+     - [ ] Verify user downgraded to free tier
+     - **Expected Result**: Graceful cancellation, user retains access until cycle end
+
+   - **Test Scenario 3: Payment Failure**
+     - [ ] Login as paid tier user
+     - [ ] Simulate payment failure (use test card 4000 0000 0000 0002)
+     - [ ] Verify webhook payment.failed received
+     - [ ] Verify subscription status = 'past_due'
+     - [ ] Verify user receives failure notification (if implemented)
+     - [ ] Razorpay auto-retries (wait 24 hours)
+     - [ ] After 3 failures, verify subscription.halted webhook
+     - [ ] Verify user downgraded to free tier
+     - **Expected Result**: Retry logic works, user downgraded after failures
+
+   - **Test Scenario 4: Free Tier Carryover**
+     - [ ] Create new user (free tier)
+     - [ ] Use 1 of 2 blueprint creations
+     - [ ] Upgrade to Navigator
+     - [ ] Verify free_tier_carryover_data JSONB has creation_carryover = 1
+     - [ ] Verify effective limit = 25 + 1 = 26
+     - [ ] Create 26 blueprints (should succeed)
+     - [ ] Attempt 27th blueprint (should fail with limit error)
+     - [ ] Wait 12 months (or manually set carryover_expires_at to past)
+     - [ ] Verify carryover expired, effective limit = 25
+     - **Expected Result**: Carryover applied for 12 months, then expires
+
+   - **Test Scenario 5: Webhook Idempotency**
+     - [ ] Send subscription.activated webhook manually (via Razorpay simulator)
+     - [ ] Verify event processed, user upgraded
+     - [ ] Send same webhook again (duplicate)
+     - [ ] Verify webhook returns 200 but skips processing (check logs)
+     - [ ] Verify user tier unchanged (no double-upgrade)
+     - **Expected Result**: Duplicate webhooks ignored
+
+2. **Security Audit**
+   - [ ] Verify RAZORPAY_KEY_SECRET not exposed in client bundle
+   - [ ] Verify RAZORPAY_WEBHOOK_SECRET not exposed in client bundle
+   - [ ] Verify webhook signature validation uses constant-time comparison
+   - [ ] Verify RLS policies prevent unauthorized database access
+   - [ ] Verify rate limiting active on all API routes
+   - [ ] Verify authentication required for all user-facing APIs
+   - [ ] Verify HTTPS enforced in production
+   - **Expected Result**: No security vulnerabilities found
+
+3. **Performance Testing**
+   - [ ] Load test pricing page (100 concurrent users)
+   - [ ] Load test checkout flow (50 concurrent subscriptions)
+   - [ ] Load test webhook handler (100 concurrent webhooks)
+   - [ ] Measure API response times (P95 < 500ms)
+   - [ ] Measure database query times (P95 < 100ms)
+   - [ ] Verify no memory leaks during sustained load
+   - **Expected Result**: All performance targets met
+
+**AGENT ACTIONS**:
+
+1. **Write Unit Tests**
+   - **Agent**: Create test files for all API routes
+   - **Agent**: Mock Razorpay SDK, Supabase client
+   - **Agent**: Test happy path, error cases, edge cases
+   - **Agent**: Aim for >90% code coverage
+   - **Verification**: Run `npm run test`, verify all tests pass
+
+2. **Write Integration Tests**
+   - **Agent**: Create integration test files for complete flows
+   - **Agent**: Use test database (not production)
+   - **Agent**: Test subscription creation → payment → webhook → tier upgrade
+   - **Agent**: Test cancellation flow
+   - **Agent**: Test payment failure flow
+   - **Verification**: Run integration tests, verify all pass
+
+3. **Write E2E Tests (Playwright)**
+   - **Agent**: Create E2E test files for user journeys
+   - **Agent**: Test pricing page → checkout → payment → dashboard
+   - **Agent**: Test subscription management page
+   - **Agent**: Use Razorpay test mode
+   - **Verification**: Run E2E tests, verify all pass
+
+**Acceptance Criteria**:
+- [ ] All manual test scenarios pass
+- [ ] All unit tests pass (>90% coverage)
+- [ ] All integration tests pass
+- [ ] All E2E tests pass
+- [ ] Security audit complete with no critical issues
+- [ ] Performance tests meet targets
+- [ ] No regressions in existing functionality
+
+**Risks**:
+- **Risk**: Test environment differs from production
+  - **Mitigation**: Use production-like environment, test migrations on staging first
+- **Risk**: Razorpay test mode behaves differently from live mode
+  - **Mitigation**: Document differences, plan for live testing with small transactions
+
+---
+
+### 3.11 Phase 11: Production Deployment (Day 14-15, 4 hours)
+
+**DEV ACTIONS**:
+
+1. **Switch to Live Razorpay Keys**
+   - [ ] Generate live API keys in Razorpay dashboard
+   - [ ] Update environment variables in Vercel (production)
+   - [ ] Configure live webhook URL
+   - [ ] Verify webhook secret updated
+   - **Verification**: Check Vercel environment variables, verify live keys active
+
+2. **Create Live Plans in Razorpay**
+   - [ ] Create 6 plans in Razorpay live mode (use exact pricing from section 2.4)
+   - [ ] Document plan IDs
+   - [ ] Update `razorpayPlans.ts` with live plan IDs
+   - **Verification**: Plans visible in Razorpay dashboard, IDs match config
+
+3. **Apply Migrations to Production Database**
+   - [ ] Backup production database
+   - [ ] Run migrations (0034-0037)
+   - [ ] Verify tables created successfully
+   - [ ] Verify no errors in logs
+   - **Verification**: Query production database, confirm new tables exist
+
+4. **Deploy to Vercel Production**
+   - [ ] Merge feature branch to main
+   - [ ] Push to GitHub
+   - [ ] Vercel auto-deploys
+   - [ ] Verify deployment successful
+   - **Verification**: Check Vercel dashboard, verify deployment green
+
+5. **Smoke Test Production**
+   - [ ] Login to production
+   - [ ] Navigate to pricing page
+   - [ ] Verify plans display correctly
+   - [ ] Complete a real transaction (₹1 test)
+   - [ ] Verify webhook received and processed
+   - [ ] Verify user upgraded
+   - **Verification**: All production flows work
+
+6. **Monitor Initial Transactions**
+   - [ ] Set up alerts for webhook failures
+   - [ ] Set up alerts for API errors
+   - [ ] Monitor Vercel logs for first 24 hours
+   - [ ] Monitor Razorpay dashboard for transaction status
+   - **Verification**: No errors in first 10 transactions
+
+**Acceptance Criteria**:
+- [ ] Live Razorpay keys active in production
+- [ ] Live plans created with correct pricing
+- [ ] Migrations applied to production database
+- [ ] Vercel deployment successful
+- [ ] Smoke tests pass
+- [ ] Monitoring active
+- [ ] Rollback plan documented and tested
+
+**Risks**:
+- **Risk**: Production issues not caught in testing
+  - **Mitigation**: Canary deployment (1% traffic first), feature flag rollback
+- **Risk**: Database migration fails in production
+  - **Mitigation**: Backup before migration, rollback script ready, test on staging first
+
+---
+
+## 4. Quality Assurance Framework
+
+### 4.1 Testing Strategy
+
+**Unit Tests (Target: >90% coverage)**
+
+```typescript
+// Example unit test structure (Agent to implement)
+describe('Subscription Creation API', () => {
+  describe('Input Validation', () => {
+    it('should accept valid planId and tier');
+    it('should reject missing planId');
+    it('should reject invalid tier');
+    it('should reject non-string planId');
+  });
+
+  describe('Authentication', () => {
+    it('should require authenticated user');
+    it('should return 401 for unauthenticated request');
+  });
+
+  describe('Business Logic', () => {
+    it('should create Razorpay customer if not exists');
+    it('should reuse existing Razorpay customer ID');
+    it('should create Razorpay subscription');
+    it('should insert subscription record in database');
+    it('should return subscription ID and short URL');
+    it('should prevent duplicate active subscriptions');
+  });
+
+  describe('Error Handling', () => {
+    it('should handle Razorpay API errors');
+    it('should handle database errors');
+    it('should handle timeout errors');
+    it('should log all errors with correlation IDs');
+  });
+});
+```
+
+**Integration Tests**
+
+```typescript
+describe('Subscription Flow', () => {
+  it('should complete full subscription lifecycle', async () => {
+    // 1. Create subscription
+    const { subscriptionId } = await createSubscription(planId, tier);
+
+    // 2. Verify payment
+    const signature = generateSignature(paymentId, subscriptionId);
+    await verifyPayment(paymentId, subscriptionId, signature);
+
+    // 3. Send webhook (subscription.activated)
+    await sendWebhook('subscription.activated', subscriptionId);
+
+    // 4. Verify user upgraded
+    const user = await getUserProfile(userId);
+    expect(user.subscription_tier).toBe('navigator');
+    expect(user.subscription_status).toBe('active');
+  });
+});
+```
+
+**E2E Tests (Playwright)**
+
+```typescript
+test('User can upgrade to Navigator tier', async ({ page }) => {
+  // 1. Login
+  await page.goto('/login');
+  await page.fill('[name="email"]', 'test@example.com');
+  await page.fill('[name="password"]', 'password123');
+  await page.click('button[type="submit"]');
+
+  // 2. Navigate to pricing page
+  await page.goto('/pricing');
+
+  // 3. Click upgrade button on Navigator plan
+  await page.click('text="Upgrade Now"', { position: { x: 100, y: 50 } });
+
+  // 4. Wait for Razorpay modal
+  await page.waitForSelector('.razorpay-container');
+
+  // 5. Fill payment details (test card)
+  await page.frameLocator('.razorpay-container').fill('[name="card[number]"]', '4111111111111111');
+  await page.frameLocator('.razorpay-container').fill('[name="card[expiry]"]', '12/25');
+  await page.frameLocator('.razorpay-container').fill('[name="card[cvv]"]', '123');
+
+  // 6. Submit payment
+  await page.frameLocator('.razorpay-container').click('button[type="submit"]');
+
+  // 7. Verify redirect to dashboard
+  await page.waitForURL('/dashboard');
+
+  // 8. Verify tier badge shows "Navigator"
+  await expect(page.locator('text="Navigator"')).toBeVisible();
+});
+```
+
+### 4.2 Performance Benchmarks
+
+| Operation | Target | Critical Threshold |
+|-----------|--------|-------------------|
+| Subscription Creation API | <500ms (P95) | >2s |
+| Payment Verification API | <300ms (P95) | >1s |
+| Webhook Processing | <1s (P95) | >5s |
+| Pricing Page Load | <1s (P95) | >3s |
+| Checkout Modal Open | <500ms | >2s |
+| Database Queries | <100ms (P95) | >500ms |
+
+### 4.3 Security Testing
+
+**Checklist**:
+- [ ] SQL injection prevention (parameterized queries)
+- [ ] XSS prevention (sanitized inputs)
+- [ ] CSRF protection (SameSite cookies)
+- [ ] Signature verification (constant-time comparison)
+- [ ] Environment variable security (no exposure to client)
+- [ ] RLS policies tested (unauthorized access blocked)
+- [ ] Rate limiting tested (429 after threshold)
+- [ ] HTTPS enforced (no HTTP in production)
+- [ ] Webhook replay attack prevention (idempotency)
+- [ ] Payment data encryption (PCI DSS compliance)
+
+### 4.4 Monitoring & Observability
+
+**Key Metrics Dashboard**:
+```typescript
+interface MonitoringMetrics {
+  // Business Metrics
+  subscriptionsCreated: Counter;
+  subscriptionsCancelled: Counter;
+  paymentsSucceeded: Counter;
+  paymentsFailed: Counter;
+  revenueTotal: Counter;
+
+  // Performance Metrics
+  apiResponseTime: Histogram;
+  webhookProcessingTime: Histogram;
+  databaseQueryTime: Histogram;
+
+  // Error Metrics
+  apiErrorRate: Gauge;
+  webhookErrorRate: Gauge;
+  paymentFailureRate: Gauge;
+
+  // Provider Health
+  razorpayAvailability: Gauge;
+  supabaseAvailability: Gauge;
+}
+```
+
+**Alert Configuration**:
+- **P0 (Critical)**: All payments failing (>10 consecutive failures) → PagerDuty
+- **P1 (High)**: Webhook error rate >5% → Slack + Email
+- **P2 (Medium)**: API response time degradation >50% → Slack
+- **P3 (Low)**: Payment failure rate >20% → Email daily digest
+
+---
+
+## 5. Risk Management
+
+### 5.1 Risk Matrix
+
+| Risk | Probability | Impact | Mitigation | Contingency |
+|------|------------|--------|------------|-------------|
+| Razorpay API Changes | Low | High | Version locking, monitor changelog | Maintain fallback to manual tier assignment |
+| Payment Gateway Downtime | Low | Critical | Health checks, status page monitoring | Show maintenance message, queue transactions |
+| Webhook Delivery Failure | Medium | High | Idempotency, retry logic, monitoring | Manual reconciliation script |
+| Signature Verification Bypass | Low | Critical | Constant-time comparison, security audit | Immediate key rotation, investigate logs |
+| Database Migration Failure | Low | High | Backup before migration, test on staging | Rollback script, restore from backup |
+| User Payment Method Expiry | High | Medium | Email reminders, payment method update UI | Retry logic, grace period |
+| Pricing Calculation Error | Low | High | Unit tests for all pricing logic | Refund script, admin correction tool |
+| Free Tier Carryover Bug | Medium | Medium | Comprehensive test scenarios | Manual adjustment via admin API |
+
+### 5.2 Rollback Procedures
+
+**Immediate Rollback (<5 minutes)**:
+```bash
+# 1. Disable payment features
+NEXT_PUBLIC_ENABLE_PAYMENTS=false npm run deploy
+
+# 2. Revert to previous Vercel deployment
+vercel rollback
+
+# 3. Update environment variables
+vercel env rm NEXT_PUBLIC_ENABLE_PAYMENTS production
+```
+
+**Database Rollback**:
+```bash
+# 1. Restore database backup (if migrations failed)
+supabase db dump --data-only > backup.sql
+psql $DATABASE_URL < backup.sql
+
+# 2. Run rollback migrations
+cd supabase/migrations
+psql $DATABASE_URL < ROLLBACK_0037_extend_user_profiles_razorpay.sql
+psql $DATABASE_URL < ROLLBACK_0036_razorpay_webhook_events.sql
+psql $DATABASE_URL < ROLLBACK_0035_razorpay_payments.sql
+psql $DATABASE_URL < ROLLBACK_0034_razorpay_subscriptions.sql
+```
+
+**Communication Plan**:
+1. **Engineering**: Slack #platform-critical (immediate)
+2. **Product**: Email to product@company.com (within 30 min)
+3. **Support**: Update status page https://status.smartslate.io (within 1 hour)
+4. **Users**: In-app notification if >10 min downtime
+
+---
+
+## 6. Post-Launch Plan
+
+### 6.1 Week 1 Post-Launch
+- [ ] **Daily Metrics Review** (10 AM IST)
+  - Subscriptions created
+  - Payments succeeded/failed
+  - Webhook processing success rate
+  - API error rate
+  - User feedback/support tickets
+
+- [ ] **Daily Monitoring**
+  - Razorpay dashboard for transaction status
+  - Vercel logs for errors
+  - Supabase logs for database issues
+  - User reports on Slack #support
+
+- [ ] **Daily Stand-up** (15 min)
+  - Review metrics
+  - Discuss issues
+  - Prioritize fixes
+
+### 6.2 Week 2-4 Post-Launch
+- [ ] **Weekly Performance Reports**
+  - Total revenue
+  - Conversion rate (free → paid)
+  - Churn rate
+  - Average revenue per user (ARPU)
+  - Payment success rate
+
+- [ ] **Weekly Optimization**
+  - Identify bottlenecks
+  - Optimize slow queries
+  - Reduce error rate
+  - Improve user experience
+
+### 6.3 Month 2 Onwards
+- [ ] **Monthly Business Review**
+  - Revenue vs. target
+  - User growth
+  - Churn analysis
+  - Cohort retention
+
+- [ ] **Quarterly Architecture Review**
+  - Code quality assessment
+  - Security audit
+  - Performance optimization
+  - Technical debt reduction
+
+---
+
+## 7. Success Criteria & Sign-off
+
+### 7.1 Technical Acceptance
+- [ ] All unit tests passing (>90% coverage)
+- [ ] All integration tests passing
+- [ ] All E2E tests passing
+- [ ] Performance benchmarks met (see section 4.2)
+- [ ] Security audit complete (see section 4.3)
+- [ ] Zero critical vulnerabilities
+- [ ] Documentation complete (API docs, runbooks, developer guides)
+
+### 7.2 Business Acceptance
+- [ ] Successful payment rate >95%
+- [ ] Checkout completion rate >80%
+- [ ] Webhook processing success >99.5%
+- [ ] Zero data loss incidents
+- [ ] Feature parity with design specs
+- [ ] Rollback tested successfully
+
+### 7.3 Stakeholder Sign-offs
+
+| Role | Name | Criteria | Sign-off Date |
+|------|------|----------|---------------|
+| Engineering Lead | TBD | Technical requirements met | |
+| Product Manager | TBD | Business objectives achieved | |
+| QA Lead | TBD | Quality standards satisfied | |
+| DevOps Lead | TBD | Deployment ready | |
+| Security Lead | TBD | Security review passed | |
+| Finance Lead | TBD | Revenue tracking verified | |
+
+---
+
+## Appendix A: Razorpay Plan Creation Script
+
+```typescript
+// frontend/scripts/createRazorpayPlans.ts
+import Razorpay from 'razorpay';
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID!,
+  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+});
+
+const plans = [
+  {
+    tier: 'explorer',
+    name: 'Explorer - Monthly',
+    amount: 190000, // ₹1,900 in paise
+    period: 'monthly',
+    interval: 1,
+    description: '5 blueprint generations per month',
+  },
+  {
+    tier: 'navigator',
+    name: 'Navigator - Monthly',
+    amount: 390000, // ₹3,900
+    period: 'monthly',
+    interval: 1,
+    description: '25 blueprint generations per month',
+  },
+  {
+    tier: 'voyager',
+    name: 'Voyager - Monthly',
+    amount: 790000, // ₹7,900
+    period: 'monthly',
+    interval: 1,
+    description: '50 blueprint generations per month',
+  },
+  {
+    tier: 'crew',
+    name: 'Crew - Monthly (per seat)',
+    amount: 240000, // ₹2,400
+    period: 'monthly',
+    interval: 1,
+    description: '10 blueprint generations per seat per month',
+  },
+  {
+    tier: 'fleet',
+    name: 'Fleet - Monthly (per seat)',
+    amount: 640000, // ₹6,400
+    period: 'monthly',
+    interval: 1,
+    description: '30 blueprint generations per seat per month',
+  },
+  {
+    tier: 'armada',
+    name: 'Armada - Monthly (per seat)',
+    amount: 1290000, // ₹12,900
+    period: 'monthly',
+    interval: 1,
+    description: '60 blueprint generations per seat per month',
+  },
+];
+
+async function createPlans() {
+  console.log('Creating Razorpay plans...\n');
+
+  for (const plan of plans) {
+    try {
+      const razorpayPlan = await razorpay.plans.create({
+        period: plan.period as 'monthly' | 'yearly',
+        interval: plan.interval,
+        item: {
+          name: plan.name,
+          description: plan.description,
+          amount: plan.amount,
+          currency: 'INR',
+        },
+      });
+
+      console.log(`✅ ${plan.name}`);
+      console.log(`   Plan ID: ${razorpayPlan.id}`);
+      console.log(`   Amount: ₹${plan.amount / 100}\n`);
+    } catch (error: any) {
+      console.error(`❌ Failed to create ${plan.name}:`, error.message);
+    }
+  }
+}
+
+createPlans();
+```
+
+**Usage**:
+```bash
+cd frontend
+npx tsx scripts/createRazorpayPlans.ts
+```
+
+---
+
+## Appendix B: Webhook Event Reference
+
+**Razorpay Webhook Events**:
+
+| Event | Description | Handler Action |
+|-------|-------------|----------------|
+| `subscription.activated` | Subscription activated after successful auth | Upgrade user tier, apply carryover, set billing dates |
+| `subscription.charged` | Recurring charge succeeded | Record payment, reset monthly limits |
+| `subscription.completed` | All billing cycles completed | Mark subscription completed |
+| `subscription.cancelled` | User cancelled subscription | Downgrade to free tier, mark cancelled |
+| `subscription.halted` | Payment failures exhausted | Downgrade to free tier, mark halted |
+| `payment.authorized` | Payment method authorized | Log authorization (informational) |
+| `payment.captured` | Payment captured successfully | Record payment |
+| `payment.failed` | Payment failed | Record error, update status to past_due |
+
+---
+
+## Appendix C: Emergency Contacts
+
+| Role | Name | Contact | Escalation Level |
+|------|------|---------|-----------------|
+| On-Call Engineer | Rotation | PagerDuty | L1 |
+| Platform Lead | TBD | Slack/Phone | L2 |
+| Product Manager | TBD | Slack/Phone | L2 |
+| VP Engineering | TBD | Phone | L3 |
+| CTO | TBD | Phone | L4 |
+| Razorpay Support | N/A | support@razorpay.com | External |
+
+---
+
+## Appendix D: Testing Checklists
+
+**Manual Testing Checklist**:
+- [ ] Pricing page displays all plans correctly
+- [ ] Currency toggle (INR/USD) works
+- [ ] Upgrade button opens Razorpay modal
+- [ ] Payment succeeds with test card
+- [ ] User redirected to dashboard after payment
+- [ ] Tier upgraded correctly in database
+- [ ] Free tier carryover applied correctly
+- [ ] Billing dates set correctly
+- [ ] Subscription status changes correctly
+- [ ] Cancellation flow works (both modes)
+- [ ] Payment history displays correctly
+- [ ] Webhook processing successful
+- [ ] Idempotency prevents duplicates
+- [ ] Error handling shows user-friendly messages
+- [ ] Loading states show during processing
+
+**Security Testing Checklist**:
+- [ ] API keys not exposed in client bundle
+- [ ] Webhook signature verification works
+- [ ] RLS policies prevent unauthorized access
+- [ ] Rate limiting active on all routes
+- [ ] Authentication required for protected routes
+- [ ] HTTPS enforced in production
+- [ ] SQL injection prevented
+- [ ] XSS prevented
+- [ ] CSRF protection active
+
+**Performance Testing Checklist**:
+- [ ] API response times <500ms (P95)
+- [ ] Database queries <100ms (P95)
+- [ ] Webhook processing <1s (P95)
+- [ ] Page load times <1s (P95)
+- [ ] No memory leaks under load
+- [ ] Concurrent requests handled correctly
+
+---
+
+**Document Status:** APPROVED FOR IMPLEMENTATION
+**Next Review:** November 15, 2025
+**Owner:** Platform Engineering Team
+
+*This PRD represents a binding technical specification. Any deviations require written approval from the Engineering Lead and Product Manager.*

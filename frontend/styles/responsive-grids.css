@@ -1,0 +1,634 @@
+/**
+ * Mobile-First Responsive Grid System
+ *
+ * This file implements mobile-first grid utility classes that automatically
+ * adapt column counts and spacing based on screen size for optimal layouts.
+ * All grids use min-width media queries for progressive enhancement.
+ */
+
+/* ========================================
+   MOBILE-FIRST GRID BASE CLASSES
+   ======================================== */
+
+/**
+ * Base grid styles - mobile-first approach
+ * Single column by default, scales up responsively
+ */
+.grid-base {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+/* ========================================
+   RESPONSIVE GRID UTILITIES
+   ======================================== */
+
+/**
+ * Auto-responsive grid that adapts column count by screen size
+ * Mobile: 1 column, scales up to 4 columns on desktop
+ */
+.grid-responsive {
+  @apply grid-base;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid-responsive {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+}
+
+/**
+ * Card-specific grid optimized for content cards
+ * Mobile: 1 column, scales to 4 columns with optimal spacing
+ */
+.grid-cards {
+  @apply grid-base;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .grid-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid-cards {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3rem;
+  }
+}
+
+/**
+ * Dashboard grid for KPI cards and metrics
+ * Mobile: 1 column, scales to 4 columns for dashboard layouts
+ */
+.grid-dashboard {
+  @apply grid-base;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .grid-dashboard {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-dashboard {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/**
+ * Form grid for input fields
+ * Mobile: 1 column, scales to 2 columns for form layouts
+ */
+.grid-form {
+  @apply grid-base;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .grid-form {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/**
+ * Navigation grid for menu items
+ * Mobile: 2 columns, scales to 6 columns for navigation
+ */
+.grid-nav {
+  @apply grid-base;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .grid-nav {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .grid-nav {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-nav {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+/* ========================================
+   ADVANCED GRID PATTERNS
+   ======================================== */
+
+/**
+ * Auto-fit grid that adapts to content width
+ * Uses minmax() for truly responsive behavior
+ */
+.grid-auto-fit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .grid-auto-fit {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-auto-fit {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+  }
+}
+
+/**
+ * Auto-fill grid that fills available space
+ * Creates as many columns as possible without overflow
+ */
+.grid-auto-fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .grid-auto-fill {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-auto-fill {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2.5rem;
+  }
+}
+
+/**
+ * Masonry-style grid for variable height content
+ * Mobile: Single column, Desktop: Multi-column masonry
+ */
+.grid-masonry {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: masonry;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .grid-masonry {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-masonry {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+/* ========================================
+   GRID ALIGNMENT UTILITIES
+   ======================================== */
+
+/**
+ * Grid alignment utilities that work across breakpoints
+ */
+.grid-center {
+  place-items: center;
+}
+
+.grid-start {
+  place-items: start;
+}
+
+.grid-end {
+  place-items: end;
+}
+
+.grid-stretch {
+  place-items: stretch;
+}
+
+/**
+ * Content alignment for grid items
+ */
+.grid-items-center {
+  align-items: center;
+}
+
+.grid-items-start {
+  align-items: start;
+}
+
+.grid-items-end {
+  align-items: end;
+}
+
+.grid-items-stretch {
+  align-items: stretch;
+}
+
+/**
+ * Content justification for grid items
+ */
+.grid-justify-center {
+  justify-items: center;
+}
+
+.grid-justify-start {
+  justify-items: start;
+}
+
+.grid-justify-end {
+  justify-items: end;
+}
+
+.grid-justify-stretch {
+  justify-items: stretch;
+}
+
+/* ========================================
+   RESPONSIVE SUBGRID PATTERNS
+   ======================================== */
+
+/**
+ * Subgrid for nested responsive layouts
+ * Maintains responsive behavior in nested contexts
+ */
+.grid-subgrid {
+  display: grid;
+  grid-template-columns: subgrid;
+  gap: inherit;
+}
+
+/**
+ * Responsive subgrid that adapts to parent container
+ */
+.grid-subgrid-responsive {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .grid-subgrid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ========================================
+   MOBILE-SPECIFIC GRID OPTIMIZATIONS
+   ======================================== */
+
+/**
+ * Mobile-optimized grid with reduced complexity
+ * Improves performance on mobile devices
+ */
+@media (max-width: 767px) {
+  .grid-mobile {
+    /* Reduce gap for mobile content density */
+    gap: 0.75rem;
+  }
+
+  .grid-mobile-dense {
+    /* Even tighter spacing for mobile */
+    gap: 0.5rem;
+  }
+}
+
+/**
+ * Landscape mobile grid optimization
+ * Adjusts for landscape orientation on mobile
+ */
+@media (max-width: 896px) and (orientation: landscape) {
+  .grid-landscape {
+    /* Reduce gaps in landscape to maximize content */
+    gap: 0.5rem;
+  }
+
+  .grid-landscape > * {
+    /* Slightly smaller items in landscape */
+    min-height: auto;
+  }
+}
+
+/* ========================================
+   TABLET-SPECIFIC GRID OPTIMIZATIONS
+   ======================================== */
+
+/**
+ * Tablet-optimized grids for touch interaction
+ * Balances mobile usability with desktop-like density
+ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid-tablet {
+    /* Slightly larger gaps for tablet finger navigation */
+    gap: 1.25rem;
+  }
+
+  .grid-tablet-cards {
+    /* Optimized card spacing for tablet screens */
+    gap: 1.75rem;
+  }
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/**
+ * Performance-optimized grids for mobile devices
+ * Disables expensive CSS properties on mobile
+ */
+@media (max-width: 767px) {
+  .grid-performance {
+    /* Disable transform animations on mobile for better performance */
+    transform: none !important;
+    transition: none !important;
+  }
+
+  /* Optimize for touch scrolling */
+  .grid-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY ENHANCEMENTS
+   ======================================== */
+
+/**
+ * High contrast grid for better accessibility
+ * Increases spacing and contrast for better readability
+ */
+@media (prefers-contrast: high) {
+  .grid-accessible {
+    gap: 2rem; /* Increased spacing for better separation */
+    border: 1px solid currentColor;
+  }
+
+  .grid-accessible > * {
+    border: 1px solid currentColor;
+    background-color: var(--background);
+  }
+}
+
+/**
+ * Reduced motion grid for users who prefer less animation
+ */
+@media (prefers-reduced-motion: reduce) {
+  .grid-motion {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ========================================
+   RESPONSIVE GRID COMPONENTS
+   ======================================== */
+
+/**
+ * Responsive card grid with auto-layout
+ * Perfect for displaying collections of cards
+ */
+.card-grid {
+  @apply grid-responsive;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+}
+
+/**
+ * Responsive dashboard grid for KPI cards
+ * Mobile: Single column, Desktop: Multi-column layout
+ */
+.dashboard-grid {
+  @apply grid-dashboard;
+  width: 100%;
+}
+
+/**
+ * Responsive form grid for organized input layouts
+ * Mobile: Single column, Tablet+: Two column layout
+ */
+.form-grid {
+  @apply grid-form;
+  width: 100%;
+}
+
+/**
+ * Responsive navigation grid for menu items
+ * Mobile: 2xN grid, Desktop: 1xN horizontal layout
+ */
+.nav-grid {
+  @apply grid-nav;
+  width: 100%;
+}
+
+/* ========================================
+   GRID SPAN UTILITIES
+   ======================================== */
+
+/**
+ * Grid span utilities for responsive layouts
+ * Mobile-first approach with progressive enhancement
+ */
+.col-span-1 {
+  grid-column: span 1;
+}
+.col-span-2 {
+  grid-column: span 2;
+}
+.col-span-3 {
+  grid-column: span 3;
+}
+.col-span-4 {
+  grid-column: span 4;
+}
+
+/* Responsive column spans */
+@media (min-width: 640px) {
+  .col-span-sm-1 {
+    grid-column: span 1;
+  }
+  .col-span-sm-2 {
+    grid-column: span 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .col-span-lg-1 {
+    grid-column: span 1;
+  }
+  .col-span-lg-2 {
+    grid-column: span 2;
+  }
+  .col-span-lg-3 {
+    grid-column: span 3;
+  }
+}
+
+/* Row span utilities */
+.row-span-1 {
+  grid-row: span 1;
+}
+.row-span-2 {
+  grid-row: span 2;
+}
+.row-span-3 {
+  grid-row: span 3;
+}
+
+/* ========================================
+   RESPONSIVE GRID AREAS
+   ======================================== */
+
+/**
+ * Named grid areas for complex layouts
+ * Mobile-first with responsive area definitions
+ */
+.grid-areas-mobile {
+  display: grid;
+  grid-template-areas:
+    'header'
+    'main'
+    'sidebar'
+    'footer';
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .grid-areas-mobile {
+    grid-template-areas:
+      'header header'
+      'sidebar main'
+      'footer footer';
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
+  }
+}
+
+/* Grid area assignments */
+.grid-header {
+  grid-area: header;
+}
+.grid-main {
+  grid-area: main;
+}
+.grid-sidebar {
+  grid-area: sidebar;
+}
+.grid-footer {
+  grid-area: footer;
+}
+
+/* ========================================
+   UTILITY GRID PATTERNS
+   ======================================== */
+
+/**
+ * Equal height grid items
+ * Ensures all grid items have the same height
+ */
+.grid-equal-height > * {
+  height: 100%;
+}
+
+/**
+ * Responsive grid with minimum item width
+ * Items will wrap based on available space
+ */
+.grid-min-width {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .grid-min-width {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+/**
+ * Responsive grid with maximum item width
+ * Items will not exceed maximum width
+ */
+.grid-max-width {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 300px));
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+/* ========================================
+   MOBILE-FIRST BREAKPOINT INTEGRATION
+   ======================================== */
+
+/* Integration with responsive.ts breakpoint system */
+/*
+  The following classes would be enhanced with CSS custom properties
+  injected from the responsive.ts module at build time:
+
+  .grid-breakpoint-xs { gap: var(--grid-gap-xs, 1rem); }
+  .grid-breakpoint-sm { gap: var(--grid-gap-sm, 1.25rem); }
+  .grid-breakpoint-md { gap: var(--grid-gap-md, 1.5rem); }
+  .grid-breakpoint-lg { gap: var(--grid-gap-lg, 2rem); }
+*/

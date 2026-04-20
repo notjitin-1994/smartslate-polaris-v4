@@ -1,0 +1,526 @@
+/**
+ * Mobile-Optimized Glass Morphism Effects
+ *
+ * Performance-optimized glass morphism implementation using only CSS properties
+ * that work reliably across all devices, including iOS Safari and older browsers.
+ * No backdrop-filter dependency for maximum compatibility and performance.
+ */
+
+/* ========================================
+   MOBILE-FIRST GLASS BASE CLASSES
+   ======================================== */
+
+/**
+ * Base mobile glass effect - no backdrop-filter
+ * Uses rgba backgrounds, borders, and layered box-shadows for glass morphism
+ */
+.glass-mobile {
+  position: relative;
+  background: rgba(255, 255, 255, var(--glass-bg-opacity));
+  border: 1px solid rgba(255, 255, 255, var(--glass-border-opacity));
+  border-radius: 1rem;
+  box-shadow:
+    0 2px 4px var(--glass-shadow-dark),
+    0 4px 8px var(--glass-shadow-dark),
+    inset 0 1px 1px var(--glass-shadow-light);
+  transition: all var(--glass-transition-duration) var(--glass-transition-easing);
+}
+
+/* Dark mode variant for mobile glass */
+.dark .glass-mobile {
+  background: rgba(0, 0, 0, var(--glass-bg-opacity));
+  border-color: rgba(255, 255, 255, var(--glass-border-opacity));
+  box-shadow:
+    0 2px 4px var(--glass-shadow-dark),
+    0 4px 8px var(--glass-shadow-dark),
+    inset 0 1px 1px var(--glass-shadow-light);
+}
+
+/**
+ * Glass card variant optimized for mobile cards
+ * Slightly more pronounced effect for better visual hierarchy
+ */
+.glass-card-mobile {
+  position: relative;
+  background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.02));
+  border: 1px solid rgba(255, 255, 255, calc(var(--glass-border-opacity) + 0.03));
+  border-radius: 1rem;
+  box-shadow:
+    0 4px 8px var(--glass-shadow-medium),
+    0 8px 16px var(--glass-shadow-medium),
+    inset 0 1px 2px var(--glass-shadow-light);
+  transition: all var(--glass-transition-duration) var(--glass-transition-easing);
+}
+
+/* Dark mode variant for glass cards */
+.dark .glass-card-mobile {
+  background: rgba(0, 0, 0, calc(var(--glass-bg-opacity) + 0.02));
+  border-color: rgba(255, 255, 255, calc(var(--glass-border-opacity) + 0.03));
+  box-shadow:
+    0 4px 8px var(--glass-shadow-medium),
+    0 8px 16px var(--glass-shadow-medium),
+    inset 0 1px 2px var(--glass-shadow-light);
+}
+
+/* ========================================
+   GLASS EFFECT VARIATIONS
+   ======================================== */
+
+/**
+ * Subtle glass effect for less prominent elements
+ * Reduced opacity for more subtle appearance
+ */
+.glass-mobile-subtle {
+  background: rgba(255, 255, 255, var(--glass-subtle-bg-opacity));
+  border: 1px solid rgba(255, 255, 255, var(--glass-subtle-border-opacity));
+  box-shadow:
+    0 1px 2px var(--glass-shadow-dark),
+    0 2px 4px var(--glass-shadow-dark),
+    inset 0 1px 0 var(--glass-shadow-light);
+}
+
+/**
+ * Strong glass effect for prominent elements
+ * Increased opacity for more dramatic appearance
+ */
+.glass-mobile-strong {
+  background: rgba(255, 255, 255, var(--glass-strong-bg-opacity));
+  border: 1px solid rgba(255, 255, 255, var(--glass-strong-border-opacity));
+  box-shadow:
+    0 6px 12px var(--glass-shadow-medium),
+    0 12px 24px var(--glass-shadow-medium),
+    inset 0 1px 2px var(--glass-shadow-light);
+}
+
+/* ========================================
+   HOVER AND INTERACTION STATES
+   ======================================== */
+
+/**
+ * Hover state for mobile glass effects
+ * Enhanced elevation and subtle glow on hover
+ */
+.glass-mobile:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 12px var(--glass-shadow-medium),
+    0 12px 24px var(--glass-shadow-medium),
+    inset 0 1px 2px var(--glass-shadow-light),
+    var(--glow-subtle);
+  background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.02));
+}
+
+/* Dark mode hover variant */
+.dark .glass-mobile:hover {
+  background: rgba(0, 0, 0, calc(var(--glass-bg-opacity) + 0.02));
+}
+
+/**
+ * Active state for mobile glass effects
+ * Subtle press feedback for touch interactions
+ */
+.glass-mobile:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow:
+    0 2px 4px var(--glass-shadow-dark),
+    0 4px 8px var(--glass-shadow-dark),
+    inset 0 1px 1px var(--glass-shadow-light);
+}
+
+/**
+ * Focus state for accessibility
+ * Enhanced border for keyboard navigation
+ */
+.glass-mobile:focus-visible {
+  outline: none;
+  box-shadow:
+    0 2px 4px var(--glass-shadow-dark),
+    0 4px 8px var(--glass-shadow-dark),
+    inset 0 1px 1px var(--glass-shadow-light),
+    0 0 0 2px var(--background),
+    0 0 0 4px var(--secondary-accent);
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/**
+ * Performance-optimized glass for mobile devices
+ * Disables expensive effects on mobile for better performance
+ */
+@media (max-width: 767px) {
+  .glass-mobile-performance {
+    /* Use simpler box-shadow for better performance */
+    box-shadow:
+      0 4px 8px var(--glass-shadow-dark),
+      inset 0 1px 1px var(--glass-shadow-light);
+  }
+
+  .glass-mobile-performance:hover {
+    /* Reduce transform complexity on mobile */
+    transform: translateY(-1px);
+    box-shadow:
+      0 6px 12px var(--glass-shadow-medium),
+      inset 0 1px 1px var(--glass-shadow-light);
+  }
+}
+
+/**
+ * iOS-specific performance optimizations
+ * Completely disables backdrop-filter fallbacks on iOS
+ */
+@supports (-webkit-touch-callout: none) {
+  .glass-mobile {
+    /* Ensure no backdrop-filter on iOS */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    /* Use solid fallback background */
+    background: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .dark .glass-mobile {
+    background: rgba(0, 0, 0, 0.12) !important;
+  }
+}
+
+/**
+ * iPad-specific optimizations
+ * Aggressive performance optimizations for iPad
+ */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2) {
+  .glass-mobile {
+    /* Completely remove backdrop-filter on iPad */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    /* Use solid background for performance */
+    background: rgba(255, 255, 255, 0.15) !important;
+    box-shadow:
+      0 4px 8px var(--glass-shadow-dark),
+      inset 0 1px 1px var(--glass-shadow-light);
+  }
+
+  .dark .glass-mobile {
+    background: rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Disable hover transforms on iPad for performance */
+  .glass-mobile:hover {
+    transform: none !important;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY ENHANCEMENTS
+   ======================================== */
+
+/**
+ * High contrast glass effects for better accessibility
+ * Increases contrast for users who need it
+ */
+@media (prefers-contrast: high) {
+  .glass-mobile-accessible {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow:
+      0 4px 8px rgba(0, 0, 0, 0.3),
+      inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .glass-mobile-accessible {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+/**
+ * Reduced motion glass effects
+ * Disables animations for users who prefer less motion
+ */
+@media (prefers-reduced-motion: reduce) {
+  .glass-mobile-motion {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .glass-mobile-motion:hover,
+  .glass-mobile-motion:active {
+    transform: none !important;
+  }
+}
+
+/* ========================================
+   UTILITY GLASS CLASSES
+   ======================================== */
+
+/**
+ * Glass shell - border and shadow only, no background fill
+ * Useful for containers that need glass styling but custom backgrounds
+ */
+.glass-shell-mobile {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, var(--glass-border-opacity));
+  border-radius: 1rem;
+  box-shadow:
+    0 2px 4px var(--glass-shadow-dark),
+    0 4px 8px var(--glass-shadow-dark),
+    inset 0 1px 1px var(--glass-shadow-light);
+  transition: all var(--glass-transition-duration) var(--glass-transition-easing);
+}
+
+/**
+ * Glass overlay for modal-like elements
+ * Designed for overlays and dropdowns
+ */
+.glass-overlay-mobile {
+  position: relative;
+  background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.04));
+  border: 1px solid rgba(255, 255, 255, calc(var(--glass-border-opacity) + 0.02));
+  border-radius: 0.75rem;
+  box-shadow:
+    0 8px 16px var(--glass-shadow-medium),
+    0 16px 32px var(--glass-shadow-medium),
+    inset 0 1px 2px var(--glass-shadow-light);
+  backdrop-filter: none; /* Ensure no backdrop-filter for performance */
+}
+
+/* ========================================
+   THEMED GLASS VARIATIONS
+   ======================================== */
+
+/**
+ * Brand-colored glass effects
+ * Uses theme colors for branded glass elements
+ */
+.glass-mobile-brand {
+  background: rgba(167, 218, 219, var(--glass-bg-opacity));
+  border: 1px solid rgba(167, 218, 219, var(--glass-border-opacity));
+  box-shadow:
+    0 2px 4px rgba(167, 218, 219, 0.1),
+    0 4px 8px rgba(167, 218, 219, 0.1),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+}
+
+/**
+ * Secondary-colored glass effects
+ * Uses secondary theme colors
+ */
+.glass-mobile-secondary {
+  background: rgba(79, 70, 229, calc(var(--glass-bg-opacity) * 0.8));
+  border: 1px solid rgba(79, 70, 229, var(--glass-border-opacity));
+  box-shadow:
+    0 2px 4px rgba(79, 70, 229, 0.15),
+    0 4px 8px rgba(79, 70, 229, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+/* ========================================
+   SIZE VARIATIONS
+   ======================================== */
+
+/**
+ * Small glass elements for compact UI
+ */
+.glass-mobile-sm {
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+}
+
+/**
+ * Large glass elements for prominent UI
+ */
+.glass-mobile-lg {
+  padding: 2rem;
+  border-radius: 1.5rem;
+}
+
+/**
+ * Extra large glass elements for hero sections
+ */
+.glass-mobile-xl {
+  padding: 3rem;
+  border-radius: 2rem;
+}
+
+/* ========================================
+   COMPONENT-SPECIFIC GLASS STYLES
+   ======================================== */
+
+/**
+ * Glass navigation for mobile nav bars
+ */
+.glass-nav-mobile {
+  background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.02));
+  border: 1px solid rgba(255, 255, 255, calc(var(--glass-border-opacity) + 0.02));
+  border-radius: 0.75rem 0.75rem 0 0; /* Rounded top corners only */
+  box-shadow:
+    0 2px 4px var(--glass-shadow-dark),
+    inset 0 1px 1px var(--glass-shadow-light);
+}
+
+/**
+ * Glass modal for mobile dialogs
+ */
+.glass-modal-mobile {
+  background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.06));
+  border: 1px solid rgba(255, 255, 255, calc(var(--glass-border-opacity) + 0.04));
+  border-radius: 1rem;
+  box-shadow:
+    0 8px 16px var(--glass-shadow-medium),
+    0 16px 32px var(--glass-shadow-medium),
+    inset 0 1px 2px var(--glass-shadow-light);
+}
+
+/**
+ * Glass card for content sections
+ */
+.glass-section-mobile {
+  background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.01));
+  border: 1px solid rgba(255, 255, 255, calc(var(--glass-border-opacity) + 0.01));
+  border-radius: 1rem;
+  box-shadow:
+    0 4px 8px var(--glass-shadow-dark),
+    inset 0 1px 1px var(--glass-shadow-light);
+}
+
+/* ========================================
+   ANIMATION AND INTERACTION UTILITIES
+   ======================================== */
+
+/**
+ * Glass element with hover lift animation
+ */
+.glass-lift-mobile {
+  transition:
+    transform var(--glass-transition-duration) var(--glass-transition-easing),
+    box-shadow var(--glass-transition-duration) var(--glass-transition-easing);
+}
+
+.glass-lift-mobile:hover {
+  transform: translateY(-2px);
+}
+
+/**
+ * Glass element with press feedback
+ */
+.glass-press-mobile {
+  transition: transform 100ms ease-out;
+}
+
+.glass-press-mobile:active {
+  transform: scale(0.98);
+}
+
+/**
+ * Glass element with glow effect on hover
+ */
+.glass-glow-mobile {
+  transition: box-shadow var(--glass-transition-duration) var(--glass-transition-easing);
+}
+
+.glass-glow-mobile:hover {
+  box-shadow:
+    0 4px 8px var(--glass-shadow-medium),
+    0 8px 16px var(--glass-shadow-medium),
+    inset 0 1px 1px var(--glass-shadow-light),
+    var(--glow-subtle);
+}
+
+/* ========================================
+   RESPONSIVE ADJUSTMENTS
+   ======================================== */
+
+/**
+ * Tablet-specific glass adjustments
+ * Balances mobile performance with desktop aesthetics
+ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .glass-tablet {
+    /* Slightly more pronounced effect for tablet */
+    background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.01));
+  }
+
+  .glass-tablet-card {
+    /* Enhanced card effect for tablet screens */
+    box-shadow:
+      0 6px 12px var(--glass-shadow-medium),
+      inset 0 1px 2px var(--glass-shadow-light);
+  }
+}
+
+/**
+ * Desktop glass enhancements
+ * Adds subtle backdrop-filter for capable devices
+ */
+@media (min-width: 1024px) {
+  .glass-desktop {
+    /* Enhanced glass effect for desktop */
+    background: rgba(255, 255, 255, calc(var(--glass-bg-opacity) + 0.02));
+    box-shadow:
+      0 8px 16px var(--glass-shadow-medium),
+      inset 0 1px 2px var(--glass-shadow-light);
+  }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+/**
+ * Print-optimized glass effects
+ * Ensures glass elements render properly when printed
+ */
+@media print {
+  .glass-mobile,
+  .glass-card-mobile,
+  .glass-mobile-subtle,
+  .glass-mobile-strong {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* ========================================
+   FALLBACKS FOR OLDER BROWSERS
+   ======================================== */
+
+/**
+ * Fallback styles for browsers without CSS custom properties support
+ */
+@supports not (backdrop-filter: blur()) {
+  .glass-mobile-fallback {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+
+  .dark .glass-mobile-fallback {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+}
+
+/* ========================================
+   INTEGRATION WITH EXISTING SYSTEM
+   ======================================== */
+
+/**
+ * Maintain compatibility with existing glass classes
+ * These ensure smooth migration from old backdrop-filter implementation
+ */
+.glass-mobile-compatible {
+  /* Base mobile glass styles */
+  background: rgba(255, 255, 255, var(--glass-bg-opacity));
+  border: 1px solid rgba(255, 255, 255, var(--glass-border-opacity));
+  border-radius: 1rem;
+  box-shadow:
+    0 2px 4px var(--glass-shadow-dark),
+    0 4px 8px var(--glass-shadow-dark),
+    inset 0 1px 1px var(--glass-shadow-light);
+}
+
+/* Enhanced version for capable devices would be added via progressive enhancement */

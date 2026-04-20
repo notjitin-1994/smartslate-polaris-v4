@@ -1,0 +1,35 @@
+-- Migration: 0037_fix_avatar_storage_policies.sql
+-- Description: Update avatar storage RLS policies to work with flat file structure
+-- Author: System
+-- Date: 2025-11-09
+
+-- Drop old policies that relied on folder structure
+DROP POLICY IF EXISTS "Users can upload their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can view their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own avatar" ON storage.objects;
+
+-- Create new policies for flat file structure (avatar_userid_timestamp.ext)
+CREATE POLICY "Users can upload avatars with their user ID"
+ON storage.objects FOR INSERT
+WITH CHECK (
+  bucket_id = 'avatars'
+  AND (storage.filename(name) LIKE 'avatar_' || auth.uid()::text || '_%')
+);
+
+CREATE POLICY "Users can update their own avatars"
+ON storage.objects FOR UPDATE
+USING (
+  bucket_id = 'avatars'
+  AND (storage.filename(name) LIKE 'avatar_' || auth.uid()::text || '_%')
+);
+
+CREATE POLICY "Users can delete their own avatars"
+ON storage.objects FOR DELETE
+USING (
+  bucket_id = 'avatars'
+  AND (storage.filename(name) LIKE 'avatar_' || auth.uid()::text || '_%')
+);
+
+-- Keep the public read policy (unchanged)
+-- "Anyone can view avatars" policy should already exist and allow public read

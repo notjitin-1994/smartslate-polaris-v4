@@ -1,0 +1,38 @@
+---
+description: TypeScript strictness, naming, and API contracts
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: true
+---
+
+- **Strictness**
+  - Keep `strict: true`, `noEmit: true`, `skipLibCheck: true` as configured.
+  - Avoid `any`. Prefer `unknown`, generics, and discriminated unions.
+  - Exported functions/components should have explicit return types.
+
+- **Naming & Props**
+  - Use descriptive names; avoid abbreviations. Props interfaces should be nouns (e.g., `UserCardProps`).
+  - Prefer `type` aliases for component props; keep props narrow and serializable between Server→Client boundaries.
+
+- **Module Resolution**
+  - Use `@/*` alias per `tsconfig.json`. Avoid deep relative paths like `../../../`.
+
+- **React Types**
+  - Use `React.ReactNode` for children. For events, use specific React event types.
+  - In Client Components, avoid DOM `any`; type refs and callbacks precisely.
+
+- **Error Handling**
+  - Use `unknown` for caught errors and narrow with type guards.
+  ```ts
+  try { /* ... */ } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+  }
+  ```
+
+- **Example**
+  ```tsx
+  type ButtonProps = { label: string; onClick?: () => void };
+  export function Button({ label, onClick }: ButtonProps): JSX.Element {
+    return <button onClick={onClick}>{label}</button>;
+  }
+  ```
+

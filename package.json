@@ -1,0 +1,38 @@
+{
+  "name": "smartslate-polaris-v3",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "prepare": "husky",
+    "supabase": "supabase",
+    "db:reset": "supabase db reset",
+    "db:push": "supabase db push",
+    "db:status": "supabase status",
+    "db:migrations:new": "supabase migration new",
+    "admin:grant-access": "tsx scripts/grant-admin-access.ts",
+    "backfill:costs": "tsx scripts/backfill-historical-costs.ts"
+  },
+  "bin": {
+    "dev-mcp": "scripts/dev-mcp/server.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.76.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.0",
+    "lodash-es": "^4.17.21",
+    "lru-cache": "^11.2.2",
+    "pg": "^8.16.3"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.1",
+    "@next/bundle-analyzer": "^16.0.1",
+    "@types/node": "^24.5.2",
+    "dotenv": "^17.2.3",
+    "glob": "^11.0.3",
+    "node-fetch": "^3.3.2",
+    "supabase": "^2.92.1",
+    "tsx": "^4.20.6",
+    "webpack-bundle-analyzer": "^4.10.2"
+  }
+}

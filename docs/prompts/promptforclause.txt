@@ -1,0 +1,740 @@
+# TASK: Fix Data Extraction Complexity to Prevent Data Loss in SmartSlate Polaris v3
+
+You are an expert software architect specializing in data integrity, LLM integration, and type-safe systems. Your task is to analyze the current data extraction implementation in our learning blueprint generation platform and provide a comprehensive, step-by-step implementation plan to eliminate ALL potential data loss scenarios.
+
+## CRITICAL CONTEXT: This is for a developer using Cursor IDE with a LOW REASONING MODEL
+
+**IMPORTANT**: Your response must be extremely detailed with:
+- ✅ Step-by-step implementation instructions (numbered, clear)
+- ✅ Complete code examples (not pseudocode - actual TypeScript/SQL)
+- ✅ File paths for every change
+- ✅ Before/after comparisons
+- ✅ Testing strategies for each change
+- ✅ Rollback procedures if something breaks
+- ✅ Database migration scripts when needed
+- ✅ Clear explanations of WHY each change prevents data loss
+
+DO NOT provide high-level architecture advice. Provide IMPLEMENTATION-READY code.
+
+---
+
+## SYSTEM OVERVIEW
+
+**SmartSlate Polaris v3** is an AI-powered SaaS platform that generates personalized learning blueprints through a two-phase questionnaire system.
+
+### Tech Stack
+- **Frontend**: Next.js 15 (App Router), React 19, TypeScript 5.7
+- **Backend**: Next.js API Routes, Supabase PostgreSQL
+- **Database**: PostgreSQL with JSONB columns (via Supabase)
+- **AI Providers**: Anthropic Claude 3.5 Sonnet (primary), Perplexity Sonar Pro (fallback), Ollama (local fallback)
+- **Validation**: Zod schemas with discriminated unions
+- **State Management**: Zustand
+- **Form Handling**: React Hook Form
+
+### Architecture Flow
+
+```
+1. User completes STATIC QUESTIONNAIRE (3 sections, 30+ fields)
+   ↓ Saved to: blueprint_generator.static_answers (JSONB)
+
+2. AI generates DYNAMIC QUESTIONS (10 sections, 50-70 questions)
+   ↓ Saved to: blueprint_generator.dynamic_questions (JSONB)
+   ↓ Raw LLM response: blueprint_generator.dynamic_questions_raw (JSONB)
+
+3. User answers DYNAMIC QUESTIONNAIRE
+   ↓ Saved to: blueprint_generator.dynamic_answers (JSONB)
+
+4. AI generates LEARNING BLUEPRINT
+   ↓ Saved to: blueprint_generator.blueprint_json (JSONB)
+   ↓ Markdown export: blueprint_generator.blueprint_markdown (TEXT)
+```
+
+---
+
+## DATABASE SCHEMA
+
+### Main Table: `blueprint_generator`
+
+```sql
+create table public.blueprint_generator (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  version integer not null default 1,
+
+  -- CRITICAL DATA COLUMNS (JSONB - potential data loss points)
+  static_answers jsonb not null default '{}'::jsonb,
+  dynamic_questions jsonb not null default '[]'::jsonb,
+  dynamic_questions_raw jsonb not null default '[]'::jsonb,
+  dynamic_answers jsonb not null default '{}'::jsonb,
+  blueprint_json jsonb not null default '{}'::jsonb,
+
+  -- Markdown export
+  blueprint_markdown text null,
+
+  -- Status tracking
+  status text not null default 'draft' check (status in ('draft','generating','answering','completed','error')),
+
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+```
+
+**Key Points**:
+- All dynamic data stored in JSONB columns (flexible but type-unsafe)
+- No schema enforcement at database level
+- Relying on application-level validation (Zod)
+- Multiple data format versions exist in production
+
+---
+
+## CURRENT DATA FORMATS & VERSIONS
+
+### Version 1 (Legacy - Flat Structure)
+```typescript
+static_answers = {
+  role: "Instructional Designer",
+  organization: "TechCorp",
+  learningGap: "Need to train sales team on new CRM",
+  resources: "Budget: $50,000, Timeline: 3 months",
+  constraints: "Remote workforce, GDPR compliance"
+}
+```
+
+### Version 2 (Legacy - 8 Sections)
+```typescript
+static_answers = {
+  version: 2,
+  role: "Instructional Designer",
+  organization: {
+    name: "TechCorp",
+    industry: "Technology",
+    size: "1001-5000"
+  },
+  learningGap: {
+    description: "Sales team struggles with CRM adoption",
+    objectives: "Increase CRM usage by 80%"
+  },
+  resources: {
+    budget: { amount: 50000, currency: "USD" },
+    timeline: { duration: 12, flexibility: "Moderate" }
+  },
+  // ... 5 more sections
+}
+```
+
+### Version 2.0 (Current - 3 Sections PRD-Aligned)
+```typescript
+static_answers = {
+  section_1_role_experience: {
+    current_role: "Instructional Designer",
+    years_in_role: 5,
+    industry_experience: ["Technology", "Healthcare"],
+    team_size: "6-10",
+    budget_responsibility: 75000,
+    technical_skills: ["Articulate 360", "Adobe Captivate", "LMS Administration"]
+  },
+  section_2_organization: {
+    organization_name: "TechCorp Solutions",
+    industry_sector: "Technology",
+    organization_size: "1001-5000",
+    geographic_regions: ["North America", "Europe"],
+    compliance_requirements: ["GDPR", "SOC 2"],
+    data_sharing_policies: "Need-to-Know",
+    security_clearance: "None",
+    legal_restrictions: "EU data residency required"
+  },
+  section_3_learning_gap: {
+    learning_gap_description: "Our sales team of 120 people struggles...",
+    total_learners_range: "101-250",
+    current_knowledge_level: 2,
+    motivation_factors: ["Performance improvement", "Career advancement"],
+    learning_location: ["Remote/Home", "Office"],
+    devices_used: ["Desktop", "Laptop", "Smartphone"],
+    hours_per_week: "3-5 hours",
+    learning_deadline: "2025-06-30",
+    budget_available: {
+      amount: 50000,
+      currency: "USD"
+    }
+  }
+}
+```
+
+---
+
+## CRITICAL DATA LOSS SCENARIOS (Current Issues)
+
+### 🚨 Issue 1: Version Format Ambiguity
+**Location**: `frontend/app/api/generate-dynamic-questions/route.ts` lines 95-157
+
+The API route has THREE different data extraction paths:
+1. V2.0 detection (lines 95-102)
+2. V2 detection (lines 173)
+3. V1 fallback (lines 208-240)
+
+**Problem**: If detection logic fails, data gets extracted incorrectly or fields are missed.
+
+**Example Data Loss**:
+```typescript
+// V2.0 data exists
+static_answers = {
+  section_1_role_experience: { years_in_role: 5 },
+  section_2_organization: { compliance_requirements: ["GDPR", "HIPAA"] }
+}
+
+// But if isV20 check fails, code falls through to V1 logic:
+// ❌ LOST: All nested V2.0 data
+// ❌ EXTRACTED: Empty strings or "Not specified"
+```
+
+---
+
+### 🚨 Issue 2: LLM Response Truncation
+**Location**: `frontend/src/lib/services/dynamicQuestionGenerationV2.ts` lines 206-261
+
+The system attempts to "repair" truncated JSON from LLM providers:
+
+```typescript
+function repairTruncatedJSON(jsonString: string): string {
+  // Counts opening/closing brackets
+  const openBraces = (repaired.match(/{/g) || []).length;
+  const closeBraces = (repaired.match(/}/g) || []).length;
+
+  // If unclosed, tries to close them
+  if (openBraces > closeBraces) {
+    // ⚠️ DANGER: Removes "incomplete trailing content"
+    // This can delete valid data!
+    for (let i = repaired.length - 1; i >= 0; i--) {
+      // Looking backwards, removes everything after last complete element
+    }
+  }
+}
+```
+
+**Problem**: The "repair" logic REMOVES data instead of preserving it. If the LLM response is 95% complete, we lose the last 5% AND potentially valid data before it.
+
+**Example Data Loss**:
+```json
+// LLM returns (95% complete, missing closing braces):
+{
+  "sections": [
+    {"id": "s1", "questions": [...]},
+    {"id": "s2", "questions": [...]},
+    {"id": "s3", "questions": [...
+}
+
+// repairTruncatedJSON() removes incomplete s3:
+// ❌ LOST: Entire section 3 and all its questions
+```
+
+---
+
+### 🚨 Issue 3: Option Value Normalization Mismatch
+**Location**: Multiple files with inconsistent normalization
+
+**Flow**:
+1. LLM generates questions with options:
+```json
+{
+  "type": "radio_pills",
+  "options": [
+    {"value": "Option 1", "label": "First Choice"},
+    {"value": "option-2", "label": "Second Choice"}
+  ]
+}
+```
+
+2. System normalizes to lowercase-kebab-case
+3. User selects "Option 1"
+4. Answer saved as: `{"q1_s1": "Option 1"}`
+5. Validation fails because it expects `"option-1"` ❌
+
+**Problem**: Normalization happens AFTER user interaction, so stored answers don't match validation schemas.
+
+---
+
+### 🚨 Issue 4: Partial JSONB Updates
+**Location**: All API routes that update `blueprint_generator`
+
+**Current Pattern**:
+```typescript
+await supabase
+  .from('blueprint_generator')
+  .update({ dynamic_questions: normalizedSections })
+  .eq('id', blueprintId);
+```
+
+**Problem**: If `normalizedSections` is partially invalid (e.g., one section has bad data), the ENTIRE update fails. Previous valid data remains, but user sees error and retries, potentially creating duplicate/inconsistent state.
+
+**No rollback or partial save strategy**.
+
+---
+
+### 🚨 Issue 5: Multi-Provider Response Format Inconsistency
+**Location**: `frontend/lib/services/perplexityQuestionService.ts`, `ollamaQuestionService.ts`
+
+**Perplexity Response**:
+```typescript
+{
+  choices: [{
+    message: { content: "{\"sections\": [...]}" }
+  }]
+}
+```
+
+**Claude Response**:
+```typescript
+{
+  content: [{
+    text: "{\"sections\": [...]}"
+  }]
+}
+```
+
+**Ollama Response**:
+```typescript
+{
+  sections: [...] // Direct object, no JSON string
+}
+```
+
+**Problem**: Each provider has different extraction logic. If we add a new provider or if response format changes, extraction breaks silently.
+
+---
+
+### 🚨 Issue 6: No Audit Trail for Data Transformations
+**Location**: Entire system
+
+**Problem**: When data is extracted, transformed, normalized, and saved, there's NO logging of:
+- What was extracted
+- What was transformed
+- What failed validation
+- What was ultimately saved
+
+If a user reports "my answers disappeared", we have no way to debug.
+
+---
+
+## YOUR TASK: COMPREHENSIVE SOLUTION DESIGN
+
+Please provide a detailed, step-by-step implementation plan that addresses ALL six issues above, with:
+
+### Part 1: Schema Versioning & Migration Strategy
+- Add explicit `data_format_version` field to database
+- Create migration scripts to normalize all existing data to V2.0
+- Add validation that rejects ambiguous formats
+- Provide code for version detection with fallback handling
+
+### Part 2: LLM Response Preservation
+- Replace JSON repair with **progressive parsing**
+- Store raw LLM responses before any manipulation
+- Implement **partial data recovery** instead of truncation
+- Add validation checkpoints with detailed error messages
+
+### Part 3: Type-Safe Option Value Handling
+- Standardize option value generation (deterministic IDs)
+- Add database constraint to enforce option format
+- Create migration to fix existing mismatched answers
+- Implement validation that maps old values to new format
+
+### Part 4: Transactional JSONB Updates
+- Implement atomic update patterns with rollback
+- Add field-level validation before full object update
+- Create backup/restore mechanism for JSONB columns
+- Provide error recovery flow for users
+
+### Part 5: Provider Response Abstraction
+- Create unified response adapter pattern
+- Add response validation for each provider
+- Implement provider health checks
+- Provide graceful degradation strategy
+
+### Part 6: Comprehensive Audit Logging
+- Add `data_transformation_log` table
+- Log all extract/transform/save operations
+- Create debugging dashboard
+- Add data recovery tools for support team
+
+---
+
+## RESPONSE FORMAT REQUIREMENTS
+
+For EACH of the 6 parts above, provide:
+
+### 1. Clear Problem Statement
+- What specific data loss scenario does this fix?
+- What is the impact if not fixed?
+
+### 2. Step-by-Step Implementation Plan
+```
+Step 1: [Action]
+  - File: /path/to/file.ts
+  - What to change: [Specific line numbers if possible]
+  - Code to add: [Full code block, not pseudocode]
+
+Step 2: [Next action]
+  - File: /path/to/another-file.ts
+  - Dependencies: [What must be done first]
+  - Code to add: [Full code block]
+
+... continue for all steps
+```
+
+### 3. Complete Code Examples
+- Provide FULL file contents or complete function implementations
+- Include all imports, types, error handling
+- Show both TypeScript and SQL where applicable
+
+### 4. Testing Strategy
+```
+Test Case 1: [Scenario]
+  - Setup: [Initial state]
+  - Action: [What to do]
+  - Expected: [What should happen]
+  - Validation: [How to verify]
+```
+
+### 5. Migration Path for Existing Data
+- SQL migration scripts
+- Data backfill procedures
+- Rollback plan if migration fails
+
+### 6. Monitoring & Verification
+- What metrics to track
+- How to verify fix is working
+- Alert conditions if data loss is detected
+
+---
+
+## ADDITIONAL CONTEXT
+
+### File Structure
+```
+/polaris-v3/
+├── frontend/
+│   ├── app/
+│   │   └── api/
+│   │       ├── generate-dynamic-questions/route.ts  ← Issue 1, 4
+│   │       ├── dynamic-answers/save/route.ts
+│   │       └── blueprints/generate/route.ts
+│   ├── lib/
+│   │   ├── services/
+│   │   │   ├── dynamicQuestionGenerationV2.ts  ← Issue 2, 5
+│   │   │   ├── perplexityQuestionService.ts    ← Issue 5
+│   │   │   └── ollamaQuestionService.ts        ← Issue 5
+│   │   ├── dynamic-form/
+│   │   │   └── schema.ts                        ← Issue 3
+│   │   └── validation/
+│   │       └── dynamicQuestionSchemas.ts        ← Issue 3
+│   └── types/supabase.ts
+└── supabase/
+    └── migrations/
+        └── [your new migrations here]           ← Issue 1, 4, 6
+```
+
+### Key Dependencies
+```json
+{
+  "dependencies": {
+    "zod": "^4.1.11",
+    "@supabase/supabase-js": "^2.45.0",
+    "next": "15.5.3",
+    "react": "19.1.0",
+    "typescript": "^5"
+  }
+}
+```
+
+### Current LLM Configuration
+```typescript
+const LLM_CONFIG = {
+  perplexity: {
+    model: 'sonar-pro',
+    maxTokens: 32000,
+    timeout: 840000, // 14 minutes
+  },
+  claude: {
+    model: 'claude-sonnet-4-20250514',
+    maxTokens: 32000,
+  },
+  ollama: {
+    model: 'qwen3:30b-a3b',
+    fallbackModel: 'qwen3:14b',
+  }
+}
+```
+
+---
+
+## CRITICAL CONSTRAINTS
+
+1. **Backward Compatibility**: Existing data in production must not break
+2. **Zero Downtime**: Migrations must be non-blocking
+3. **Type Safety**: Use Zod for runtime validation, TypeScript for compile-time
+4. **Performance**: JSONB operations must not slow down (current: <200ms queries)
+5. **User Experience**: If data is corrupted, provide recovery UI (don't just fail)
+
+---
+
+## EXAMPLE OF EXPECTED RESPONSE QUALITY
+
+### ❌ BAD (Too High-Level)
+"Add version field to database and normalize data formats."
+
+### ✅ GOOD (Implementation-Ready)
+```
+STEP 1: Add data_format_version field to blueprint_generator table
+
+File: /supabase/migrations/0027_add_data_format_version.sql
+
+-- Migration: Add version tracking
+ALTER TABLE public.blueprint_generator
+ADD COLUMN data_format_version TEXT NOT NULL DEFAULT 'v2.0';
+
+-- Add constraint to only allow known versions
+ALTER TABLE public.blueprint_generator
+ADD CONSTRAINT valid_data_format_version
+CHECK (data_format_version IN ('v1', 'v2', 'v2.0'));
+
+-- Create index for version-based queries
+CREATE INDEX idx_blueprint_data_version
+ON public.blueprint_generator(data_format_version);
+
+-- Backfill existing data
+UPDATE public.blueprint_generator
+SET data_format_version = CASE
+  WHEN static_answers ? 'section_1_role_experience' THEN 'v2.0'
+  WHEN static_answers ? 'version' AND (static_answers->>'version')::int = 2 THEN 'v2'
+  ELSE 'v1'
+END;
+
+STEP 2: Update TypeScript types
+
+File: /frontend/types/supabase.ts
+
+// Add to Database interface
+export interface Database {
+  public: {
+    Tables: {
+      blueprint_generator: {
+        Row: {
+          // ... existing fields
+          data_format_version: 'v1' | 'v2' | 'v2.0';
+        }
+      }
+    }
+  }
+}
+
+STEP 3: Create version-safe extraction utility
+
+File: /frontend/lib/utils/staticAnswersExtractor.ts
+
+import { z } from 'zod';
+
+// Define schemas for each version
+const V20Schema = z.object({
+  section_1_role_experience: z.object({
+    current_role: z.string(),
+    years_in_role: z.number(),
+    // ... all V2.0 fields
+  }),
+  // ... sections 2 and 3
+});
+
+const V2Schema = z.object({
+  version: z.literal(2),
+  organization: z.object({...}),
+  // ... V2 fields
+});
+
+const V1Schema = z.object({
+  role: z.string(),
+  organization: z.string(),
+  // ... V1 fields
+});
+
+// Unified output format (always normalize to V2.0 structure)
+export interface NormalizedStaticAnswers {
+  version: 'v2.0';
+  roleExperience: {
+    currentRole: string;
+    yearsInRole: number;
+    // ...
+  };
+  organization: {
+    name: string;
+    industry: string;
+    // ...
+  };
+  learningGap: {
+    description: string;
+    // ...
+  };
+}
+
+export function extractAndNormalize(
+  rawData: unknown,
+  knownVersion?: 'v1' | 'v2' | 'v2.0'
+): { success: true; data: NormalizedStaticAnswers } | { success: false; error: string } {
+
+  // Try explicit version first
+  if (knownVersion === 'v2.0') {
+    const result = V20Schema.safeParse(rawData);
+    if (result.success) {
+      return { success: true, data: normalizeV20(result.data) };
+    }
+  }
+
+  // Try auto-detection with validation
+  const v20Result = V20Schema.safeParse(rawData);
+  if (v20Result.success) {
+    return { success: true, data: normalizeV20(v20Result.data) };
+  }
+
+  const v2Result = V2Schema.safeParse(rawData);
+  if (v2Result.success) {
+    return { success: true, data: normalizeV2(v2Result.data) };
+  }
+
+  const v1Result = V1Schema.safeParse(rawData);
+  if (v1Result.success) {
+    return { success: true, data: normalizeV1(v1Result.data) };
+  }
+
+  // All validations failed - return detailed error
+  return {
+    success: false,
+    error: `Data format validation failed. Errors:\nV2.0: ${v20Result.error?.message}\nV2: ${v2Result.error?.message}\nV1: ${v1Result.error?.message}`
+  };
+}
+
+// Normalization functions (full implementations)
+function normalizeV20(data: z.infer<typeof V20Schema>): NormalizedStaticAnswers {
+  return {
+    version: 'v2.0',
+    roleExperience: {
+      currentRole: data.section_1_role_experience.current_role,
+      yearsInRole: data.section_1_role_experience.years_in_role,
+      // ... map all fields
+    },
+    // ... complete mapping
+  };
+}
+
+// ... implement normalizeV2() and normalizeV1()
+
+STEP 4: Update API route to use extractor
+
+File: /frontend/app/api/generate-dynamic-questions/route.ts
+
+import { extractAndNormalize } from '@/lib/utils/staticAnswersExtractor';
+
+export async function POST(request: NextRequest) {
+  // ... existing code to get blueprint
+
+  const { data: blueprint } = await supabase
+    .from('blueprint_generator')
+    .select('id, static_answers, data_format_version')
+    .eq('id', blueprintId)
+    .single();
+
+  // Use version-safe extraction
+  const extractionResult = extractAndNormalize(
+    blueprint.static_answers,
+    blueprint.data_format_version
+  );
+
+  if (!extractionResult.success) {
+    console.error('[DataExtraction] Failed:', extractionResult.error);
+    return NextResponse.json({
+      error: 'Invalid static answers format',
+      details: extractionResult.error,
+      hint: 'Data may be corrupted. Contact support with blueprint ID: ' + blueprintId
+    }, { status: 400 });
+  }
+
+  // Use normalized data
+  const normalizedAnswers = extractionResult.data;
+
+  // ... continue with generation using normalizedAnswers
+}
+
+STEP 5: Add automated tests
+
+File: /frontend/tests/unit/staticAnswersExtractor.test.ts
+
+import { describe, it, expect } from 'vitest';
+import { extractAndNormalize } from '@/lib/utils/staticAnswersExtractor';
+
+describe('staticAnswersExtractor', () => {
+
+  it('should extract V2.0 format correctly', () => {
+    const input = {
+      section_1_role_experience: {
+        current_role: 'Instructional Designer',
+        years_in_role: 5,
+        // ... all required fields
+      },
+      section_2_organization: { /* ... */ },
+      section_3_learning_gap: { /* ... */ }
+    };
+
+    const result = extractAndNormalize(input, 'v2.0');
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.roleExperience.currentRole).toBe('Instructional Designer');
+      expect(result.data.roleExperience.yearsInRole).toBe(5);
+    }
+  });
+
+  it('should fail gracefully on invalid data', () => {
+    const result = extractAndNormalize({ invalid: 'data' });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain('Data format validation failed');
+    }
+  });
+
+  // ... 10+ more test cases covering edge cases
+});
+
+STEP 6: Deploy and verify
+
+1. Run migration:
+   npx supabase migration up
+
+2. Verify backfill:
+   SELECT data_format_version, COUNT(*)
+   FROM blueprint_generator
+   GROUP BY data_format_version;
+
+3. Test API endpoint with each version type
+
+4. Monitor error logs for validation failures
+```
+
+---
+
+## DELIVERABLE CHECKLIST
+
+Your response should include:
+
+- [ ] 6 major sections (one per issue)
+- [ ] Step-by-step implementation for each section
+- [ ] Complete code (not pseudocode) for all changes
+- [ ] SQL migration scripts with rollback procedures
+- [ ] TypeScript types and Zod schemas
+- [ ] Test cases for each change
+- [ ] Deployment and verification procedures
+- [ ] Monitoring and alerting strategy
+- [ ] User-facing error messages and recovery flows
+- [ ] Documentation updates (what to tell developers)
+
+---
+
+BEGIN YOUR COMPREHENSIVE RESPONSE NOW.
+
+Remember: The developer using this output has a LOW REASONING MODEL in Cursor. Every step must be explicit, every code block must be complete, and every instruction must be actionable without additional research.

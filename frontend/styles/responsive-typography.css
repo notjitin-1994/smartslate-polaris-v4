@@ -1,0 +1,641 @@
+/**
+ * Mobile-First Responsive Typography Scale System
+ *
+ * This file implements a comprehensive typography scale that adjusts
+ * font sizes, line heights, and spacing for optimal readability across
+ * all device sizes using mobile-first min-width media queries.
+ */
+
+/* ========================================
+   MOBILE-FIRST TYPOGRAPHY BASE
+   ======================================== */
+
+/**
+ * Base typography styles - mobile-first approach
+ * These styles apply to all screen sizes by default
+ */
+.typography-base {
+  font-family: var(--font-lato), ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+
+/* ========================================
+   RESPONSIVE TYPOGRAPHY SCALE
+   ======================================== */
+
+/**
+ * Display text (hero titles, page headers)
+ * Mobile-first sizing that scales up responsively
+ */
+.text-display {
+  font-family: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
+  font-size: 2rem; /* 32px mobile base */
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+@media (min-width: 640px) {
+  .text-display {
+    font-size: 2.5rem; /* 40px */
+  }
+}
+
+@media (min-width: 768px) {
+  .text-display {
+    font-size: 3rem; /* 48px */
+    line-height: 1.1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .text-display {
+    font-size: 3.5rem; /* 56px */
+  }
+}
+
+@media (min-width: 1280px) {
+  .text-display {
+    font-size: 4rem; /* 64px */
+  }
+}
+
+/**
+ * Title text (section headers, card titles)
+ * Optimized for mobile readability with responsive scaling
+ */
+.text-title {
+  font-family: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.5rem; /* 24px mobile base */
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+@media (min-width: 640px) {
+  .text-title {
+    font-size: 1.75rem; /* 28px */
+  }
+}
+
+@media (min-width: 768px) {
+  .text-title {
+    font-size: 2rem; /* 32px */
+    line-height: 1.2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .text-title {
+    font-size: 2.25rem; /* 36px */
+  }
+}
+
+/**
+ * Heading text (subsection headers, component titles)
+ * Mobile-optimized for touch interfaces
+ */
+.text-heading {
+  font-family: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.25rem; /* 20px mobile base */
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+@media (min-width: 640px) {
+  .text-heading {
+    font-size: 1.375rem; /* 22px */
+  }
+}
+
+@media (min-width: 768px) {
+  .text-heading {
+    font-size: 1.5rem; /* 24px */
+    line-height: 1.3;
+  }
+}
+
+@media (min-width: 1024px) {
+  .text-heading {
+    font-size: 1.75rem; /* 28px */
+  }
+}
+
+/**
+ * Body text (paragraphs, descriptions)
+ * Optimized for mobile reading with responsive line height
+ */
+.text-body {
+  font-family: var(--font-lato), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1rem; /* 16px mobile base */
+  line-height: 1.6;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+@media (min-width: 640px) {
+  .text-body {
+    font-size: 1rem; /* Maintain 16px for readability */
+    line-height: 1.6;
+  }
+}
+
+@media (min-width: 768px) {
+  .text-body {
+    font-size: 1.125rem; /* 18px for better desktop readability */
+    line-height: 1.5;
+  }
+}
+
+/**
+ * Caption text (metadata, secondary info)
+ * Mobile-optimized for small text readability
+ */
+.text-caption {
+  font-family: var(--font-lato), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.875rem; /* 14px mobile base */
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+@media (min-width: 640px) {
+  .text-caption {
+    font-size: 0.875rem; /* Maintain 14px */
+  }
+}
+
+@media (min-width: 768px) {
+  .text-caption {
+    font-size: 1rem; /* 16px for better readability */
+  }
+}
+
+/**
+ * Small text (labels, footnotes)
+ * Ultra-compact for mobile interfaces
+ */
+.text-small {
+  font-family: var(--font-lato), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.75rem; /* 12px mobile base */
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.025em;
+}
+
+/* ========================================
+   FLUID TYPOGRAPHY WITH CLAMP()
+   ======================================== */
+
+/**
+ * Fluid display text using CSS clamp()
+ * Provides smooth scaling between breakpoints
+ */
+.text-display-fluid {
+  font-family: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(2rem, 4vw, 4rem); /* 32px to 64px */
+  line-height: clamp(1.1, 1.2, 1.2);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/**
+ * Fluid title text for responsive headings
+ */
+.text-title-fluid {
+  font-family: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2.25rem); /* 24px to 36px */
+  line-height: clamp(1.2, 1.3, 1.3);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/**
+ * Fluid body text for optimal readability
+ */
+.text-body-fluid {
+  font-family: var(--font-lato), ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(1rem, 2vw, 1.125rem); /* 16px to 18px */
+  line-height: clamp(1.5, 1.6, 1.6);
+  font-weight: 400;
+}
+
+/* ========================================
+   RESPONSIVE TYPOGRAPHY VARIANTS
+   ======================================== */
+
+/**
+ * Large display text for hero sections
+ * Scales dramatically for impact on larger screens
+ */
+.text-hero {
+  font-family: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
+  font-size: 2.5rem; /* 40px mobile base */
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+}
+
+@media (min-width: 640px) {
+  .text-hero {
+    font-size: 3.5rem; /* 56px */
+  }
+}
+
+@media (min-width: 768px) {
+  .text-hero {
+    font-size: 4.5rem; /* 72px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .text-hero {
+    font-size: 5.5rem; /* 88px */
+  }
+}
+
+@media (min-width: 1280px) {
+  .text-hero {
+    font-size: 6.5rem; /* 104px */
+  }
+}
+
+/**
+ * Lead text for introductory paragraphs
+ * Slightly larger than body text for emphasis
+ */
+.text-lead {
+  font-family: var(--font-lato), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.125rem; /* 18px mobile base */
+  line-height: 1.7;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 640px) {
+  .text-lead {
+    font-size: 1.25rem; /* 20px */
+  }
+}
+
+@media (min-width: 768px) {
+  .text-lead {
+    font-size: 1.375rem; /* 22px */
+    line-height: 1.6;
+  }
+}
+
+/**
+ * Code text for monospace content
+ * Responsive sizing for code blocks and inline code
+ */
+.text-code {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 0.875rem; /* 14px mobile base */
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+@media (min-width: 640px) {
+  .text-code {
+    font-size: 0.875rem; /* Maintain 14px for code readability */
+  }
+}
+
+@media (min-width: 768px) {
+  .text-code {
+    font-size: 0.9375rem; /* 15px for better desktop readability */
+  }
+}
+
+/* ========================================
+   TYPOGRAPHY UTILITIES
+   ======================================== */
+
+/**
+ * Text balance utility for better text wrapping
+ * Prevents orphans and improves mobile readability
+ */
+.text-balance {
+  text-wrap: balance;
+}
+
+/**
+ * Pretty text wrapping for mobile
+ * Optimizes line breaks for narrow screens
+ */
+.text-pretty {
+  text-wrap: pretty;
+}
+
+/**
+ * Responsive line height utilities
+ */
+.leading-tight-responsive {
+  line-height: 1.2;
+}
+
+@media (min-width: 640px) {
+  .leading-tight-responsive {
+    line-height: 1.1;
+  }
+}
+
+.leading-normal-responsive {
+  line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+  .leading-normal-responsive {
+    line-height: 1.5;
+  }
+}
+
+/**
+ * Responsive letter spacing
+ */
+.tracking-tight-responsive {
+  letter-spacing: -0.025em;
+}
+
+@media (min-width: 640px) {
+  .tracking-tight-responsive {
+    letter-spacing: -0.05em;
+  }
+}
+
+/* ========================================
+   MOBILE TYPOGRAPHY OPTIMIZATIONS
+   ======================================== */
+
+/**
+ * Mobile-optimized typography for small screens
+ * Increases font sizes and improves readability on mobile
+ */
+@media (max-width: 374px) {
+  .text-display-mobile {
+    font-size: 1.75rem; /* Slightly smaller for very small screens */
+    line-height: 1.3;
+  }
+
+  .text-title-mobile {
+    font-size: 1.25rem; /* Optimized for small mobile screens */
+  }
+
+  .text-body-mobile {
+    font-size: 0.9375rem; /* 15px for better mobile readability */
+    line-height: 1.7;
+  }
+}
+
+/**
+ * Landscape mobile typography adjustments
+ * Optimizes for landscape orientation on mobile devices
+ */
+@media (max-width: 896px) and (orientation: landscape) {
+  .text-landscape {
+    /* Slightly smaller text in landscape to maximize content */
+    transform: scale(0.95);
+  }
+
+  .text-landscape-display {
+    font-size: 1.875rem; /* Smaller display text in landscape */
+  }
+}
+
+/* ========================================
+   TABLET TYPOGRAPHY OPTIMIZATIONS
+   ======================================== */
+
+/**
+ * Tablet-optimized typography
+ * Balances mobile readability with desktop-like sizing
+ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .text-tablet {
+    /* Slightly larger text for tablet touch interfaces */
+    font-size: 1.05em;
+  }
+
+  .text-tablet-display {
+    font-size: 3.25rem; /* Optimized for tablet screens */
+  }
+
+  .text-tablet-body {
+    font-size: 1.0625rem; /* 17px for tablet readability */
+    line-height: 1.55;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY TYPOGRAPHY
+   ======================================== */
+
+/**
+ * High contrast typography for better accessibility
+ * Increases contrast and spacing for better readability
+ */
+@media (prefers-contrast: high) {
+  .text-accessible {
+    color: var(--foreground);
+    font-weight: 500; /* Slightly bolder for better contrast */
+  }
+
+  .text-accessible-body {
+    font-size: 1.0625rem; /* Slightly larger for better readability */
+    line-height: 1.7;
+  }
+}
+
+/**
+ * Reduced motion typography for users who prefer less animation
+ */
+@media (prefers-reduced-motion: reduce) {
+  .text-motion {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ========================================
+   TYPOGRAPHY COMPONENTS
+   ======================================== */
+
+/**
+ * Responsive heading component
+ * Automatically adjusts size based on screen size
+ */
+.heading-responsive {
+  @apply text-title;
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .heading-responsive {
+    @apply text-title;
+    margin-bottom: 0.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heading-responsive {
+    @apply text-heading;
+    margin-bottom: 1rem;
+  }
+}
+
+/**
+ * Responsive paragraph component
+ * Optimized spacing and sizing for body text
+ */
+.paragraph-responsive {
+  @apply text-body;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .paragraph-responsive {
+    margin-bottom: 1.25rem;
+  }
+}
+
+/* ========================================
+   TYPOGRAPHY SPACING SYSTEM
+   ======================================== */
+
+/**
+ * Responsive margin and padding for typography
+ * Mobile-first spacing that scales appropriately
+ */
+.text-spacing-responsive {
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .text-spacing-responsive {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .text-spacing-responsive {
+    margin-bottom: 1.25rem;
+  }
+}
+
+/**
+ * Responsive heading spacing
+ */
+.heading-spacing-responsive {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .heading-spacing-responsive {
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heading-spacing-responsive {
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/**
+ * Performance-optimized typography for mobile devices
+ * Reduces font loading and rendering complexity
+ */
+@media (max-width: 767px) {
+  .text-performance {
+    /* Use system fonts primarily on mobile for faster loading */
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
+    font-feature-settings: normal; /* Disable ligatures for better performance */
+    text-rendering: optimizeSpeed;
+  }
+}
+
+/* ========================================
+   PRINT TYPOGRAPHY
+   ======================================== */
+
+/**
+ * Print-optimized typography
+ * Ensures readability and proper scaling for printed documents
+ */
+@media print {
+  .text-print {
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+    color: #000 !important;
+  }
+
+  .text-print-display {
+    font-size: 18pt !important;
+    line-height: 1.2 !important;
+  }
+
+  .text-print-title {
+    font-size: 14pt !important;
+    line-height: 1.3 !important;
+  }
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+/**
+ * Utility classes for common typography patterns
+ */
+.text-ellipsis-responsive {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .text-ellipsis-responsive {
+    max-width: 200px; /* Constrain width on larger screens */
+  }
+}
+
+/**
+ * Responsive text alignment utilities
+ */
+.text-center-responsive {
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .text-center-responsive {
+    text-align: left; /* Left-align on desktop for better readability */
+  }
+}
+
+/* ========================================
+   MOBILE-FIRST BREAKPOINT INTEGRATION
+   ======================================== */
+
+/* Integration with responsive.ts breakpoint system */
+/*
+  The following classes would be enhanced with CSS custom properties
+  injected from the responsive.ts module at build time:
+
+  .text-breakpoint-xs { font-size: var(--text-size-xs, 1rem); }
+  .text-breakpoint-sm { font-size: var(--text-size-sm, 1rem); }
+  .text-breakpoint-md { font-size: var(--text-size-md, 1.125rem); }
+  .text-breakpoint-lg { font-size: var(--text-size-lg, 1.125rem); }
+*/

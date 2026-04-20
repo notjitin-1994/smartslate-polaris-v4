@@ -1,0 +1,300 @@
+Generate a comprehensive learning blueprint dynamic questionnaire based on the following context.
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    PROJECT CONTEXT (For Your Awareness Only)                  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+⚠️ CRITICAL: Use this context to inform WHICH questions to generate, NOT to personalize question text.
+⚠️ DO NOT embed any of these values into question labels or helpText.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 SECTION 1: ROLE & EXPERIENCE (Context Only - Do Not Embed in Questions)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Current Role:             {current_role}
+Years in Role:            {years_in_role} years
+Previous Roles:           {previous_roles}
+Industry Experience:      {industry_experience}
+Team Size:                {team_size}
+Technical Skills:         {technical_skills}
+
+💡 USE THIS TO:
+- Determine appropriate question sophistication level
+- Decide which technical topics to include
+- Inform scalability-related questions
+- DO NOT embed role/org names in question text
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏢 SECTION 2: ORGANIZATIONAL CONTEXT (Context Only - Do Not Embed in Questions)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Organization Name:        {organization_name}
+Industry Sector:          {industry_sector}
+Organization Size:        {organization_size} employees
+Geographic Regions:       {geographic_regions}
+Compliance Requirements:  {compliance_requirements}
+Data Sharing Policies:    {data_sharing_policies}
+Security Clearance:       {security_clearance}
+Legal Restrictions:       {legal_restrictions}
+
+💡 USE THIS TO:
+- Include relevant compliance options in questions
+- Add appropriate security/data residency options
+- Determine enterprise vs SMB question focus
+- DO NOT reference organization name or industry in question text
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 SECTION 3: LEARNING GAP & AUDIENCE (Context Only - Do Not Embed in Questions)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Learning Gap Description:
+{learning_gap_description}
+
+Total Learners:           {total_learners_range}
+Current Knowledge Level:  {current_knowledge_level}/5 (1=Novice, 5=Expert)
+Motivation Factors:       {motivation_factors}
+Learning Location:        {learning_location}
+Devices Used:             {devices_used}
+Hours Per Week:           {hours_per_week}
+Learning Deadline:        {learning_deadline}
+Budget Available:         {budget_available}
+
+💡 USE THIS TO:
+- Determine content depth and pacing questions
+- Include relevant delivery modality options
+- Add appropriate timeline/budget questions
+- DO NOT reference specific knowledge levels or learner counts in question text
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         YOUR GENERATION MISSION                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+🎯 TASK: Generate exactly 10 sections with 5-7 questions each (50-70 total questions)
+
+🚨 CRITICAL RULES:
+1. Write GENERIC, universal questions that work for ANY organization
+2. DO NOT embed context variables like {organization_name} or {current_role} in questions
+3. Use context to determine RELEVANCE (which questions to ask), NOT to customize TEXT
+4. Questions must be consistent and repeatable across generations
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 MANDATORY 10-SECTION STRUCTURE (PRD-ALIGNED)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SECTION 1: Learning Objectives & Outcomes
+- Focus: Specific, measurable outcomes and success criteria
+- Questions: SMART objectives, Bloom's levels, business impact, stakeholder criteria
+- Generate: 5-7 questions about learning goals and expected outcomes
+- Example: "What are the primary learning objectives?" (NOT "What are YOUR objectives for YOUR learners?")
+
+SECTION 2: Target Audience Analysis
+- Focus: Learner characteristics, demographics, and learning needs
+- Questions: Demographics, learning styles, accessibility, cultural considerations
+- Generate: 5-7 questions about learner profiles and needs
+- Example: "What is the current knowledge level of learners?" (NOT "What is YOUR team's knowledge level?")
+
+SECTION 3: Content Scope & Structure
+- Focus: Content breadth, depth, and sequencing
+- Questions: Topics, structure, prerequisites, chunking strategy
+- Generate: 5-7 questions about content organization
+- Example: "What topics should be covered?" (NOT "What topics should YOUR {industry_sector} training cover?")
+
+SECTION 4: Instructional Strategy & Methods
+- Focus: Pedagogical approaches and teaching methods
+- Questions: Methods, balance, social learning, active strategies
+- Generate: 5-7 questions about teaching approaches
+- Example: "What instructional methods will be used?" (NOT "What methods work for YOUR {team_size} team?")
+
+SECTION 5: Learning Activities & Interactions
+- Focus: Engagement activities and learner interactions
+- Questions: Activity types, practice, collaboration, real-world scenarios
+- Generate: 5-7 questions about learning activities
+- Example: "What types of practice activities are needed?" (NOT "What activities suit YOUR {devices_used}?")
+
+SECTION 6: Assessment & Evaluation
+- Focus: Measurement strategies and evaluation methods
+- Questions: Formative/summative assessments, certifications, feedback, data usage
+- Generate: 5-7 questions about assessment approaches
+- Example: "What assessment methods will be used?" (NOT "What assessments meet YOUR {compliance_requirements}?")
+
+SECTION 7: Resources & Materials
+- Focus: Learning resources and content materials
+- Questions: Existing materials, new resources, external content, tools
+- Generate: 5-7 questions about learning resources
+- Example: "What learning resources are available?" (NOT "What resources fit YOUR {budget_available}?")
+
+SECTION 8: Technology & Platform
+- Focus: Technical infrastructure and platform requirements
+- Questions: LMS requirements, authoring tools, integrations, analytics
+- Generate: 5-7 questions about technology needs
+- Example: "What technology platform will be used?" (NOT "What platform meets YOUR {security_clearance} requirements?")
+
+SECTION 9: Implementation & Rollout
+- Focus: Deployment strategy and change management
+- Questions: Pilot approach, timeline, communication, change management
+- Generate: 5-7 questions about implementation planning
+- Example: "What is the deployment timeline?" (NOT "Can YOU meet YOUR {learning_deadline} deadline?")
+
+SECTION 10: Success Metrics & Continuous Improvement
+- Focus: KPIs and continuous improvement processes
+- Questions: KPIs, data collection, reporting, iteration, sustainability
+- Generate: 5-7 questions about measurement and improvement
+- Example: "What metrics will measure success?" (NOT "What KPIs does YOUR {current_role} need to report?")
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 INPUT TYPE REQUIREMENTS (MODERN UX ONLY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ FORBIDDEN INPUT TYPES (Poor UX):
+- select (use radio_pills or radio_cards instead)
+- multiselect (use checkbox_pills or checkbox_cards instead)
+
+✅ REQUIRED INPUT TYPE MIX (Use All):
+- radio_pills: 20-30% of questions (2-6 options, short labels)
+- checkbox_pills: 15-20% of questions (2-8 options, multiple selection)
+- radio_cards: 10-15% of questions (2-4 options with descriptions)
+- checkbox_cards: 10-15% of questions (2-6 options with descriptions)
+- toggle_switch: 5-10% of questions (exactly 2 binary options)
+- scale: 10-15% of questions (1-10 range ratings)
+- enhanced_scale: 5-10% of questions (visual feedback scales)
+- labeled_slider: 5-10% of questions (continuous values with units)
+- textarea: 10-15% of questions (detailed descriptions)
+- text: 5-10% of questions (short answers)
+- currency: 2-5% of questions (budget amounts)
+- number_spinner: 2-5% of questions (countable items)
+- date: 2-5% of questions (deadlines, milestones)
+
+ENSURE: Every section has diverse input types. Never use same type for all questions in a section.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📤 STRICT OUTPUT FORMAT REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRUCTURE REQUIREMENTS:
+✓ Return ONLY valid JSON - NO markdown code fences, NO preamble, NO explanatory text
+✓ Start directly with { and end with }
+✓ Exactly 10 sections, each with "id", "title", "description", "order"
+✓ Each section has 5-7 questions array
+✓ Total questions: 50-70
+
+QUESTION ID FORMAT:
+✓ Use format: s{section}_q{number}
+✓ Examples: s1_q1, s1_q2, s2_q1, s10_q7
+✓ Section IDs: s1, s2, s3, s4, s5, s6, s7, s8, s9, s10
+
+QUESTION STRUCTURE (ALL REQUIRED):
+{
+  "id": "s1_q1",
+  "label": "What are the primary learning objectives?",
+  "type": "checkbox_cards",
+  "required": true,
+  "helpText": "Select the objectives that best align with your organizational goals",
+  "placeholder": "Example placeholder when applicable",
+  "options": [...], // For selection types
+  "scaleConfig": {...}, // For scale/slider types
+  "validation": [
+    {"rule": "minSelections", "value": 1, "message": "Please select at least one option"}
+  ],
+  "metadata": {
+    "category": "objectives",
+    "priority": "high"
+  }
+}
+
+REQUIRED CONFIGS BY TYPE:
+- radio_pills/checkbox_pills: options array (2-8 items with value, label, optional icon)
+- radio_cards/checkbox_cards: options array (2-6 items with value, label, description)
+- toggle_switch: options array (exactly 2 items)
+- scale: scaleConfig {min, max, minLabel, maxLabel, step}
+- enhanced_scale: scaleConfig {min, max, minLabel, maxLabel, labels array, step}
+- labeled_slider: sliderConfig {min, max, step, unit, markers array}
+- currency: currencyConfig {symbol, min, max}
+- number_spinner: min, max, step
+- textarea: rows (3-10), maxLength
+- text: maxLength (typically 200)
+- date: No special config needed
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ QUALITY VALIDATION CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before returning JSON, verify:
+☑ Exactly 10 sections (s1 through s10)
+☑ Each section has 5-7 questions
+☑ Total questions: 50-70
+☑ All question IDs use s{section}_q{number} format
+☑ NO context variables in question labels (no {organization_name}, {current_role}, etc.)
+☑ ALL questions are generic and universally applicable
+☑ Input types are diverse (not all radio_pills)
+☑ No select or multiselect types used
+☑ All selection types have options array
+☑ All scale types have proper config
+☑ All questions have validation array
+☑ All questions have metadata object
+☑ Valid JSON (no trailing commas, proper escaping)
+☑ No markdown code fences (no ```json)
+☑ Starts with { and ends with }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 TEMPLATE-BASED EXAMPLE (Follow This Pattern Exactly)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ WRONG (Personalized - DO NOT DO THIS):
+{
+  "id": "s1_q1",
+  "label": "As {current_role} at {organization_name}, what are your AI training objectives for {total_learners_range} executives at {current_knowledge_level}/5 knowledge level?",
+  "helpText": "Given your {budget_available} budget and {learning_deadline} deadline in {industry_sector}..."
+}
+
+✅ CORRECT (Template-Based - DO THIS):
+{
+  "id": "s1_q1",
+  "label": "What are the primary learning objectives for this training program?",
+  "type": "checkbox_cards",
+  "required": true,
+  "helpText": "Select all objectives that align with your organizational learning goals and desired business outcomes",
+  "options": [
+    {
+      "value": "knowledge-acquisition",
+      "label": "Knowledge Acquisition",
+      "description": "Build foundational understanding of key concepts and principles"
+    },
+    {
+      "value": "skill-development",
+      "label": "Skill Development",
+      "description": "Develop practical, hands-on abilities that can be applied on the job"
+    },
+    {
+      "value": "performance-improvement",
+      "label": "Performance Improvement",
+      "description": "Drive measurable improvements in job performance and productivity"
+    },
+    {
+      "value": "behavioral-change",
+      "label": "Behavioral Change",
+      "description": "Foster lasting changes in work habits and professional behaviors"
+    },
+    {
+      "value": "certification-compliance",
+      "label": "Certification & Compliance",
+      "description": "Meet regulatory requirements or achieve industry certifications"
+    }
+  ],
+  "validation": [
+    {"rule": "minSelections", "value": 1, "message": "Please select at least one objective"},
+    {"rule": "maxSelections", "value": 3, "message": "Please select no more than 3 primary objectives"}
+  ],
+  "metadata": {
+    "category": "objectives",
+    "priority": "high",
+    "bloomLevel": "understand"
+  }
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REMEMBER: You are creating a UNIVERSAL template-based questionnaire that:
+- Works for ANY organization, ANY role, ANY industry
+- Does NOT reference specific context in question text
+- Uses context only to determine which questions are relevant
+- Remains consistent across multiple generations
+- Maintains professional, generic language throughout
+
+GENERATE NOW. RETURN ONLY VALID JSON. START WITH { END WITH }.
