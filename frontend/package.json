@@ -150,13 +150,6 @@
     "zustand": "^4.5.7",
     "zxcvbn": "^4.4.2"
   },
-  "overrides": {
-    "glob": "^11.0.3",
-    "rimraf": "^6.0.1",
-    "inflight": "lru-cache",
-    "sourcemap-codec": "@jridgewell/sourcemap-codec",
-    "lodash.isequal": "node:util"
-  },
   "resolutions": {
     "ai": "5.0.92",
     "@ai-sdk/anthropic": "1.0.0",
