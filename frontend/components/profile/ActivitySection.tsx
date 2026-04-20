@@ -44,26 +44,44 @@ export function ActivitySection() {
 
   // Fetch recent activity (only 3-4 items)
   useEffect(() => {
+    let mounted = true;
     const fetchActivityData = async () => {
       try {
         setLoading(true);
         setError(null);
 
         const recentResponse = await fetch('/api/user/activity/recent?limit=3&offset=0');
+        
         if (!recentResponse.ok) {
-          throw new Error('Failed to fetch recent activity');
+          const errorData = await recentResponse.json().catch(() => ({}));
+          console.error('[ActivitySection] API error:', {
+            status: recentResponse.status,
+            error: errorData.error,
+            details: errorData.details
+          });
+          throw new Error(errorData.error || 'Failed to fetch recent activity');
         }
+        
         const recentData: RecentActivityResponse = await recentResponse.json();
-        setRecentActivities(recentData.activities);
+        if (mounted) {
+          setRecentActivities(recentData.activities || []);
+        }
       } catch (err) {
-        console.error('Error fetching activity data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load activity data');
+        console.error('[ActivitySection] Error fetching activity data:', err);
+        if (mounted) {
+          // Set error but also ensure activities is an empty array
+          setError(err instanceof Error ? err.message : 'Failed to load activity data');
+          setRecentActivities([]);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchActivityData();
+    return () => { mounted = false; };
   }, []);
 
   // Helper function to format relative time

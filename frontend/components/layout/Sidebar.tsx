@@ -306,12 +306,6 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
                       }`}
                     >
                       <Icon className="h-5.5 w-5.5" />
-                      {isActive && (
-                        <motion.div 
-                          layoutId="activePill"
-                          className="absolute -right-1 h-6 w-1 rounded-l-full bg-primary" 
-                        />
-                      )}
                     </button>
                   </motion.div>
                 );
