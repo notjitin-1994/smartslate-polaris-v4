@@ -42,7 +42,7 @@
     <div class="brand-logo">
       <div class="brand-logo-icon">SP</div>
       <div>
-        <div>SmartSlate Polaris</div>
+        <div>Smartslate Polaris</div>
         <div class="brand-powered-by">Powered by Solara</div>
       </div>
     </div>

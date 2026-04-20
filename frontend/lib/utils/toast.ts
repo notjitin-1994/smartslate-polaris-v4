@@ -1,7 +1,7 @@
 /**
  * Toast Notification Utilities
  *
- * Wraps Sonner toast library with SmartSlate-specific configurations
+ * Wraps Sonner toast library with Smartslate-specific configurations
  * and reusable patterns for consistent notifications across the application.
  *
  * @see https://sonner.emilkowal.ski/
@@ -10,7 +10,7 @@
 import { toast as sonnerToast, type ExternalToast } from 'sonner';
 
 /**
- * Default toast options for SmartSlate
+ * Default toast options for Smartslate
  */
 const defaultOptions: ExternalToast = {
   duration: 4000,

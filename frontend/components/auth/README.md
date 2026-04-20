@@ -1,11 +1,11 @@
 # SignupErrorMessage Component
 
-A sophisticated, accessible error message component for SmartSlate Polaris sign-up flows. Provides contextual error messages with appropriate call-to-action buttons based on the type of signup failure.
+A sophisticated, accessible error message component for Smartslate Polaris sign-up flows. Provides contextual error messages with appropriate call-to-action buttons based on the type of signup failure.
 
 ## Features
 
 - **Three Error States**: Password authentication, OAuth conflicts, and unconfirmed email scenarios
-- **SmartSlate Polaris Design**: Glassmorphism effects with brand colors (#A7DADB primary, indigo secondary)
+- **Smartslate Polaris Design**: Glassmorphism effects with brand colors (#A7DADB primary, indigo secondary)
 - **WCAG AA Accessible**: Proper ARIA labels, keyboard navigation, 4.5:1+ contrast ratios
 - **Touch-Friendly**: Minimum 44px touch targets for mobile optimization
 - **Smooth Animations**: Fade-in-up entrance with respecting `prefers-reduced-motion`
@@ -246,7 +246,7 @@ import {
 
 ## Design Tokens Used
 
-The component uses SmartSlate Polaris design tokens:
+The component uses Smartslate Polaris design tokens:
 
 **Colors**:
 
@@ -297,7 +297,7 @@ All interactive elements meet mobile touch requirements:
 
 ## Animation Details
 
-The component uses SmartSlate's animation system:
+The component uses Smartslate's animation system:
 
 - **Entrance**: `.animate-fade-in-up` (300ms, cubic-bezier easing)
 - **Hover States**: Smooth color transitions (200ms)
@@ -418,8 +418,8 @@ For issues or questions:
 
 - Check examples: `SignupErrorMessage.example.tsx`
 - Review tests: `__tests__/components/auth/SignupErrorMessage.test.tsx`
-- Contact: SmartSlate Polaris team
+- Contact: Smartslate Polaris team
 
 ## License
 
-Part of SmartSlate Polaris v3 platform.
+Part of Smartslate Polaris v3 platform.

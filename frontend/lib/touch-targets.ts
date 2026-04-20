@@ -1,7 +1,7 @@
 /**
  * Touch-First Component System - Touch Target Constants and Configuration
  *
- * This module defines the comprehensive touch target system for SmartSlate Polaris v3,
+ * This module defines the comprehensive touch target system for Smartslate Polaris v3,
  * ensuring all interactive elements meet accessibility standards and provide optimal
  * touch experiences across all devices and screen sizes.
  */

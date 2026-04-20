@@ -1,10 +1,10 @@
 # SystemStatusModal Component
 
-A premium glassmorphism modal component for displaying detailed system status information in the SmartSlate Polaris admin dashboard.
+A premium glassmorphism modal component for displaying detailed system status information in the Smartslate Polaris admin dashboard.
 
 ## Features
 
-- **Brand-Compliant Design**: Full glassmorphism styling following SmartSlate Polaris design system
+- **Brand-Compliant Design**: Full glassmorphism styling following Smartslate Polaris design system
 - **Touch-First**: All interactive elements meet 44px minimum touch target requirements
 - **Accessible**: WCAG AA compliant with proper ARIA labels, keyboard navigation, and focus management
 - **Responsive**: Mobile-first design that scales from 320px to 2560px
@@ -395,4 +395,4 @@ function AdminDashboard() {
 
 ## License
 
-Part of the SmartSlate Polaris v3 project.
+Part of the Smartslate Polaris v3 project.

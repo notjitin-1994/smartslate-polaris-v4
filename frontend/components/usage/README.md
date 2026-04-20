@@ -1,6 +1,6 @@
 # Usage Components Design System
 
-This directory contains world-class UI components for displaying tier limits, usage information, and upgrade prompts in the SmartSlate Polaris v3 application.
+This directory contains world-class UI components for displaying tier limits, usage information, and upgrade prompts in the Smartslate Polaris v3 application.
 
 ## Components Overview
 
@@ -609,4 +609,4 @@ For issues or questions:
 
 **Last Updated:** 2025-10-28
 **Version:** 1.0.0
-**Maintainer:** SmartSlate Polaris Team
+**Maintainer:** Smartslate Polaris Team

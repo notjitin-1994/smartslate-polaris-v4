@@ -46,9 +46,9 @@ export const metadata: Metadata = {
     'LXD platform',
     'learning needs analysis',
   ],
-  authors: [{ name: 'SmartSlate' }],
-  creator: 'SmartSlate',
-  publisher: 'SmartSlate',
+  authors: [{ name: 'Smartslate' }],
+  creator: 'Smartslate',
+  publisher: 'Smartslate',
   formatDetection: {
     email: false,
     address: false,
@@ -58,9 +58,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Smartslate Polaris: AI-assisted Learning Experience Design',
     description:
-      'SmartSlate Polaris uses AI-powered intelligent questioning to capture context and generate comprehensive learning blueprints. Cut blueprint creation from weeks to minutes with personalized L&D strategies, SMART objectives, and implementation timelines.',
+      'Smartslate Polaris uses AI-powered intelligent questioning to capture context and generate comprehensive learning blueprints. Cut blueprint creation from weeks to minutes with personalized L&D strategies, SMART objectives, and implementation timelines.',
     url: '/',
-    siteName: 'SmartSlate Polaris',
+    siteName: 'Smartslate Polaris',
     locale: 'en_US',
     type: 'website',
     images: [
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'SmartSlate Polaris - AI-assisted Learning Experience Design Platform',
+        alt: 'Smartslate Polaris - AI-assisted Learning Experience Design Platform',
       },
     ],
   },
@@ -152,7 +152,7 @@ export default function RootLayout({
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'SoftwareApplication',
-              name: 'SmartSlate Polaris',
+              name: 'Smartslate Polaris',
               applicationCategory: 'BusinessApplication',
               applicationSubCategory: 'Learning Management System',
               description:
@@ -187,7 +187,7 @@ export default function RootLayout({
               // Apply theme class immediately to prevent flash
               (function() {
                 try {
-                  // Always default to dark theme for SmartSlate
+                  // Always default to dark theme for Smartslate
                   document.documentElement.classList.remove('light', 'dark');
                   document.documentElement.classList.add('dark');
                 } catch (e) {

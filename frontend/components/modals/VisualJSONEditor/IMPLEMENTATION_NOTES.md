@@ -99,7 +99,7 @@ The VisualJSONEditor has been completely redesigned from a technical tree-based 
 - Responsive spacing and typography
 - Truncated text for small screens
 
-### 11. **Brand Styling (SmartSlate Polaris)** ✅
+### 11. **Brand Styling (Smartslate Polaris)** ✅
 
 - Glassmorphism effects on cards
 - Cyan/teal accent colors (#A7DADB)
@@ -399,8 +399,8 @@ When adding features:
 
 ## Credits
 
-**Designed by**: Claude Code (SmartSlate Polaris UX/UI Design Expert)
-**Built for**: SmartSlate Polaris v3
+**Designed by**: Claude Code (Smartslate Polaris UX/UI Design Expert)
+**Built for**: Smartslate Polaris v3
 **Technology**: Next.js 15, React 19, TypeScript 5.7, Tailwind CSS v4, Radix UI
 **Philosophy**: Make JSON editing feel like magic, not work.
 

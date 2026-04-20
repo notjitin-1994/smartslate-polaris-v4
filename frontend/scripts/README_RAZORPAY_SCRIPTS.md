@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains scripts for managing Razorpay subscription plans for SmartSlate Polaris v3. These scripts automate the creation, management, and configuration of subscription plans.
+This directory contains scripts for managing Razorpay subscription plans for Smartslate Polaris v3. These scripts automate the creation, management, and configuration of subscription plans.
 
 ## Available Scripts
 

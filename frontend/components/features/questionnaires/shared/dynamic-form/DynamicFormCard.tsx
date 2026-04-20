@@ -18,7 +18,7 @@ export function DynamicFormCard({
         <div className="animate-fade-in flex items-center justify-center pb-2">
           <Image
             src="/logo.png"
-            alt="SmartSlate"
+            alt="Smartslate"
             width={140}
             height={38}
             className="h-10 w-auto opacity-90 transition-opacity duration-300 hover:opacity-100"

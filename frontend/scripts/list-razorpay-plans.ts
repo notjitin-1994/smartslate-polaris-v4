@@ -154,7 +154,7 @@ async function checkActiveSubscriptions(razorpay: any, planId: string): Promise<
  * Main execution function
  */
 async function main(): Promise<void> {
-  console.log('🔍 Listing Razorpay Plans for SmartSlate Polaris v3');
+  console.log('🔍 Listing Razorpay Plans for Smartslate Polaris v3');
   console.log('========================================================\n');
 
   // Validate environment

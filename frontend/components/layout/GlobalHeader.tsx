@@ -186,7 +186,7 @@ export function GlobalHeader(props: GlobalHeaderProps = {}) {
           };
         }
         return {
-          title: 'SmartSlate Polaris',
+          title: 'Smartslate Polaris',
           subtitle: 'Your learning companion',
         };
     }

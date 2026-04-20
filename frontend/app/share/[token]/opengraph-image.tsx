@@ -7,7 +7,7 @@ import { ImageResponse } from 'next/og';
 import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'edge';
-export const alt = 'SmartSlate Polaris - Learning Blueprint';
+export const alt = 'Smartslate Polaris - Learning Blueprint';
 export const size = {
   width: 1200,
   height: 630,
@@ -56,7 +56,7 @@ export default async function Image({ params }: Props) {
     // Safely extract description from executive_summary
     let description =
       shareLink?.custom_description ||
-      'AI-powered learning blueprint created with SmartSlate Polaris';
+      'AI-powered learning blueprint created with Smartslate Polaris';
     if (!description && blueprintData?.blueprint_json) {
       const executiveSummary = (blueprintData.blueprint_json as any)?.executive_summary;
       if (typeof executiveSummary === 'string') {
@@ -149,7 +149,7 @@ export default async function Image({ params }: Props) {
               {/* Brand */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ color: '#a7dadb', fontSize: '24px', fontWeight: '600' }}>
-                  SmartSlate Polaris
+                  Smartslate Polaris
                 </div>
                 <div style={{ color: '#64748b', fontSize: '16px' }}>
                   AI-Powered Learning Blueprints
@@ -356,7 +356,7 @@ export default async function Image({ params }: Props) {
               S
             </div>
             <div style={{ color: '#ffffff', fontSize: '32px', fontWeight: '600' }}>
-              SmartSlate Polaris
+              Smartslate Polaris
             </div>
             <div style={{ color: '#64748b', fontSize: '20px' }}>AI-Powered Learning Blueprints</div>
           </div>

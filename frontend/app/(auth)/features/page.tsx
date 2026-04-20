@@ -53,7 +53,7 @@ export default function DocumentationPage() {
 
               <p className="mb-8 text-lg leading-relaxed text-[rgb(176,197,198)] sm:text-xl">
                 What takes weeks of meetings, interviews, and documentation now happens in minutes.
-                SmartSlate Polaris uses AI-powered questionnaires and Solara Learning Engine's
+                Smartslate Polaris uses AI-powered questionnaires and Solara Learning Engine's
                 advanced reasoning to capture 100% of your requirements and generate
                 production-ready learning blueprints with zero revision cycles.
               </p>
@@ -731,7 +731,7 @@ export default function DocumentationPage() {
                     <p className="text-sm leading-relaxed text-[rgb(176,197,198)]">
                       Traditional needs analysis involves scheduling multiple 2-hour stakeholder
                       workshops, transcribing notes, identifying gaps, and running follow-up
-                      sessions. SmartSlate compresses this into 45 minutes of focused answers. The
+                      sessions. Smartslate compresses this into 45 minutes of focused answers. The
                       result? Same quality, 95% less time investment.
                     </p>
                   </div>

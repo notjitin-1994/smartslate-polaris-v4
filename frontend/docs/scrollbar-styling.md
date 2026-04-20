@@ -1,8 +1,8 @@
-# SmartSlate Polaris Scrollbar Styling Guide
+# Smartslate Polaris Scrollbar Styling Guide
 
 ## Overview
 
-This document describes the brand-consistent scrollbar styling system implemented for SmartSlate Polaris.
+This document describes the brand-consistent scrollbar styling system implemented for Smartslate Polaris.
 
 ## Implementation Location
 
@@ -13,7 +13,7 @@ This document describes the brand-consistent scrollbar styling system implemente
 
 ### Brand Scrollbar Class: `.scrollbar-brand`
 
-A premium scrollbar design that matches the SmartSlate Polaris brand identity with glassmorphism effects and subtle glow.
+A premium scrollbar design that matches the Smartslate Polaris brand identity with glassmorphism effects and subtle glow.
 
 #### Visual Design
 
@@ -163,11 +163,11 @@ Specialized scrollbar for presentation mode:
 
 ### Why Glassmorphism?
 
-Glassmorphism aligns with SmartSlate Polaris's premium dark mode aesthetic. The frosted glass effect with subtle blur creates depth and sophistication without overwhelming the interface.
+Glassmorphism aligns with Smartslate Polaris's premium dark mode aesthetic. The frosted glass effect with subtle blur creates depth and sophistication without overwhelming the interface.
 
 ### Why the Cyan-Teal Glow?
 
-The `#a7dadb` primary accent color is SmartSlate's signature brand color. Using it for the scrollbar:
+The `#a7dadb` primary accent color is Smartslate's signature brand color. Using it for the scrollbar:
 
 1. Reinforces brand identity throughout the UI
 2. Creates visual consistency with other interactive elements
@@ -204,5 +204,5 @@ Potential improvements for future iterations:
 ---
 
 **Last Updated**: 2025-11-14
-**Author**: Claude Code (SmartSlate UX/UI Design Expert)
+**Author**: Claude Code (Smartslate UX/UI Design Expert)
 **Version**: 1.0.0

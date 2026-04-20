@@ -44,7 +44,7 @@ export const PRODUCTION_NOTIFICATION_CHANNELS = {
     config: {
       webhookUrl: process.env.SLACK_WEBHOOK_URL,
       channel: '#production-alerts',
-      username: 'SmartSlate Monitor',
+      username: 'Smartslate Monitor',
       iconEmoji: ':warning:',
     },
   },

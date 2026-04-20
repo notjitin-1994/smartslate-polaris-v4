@@ -1,5 +1,5 @@
 /**
- * SmartSlate Premium Design System
+ * Smartslate Premium Design System
  * Comprehensive export of all design tokens and utilities
  */
 

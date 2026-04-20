@@ -1,4 +1,4 @@
-# SmartSlate Polaris Slidev Theme - Quick Start Guide
+# Smartslate Polaris Slidev Theme - Quick Start Guide
 
 Get up and running with stunning presentations in 5 minutes.
 
@@ -7,7 +7,7 @@ Get up and running with stunning presentations in 5 minutes.
 ## Prerequisites
 
 - Node.js 18+ installed
-- SmartSlate Polaris frontend running
+- Smartslate Polaris frontend running
 - Basic familiarity with Markdown
 
 ---
@@ -71,7 +71,7 @@ highlighter: shiki
 
 # Welcome to My Blueprint
 
-This is my first SmartSlate presentation
+This is my first Smartslate presentation
 
 ---
 
@@ -545,7 +545,7 @@ theme: ./slidev/theme # Correct path
 2. **Create your first presentation**: Copy example, modify content
 3. **Experiment with layouts**: Test each layout type
 4. **Export**: Build static HTML or PDF
-5. **Integrate**: Connect to SmartSlate blueprint generation
+5. **Integrate**: Connect to Smartslate blueprint generation
 
 ---
 

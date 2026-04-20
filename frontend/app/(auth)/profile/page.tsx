@@ -15,7 +15,7 @@ import { useUserProfile } from '@/lib/hooks/useUserProfile';
  *
  * Design Principles:
  * - Minimalist & modern aesthetic
- * - Glassmorphism design (SmartSlate Polaris brand)
+ * - Glassmorphism design (Smartslate Polaris brand)
  * - Progressive disclosure (advanced features collapsed)
  * - Mobile-responsive layout
  * - WCAG AA accessibility compliance

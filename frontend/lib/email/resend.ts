@@ -28,8 +28,8 @@ function getResendClient(): Resend {
 
 // Email configuration
 export const EMAIL_CONFIG = {
-  from: process.env.RESEND_FROM_EMAIL || 'SmartSlate <noreply@smartslate.com>',
-  replyTo: process.env.RESEND_REPLY_TO || 'support@smartslate.com',
+  from: process.env.RESEND_FROM_EMAIL || 'Smartslate <noreply@smartslate.io>',
+  replyTo: process.env.RESEND_REPLY_TO || 'support@smartslate.io',
 } as const;
 
 // Email types for tracking
@@ -123,8 +123,9 @@ export async function sendTemplateEmail(
     // Import render function from @react-email/render
     const { render } = await import('@react-email/render');
 
-    const html = render(template);
-    const text = render(template, { plainText: true });
+    // NEW: Await the render calls as newer versions of @react-email/render are async
+    const html = await render(template);
+    const text = await render(template, { plainText: true });
 
     return sendEmail({
       to,

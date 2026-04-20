@@ -52,7 +52,7 @@ import {
 /**
  * Admin Reports Page
  * Comprehensive reporting system with report templates, generation, and management
- * Styled to match SmartSlate Polaris v3 brand guidelines
+ * Styled to match Smartslate Polaris v3 brand guidelines
  */
 
 // TypeScript Interfaces

@@ -56,13 +56,22 @@ export default function ResetPasswordPage(): React.JSX.Element {
   useEffect(() => {
     const checkSession = async () => {
       const supabase = getSupabaseBrowserClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      // If no session, redirect to forgot-password page
+      
+      // Try to get session, with a retry if not immediately found
+      // This helps with race conditions in Next.js 15 SSR
+      let { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
-        router.push('/forgot-password');
+        // Wait 1 second and try one more time
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const retry = await supabase.auth.getSession();
+        session = retry.data.session;
+      }
+
+      // If still no session, redirect to forgot-password page
+      if (!session) {
+        console.warn('[Reset Password] No session found, redirecting to recovery request');
+        router.push('/forgot-password?error=session_expired');
       }
     };
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a comprehensive overview of the test coverage for the SmartSlate Polaris v3 AI Blueprint Generation Platform.
+This document provides a comprehensive overview of the test coverage for the Smartslate Polaris v3 AI Blueprint Generation Platform.
 
 **Date**: 2025-10-29
 **Total Tests**: 996

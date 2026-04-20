@@ -6,7 +6,7 @@
  * Tests the Razorpay webhook endpoint for production readiness
  * @version 1.0.0
  * @date 2025-10-29
- * @author SmartSlate Polaris Team
+ * @author Smartslate Polaris Team
  *
  * Usage:
  *   npm run test-webhook-endpoint                           # Test local endpoint

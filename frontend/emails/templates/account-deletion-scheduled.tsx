@@ -23,7 +23,7 @@ export function AccountDeletionScheduledEmail({
   const deletionDate = new Date(scheduledDeletionDate);
 
   return (
-    <BaseEmail preview="Important: Your SmartSlate Polaris account is scheduled for deletion">
+    <BaseEmail preview="Important: Your Smartslate Polaris account is scheduled for deletion">
       {/* Warning Icon */}
       <Section style={iconSection}>
         <div style={iconWrapper}>
@@ -36,7 +36,7 @@ export function AccountDeletionScheduledEmail({
       <Text style={greeting}>Hi {userName},</Text>
 
       <Text style={paragraph}>
-        We've received your request to delete your SmartSlate Polaris account. This is a permanent
+        We've received your request to delete your Smartslate Polaris account. This is a permanent
         action that will completely remove your account and all associated data from our systems.
       </Text>
 

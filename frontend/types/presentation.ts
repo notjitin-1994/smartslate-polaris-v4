@@ -1,7 +1,7 @@
 /**
  * Presentation Mode Type Definitions
  *
- * Comprehensive TypeScript interfaces and types for SmartSlate Polaris
+ * Comprehensive TypeScript interfaces and types for Smartslate Polaris
  * presentation mode feature. Follows TypeScript 5.7 strict mode conventions.
  */
 

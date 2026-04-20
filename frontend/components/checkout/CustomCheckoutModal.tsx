@@ -1,6 +1,6 @@
 /**
  * Custom Checkout Modal Component
- * Premium branded checkout experience for SmartSlate Polaris
+ * Premium branded checkout experience for Smartslate Polaris
  */
 
 'use client';

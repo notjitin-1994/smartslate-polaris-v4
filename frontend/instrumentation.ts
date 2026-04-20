@@ -48,7 +48,7 @@ export async function register() {
       initializeGlobalErrorHandlers();
 
       // Log successful initialization
-      logger.info('system.startup', 'SmartSlate Polaris server initialized', {
+      logger.info('system.startup', 'Smartslate Polaris server initialized', {
         nodeVersion: process.version,
         platform: process.platform,
         env: process.env.NODE_ENV,

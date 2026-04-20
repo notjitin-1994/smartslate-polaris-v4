@@ -33,13 +33,17 @@ export default function ForgotPasswordFormContent({
     setLoading(true);
 
     try {
-      const supabase = getSupabaseBrowserClient();
-
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(identifier.email, {
-        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+      const response = await fetch('/api/auth/reset-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: identifier.email }),
       });
 
-      if (resetError) throw resetError;
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send reset email');
+      }
 
       setSent(true);
     } catch (err) {

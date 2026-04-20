@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
  * SignupErrorMessage Component
  *
  * Displays contextual error messages for sign-up failures with appropriate
- * call-to-action buttons. Follows SmartSlate Polaris design system with
+ * call-to-action buttons. Follows Smartslate Polaris design system with
  * glassmorphism effects and WCAG AA accessibility standards.
  */
 

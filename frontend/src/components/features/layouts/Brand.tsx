@@ -17,7 +17,7 @@ export const Brand = memo(function Brand() {
       <div className="relative">
         <img
           src="/logo.png"
-          alt="SmartSlate"
+          alt="Smartslate"
           className="relative h-7 w-auto drop-shadow-sm transition-all duration-300 select-none group-hover:scale-[1.02] group-hover:drop-shadow-md"
           draggable="false"
         />

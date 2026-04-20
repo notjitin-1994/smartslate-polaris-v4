@@ -41,7 +41,7 @@ interface FeedbackModalProps {
 /**
  * FeedbackModal Component
  *
- * Modal form for submitting general feedback about SmartSlate.
+ * Modal form for submitting general feedback about Smartslate.
  * Includes sentiment selection (emoji radio pills), category dropdown,
  * message textarea, and optional email input.
  *

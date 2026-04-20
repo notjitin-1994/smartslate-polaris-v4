@@ -2,7 +2,7 @@
 
 ## Overview
 
-A beautiful, accessible database administration page built with SmartSlate Polaris design system. This tool allows developers to explore database tables, view schemas, and export data in multiple formats.
+A beautiful, accessible database administration page built with Smartslate Polaris design system. This tool allows developers to explore database tables, view schemas, and export data in multiple formats.
 
 ## Features
 
@@ -278,5 +278,5 @@ Run: `npm run lint` from frontend directory
 
 ---
 
-**Created with SmartSlate Polaris Design System**
+**Created with Smartslate Polaris Design System**
 Following brand identity guidelines for premium, accessible UX/UI.

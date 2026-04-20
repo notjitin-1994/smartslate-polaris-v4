@@ -136,7 +136,7 @@ export function useRazorpayCheckout() {
 
     const baseOptions: ModalCheckoutOptions = {
       key: config.keyId,
-      name: config.name || 'SmartSlate',
+      name: config.name || 'Smartslate',
       description: config.description || 'AI-powered learning platform subscription',
       image: config.image,
       prefill: {

@@ -1,6 +1,6 @@
 /**
  * Type definitions for Custom Checkout System
- * SmartSlate Polaris - Premium Checkout Experience
+ * Smartslate Polaris - Premium Checkout Experience
  */
 
 export type PaymentMethod = 'card' | 'upi' | 'netbanking' | 'wallet';

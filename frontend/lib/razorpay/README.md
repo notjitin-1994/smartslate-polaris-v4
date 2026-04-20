@@ -1,4 +1,4 @@
-# Razorpay Integration for SmartSlate Polaris v3
+# Razorpay Integration for Smartslate Polaris v3
 
 **Task**: Task 1 - TypeScript Type Definitions and Razorpay Client Setup
 **Date**: 2025-10-29
@@ -7,7 +7,7 @@
 
 ## Overview
 
-This directory contains the complete Razorpay payment gateway integration foundation for SmartSlate Polaris v3. The implementation provides TypeScript type definitions, SDK client initialization, plan configuration, and comprehensive testing for Razorpay subscription payments.
+This directory contains the complete Razorpay payment gateway integration foundation for Smartslate Polaris v3. The implementation provides TypeScript type definitions, SDK client initialization, plan configuration, and comprehensive testing for Razorpay subscription payments.
 
 ## 🚀 Quick Start
 
@@ -65,7 +65,7 @@ export default function CheckoutButton() {
     const options = {
       key: getRazorpayKeyId(),
       subscription_id: 'sub_XXXXXXXX',
-      name: 'SmartSlate Polaris',
+      name: 'Smartslate Polaris',
       description: 'Navigator Plan Subscription',
       handler: function (response: any) {
         console.log('Payment successful:', response);

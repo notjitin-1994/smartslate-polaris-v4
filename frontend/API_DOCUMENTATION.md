@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides comprehensive documentation for all API endpoints in the SmartSlate Dynamic Questionnaire System.
+This document provides comprehensive documentation for all API endpoints in the Smartslate Dynamic Questionnaire System.
 
 ## Base URL
 

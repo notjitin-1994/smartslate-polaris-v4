@@ -88,7 +88,7 @@ export function SharePageSidebar(_props: SharePageSidebarProps) {
             <div className="relative h-8 w-32">
               <Image
                 src="/images/logos/logo.png"
-                alt="SmartSlate"
+                alt="Smartslate"
                 fill
                 className="object-contain"
                 style={{

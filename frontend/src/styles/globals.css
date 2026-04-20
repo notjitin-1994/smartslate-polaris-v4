@@ -338,7 +338,7 @@ h6 {
   font-weight: var(--font-medium);
 }
 
-/* SmartSlate App Specific Styles */
+/* Smartslate App Specific Styles */
 .logo-glow {
   filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3));
 }

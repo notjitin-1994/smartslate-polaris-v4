@@ -62,7 +62,7 @@ export async function GET(request: Request) {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>SmartSlate Polaris - Email Templates Test</title>
+        <title>Smartslate Polaris - Email Templates Test</title>
         <style>
           * {
             margin: 0;
@@ -221,7 +221,7 @@ export async function GET(request: Request) {
       <body>
         <div class="container">
           <div class="header">
-            <h1>📧 SmartSlate Polaris Email Templates</h1>
+            <h1>📧 Smartslate Polaris Email Templates</h1>
             <p>Development Preview & Testing Dashboard</p>
           </div>
 
@@ -272,7 +272,7 @@ export async function GET(request: Request) {
           </div>
 
           <div class="footer">
-            <p>🚀 SmartSlate Polaris Email Template Testing Suite</p>
+            <p>🚀 Smartslate Polaris Email Template Testing Suite</p>
             <p style="margin-top: 8px; font-size: 12px;">
               Development mode only • All templates use React Email components
             </p>

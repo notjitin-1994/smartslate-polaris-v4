@@ -107,7 +107,7 @@ export default function FeatureRequestNotification({
               <Text style={{ ...priorityLabel, color: config.color }}>{config.label}</Text>
             </div>
             <Heading style={h1}>New Feature Request</Heading>
-            <Text style={subtitle}>SmartSlate Polaris Product Enhancement</Text>
+            <Text style={subtitle}>Smartslate Polaris Product Enhancement</Text>
           </Section>
 
           {/* Feature Title Bar */}
@@ -242,7 +242,7 @@ export default function FeatureRequestNotification({
           <Section style={footer}>
             <Hr style={footerDivider} />
             <Text style={footerText}>
-              This is an automated notification from the SmartSlate Polaris feature request system.
+              This is an automated notification from the Smartslate Polaris feature request system.
             </Text>
             <Text style={footerText}>
               You're receiving this because you're listed as a product team member.

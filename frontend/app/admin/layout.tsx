@@ -5,8 +5,8 @@ import { ToastProvider } from '@/src/components/ui/Toast';
 import AdminLayout from '@/components/admin/AdminLayout';
 
 export const metadata = {
-  title: 'Admin Dashboard | SmartSlate Polaris',
-  description: 'Enterprise admin dashboard for SmartSlate Polaris v3',
+  title: 'Admin Dashboard | Smartslate Polaris',
+  description: 'Enterprise admin dashboard for Smartslate Polaris v3',
 };
 
 // Force dynamic rendering since we check authentication with cookies

@@ -1,4 +1,4 @@
-# SmartSlate Polaris Login Page - Visual Reference
+# Smartslate Polaris Login Page - Visual Reference
 
 ## Desktop Layout (1280px+)
 
@@ -11,7 +11,7 @@
 │  │  (Left Column)             │  │                                           │    │
 │  │                            │  │    ╔═══════════════════════════════╗       │    │
 │  │  ┌──────────────────────┐  │  │    ║                             ║       │    │
-│  │  │  Persona Tabs        │  │  │    ║      [SmartSlate Logo]      ║       │    │
+│  │  │  Persona Tabs        │  │  │    ║      [Smartslate Logo]      ║       │    │
 │  │  │  ├─ ID (active)      │  │  │    ║      (with subtle glow)     ║       │    │
 │  │  │  ├─ LXD              │  │  │    ║                             ║       │    │
 │  │  │  ├─ CD               │  │  │    ║     Welcome Back            ║       │    │
@@ -43,7 +43,7 @@
 │  │                            │  │    ║                             ║       │    │
 │  │                            │  │    ║   ───────────────────       ║       │    │
 │  │                            │  │    ║                             ║       │    │
-│  │                            │  │    ║   New to SmartSlate?        ║       │    │
+│  │                            │  │    ║   New to Smartslate?        ║       │    │
 │  │                            │  │    ║   Create free account       ║       │    │
 │  │                            │  │    ║                             ║       │    │
 │  │                            │  │    ║   Terms | Privacy Policy    ║       │    │
@@ -91,7 +91,7 @@
 │                                     │
 │  ┌───────────────────────────────┐  │
 │  │                               │  │
-│  │    [SmartSlate Logo]          │  │
+│  │    [Smartslate Logo]          │  │
 │  │    (with glow)                │  │
 │  │                               │  │
 │  │    Welcome Back               │  │
@@ -123,7 +123,7 @@
 │  │                               │  │
 │  │  ───────────────────          │  │
 │  │                               │  │
-│  │  New to SmartSlate?           │  │
+│  │  New to Smartslate?           │  │
 │  │  Create free account          │  │
 │  │                               │  │
 │  │  Terms | Privacy Policy       │  │

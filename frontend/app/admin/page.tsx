@@ -31,7 +31,7 @@ import {
 /**
  * Admin Dashboard Overview Page
  * Displays system-wide metrics, user statistics, and quick actions
- * Styled to match SmartSlate Polaris v3 brand guidelines
+ * Styled to match Smartslate Polaris v3 brand guidelines
  */
 
 interface SystemMetrics {
@@ -734,7 +734,7 @@ export default function AdminDashboardPage() {
                   </span>
                 </h1>
                 <p className="mt-2 text-base text-[#b0c5c6] sm:mt-3 sm:text-lg md:text-xl">
-                  Monitor, manage, and optimize your SmartSlate Polaris platform
+                  Monitor, manage, and optimize your Smartslate Polaris platform
                 </p>
               </div>
             </div>

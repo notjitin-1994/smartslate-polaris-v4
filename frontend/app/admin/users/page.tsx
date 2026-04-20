@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 /**
  * Admin Users Management Page
  * Comprehensive user administration with advanced filtering, sorting, and bulk actions
- * Styled to match SmartSlate Polaris v3 brand guidelines
+ * Styled to match Smartslate Polaris v3 brand guidelines
  */
 
 export default function UsersPage() {

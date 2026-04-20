@@ -19,7 +19,7 @@ import { Lightbulb, GitBranch, ArrowRight } from 'lucide-react';
  *    - Comfortable 16px spacing between cards
  *
  * 2. **Visual Hierarchy**:
- *    - Section header establishes context ("Ready to master SmartSlate?")
+ *    - Section header establishes context ("Ready to master Smartslate?")
  *    - Cards use glassmorphism for premium feel
  *    - Icons on left for quick scanning, arrow on right signals action
  *    - Primary card (Best Practices) has subtle teal glow
@@ -73,7 +73,7 @@ const MobileNavigationFooter: React.FC = () => {
         className="mb-6 text-left"
       >
         <h2 className="mb-2 font-[family-name:var(--font-quicksand)] text-xl font-semibold text-[rgb(167,218,219)]">
-          Ready to Master SmartSlate?
+          Ready to Master Smartslate?
         </h2>
         <p className="font-[family-name:var(--font-lato)] text-sm text-white">
           Explore expert guidance to maximize your learning blueprint results

@@ -51,7 +51,7 @@ interface VisualJSONEditorProps {
  * - Inline validation & helpful errors
  * - Keyboard shortcuts (Cmd/Ctrl+S, Cmd/Ctrl+Z, etc.)
  * - Touch-optimized & accessible (WCAG AA)
- * - SmartSlate Polaris brand styling
+ * - Smartslate Polaris brand styling
  */
 export function VisualJSONEditor({
   isOpen,

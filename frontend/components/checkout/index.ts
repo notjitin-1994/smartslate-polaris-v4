@@ -1,6 +1,6 @@
 /**
  * Checkout Components Barrel Export
- * SmartSlate Polaris - Custom Checkout System
+ * Smartslate Polaris - Custom Checkout System
  */
 
 export { CustomCheckoutModal } from './CustomCheckoutModal';

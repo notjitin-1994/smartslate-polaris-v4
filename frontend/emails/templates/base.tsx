@@ -1,6 +1,6 @@
 /**
  * Base Email Template
- * Modern glassmorphism design for all SmartSlate Polaris emails
+ * Modern Indigo design for all Smartslate Polaris emails
  */
 
 import {
@@ -12,7 +12,6 @@ import {
   Section,
   Text,
   Link,
-  Img,
   Hr,
   Row,
   Column,
@@ -26,7 +25,8 @@ interface BaseEmailProps {
 
 export function BaseEmail({ preview, children }: BaseEmailProps) {
   const currentYear = new Date().getFullYear();
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.smartslate.io';
+  // Ensure we point to the verified domain
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://smartslate.io';
 
   return (
     <Html>
@@ -45,21 +45,18 @@ export function BaseEmail({ preview, children }: BaseEmailProps) {
       <Preview>{preview}</Preview>
       <Body style={main}>
         <Container style={container}>
-          {/* Header with Logo and Branding */}
+          {/* Header with Logo and Branding - Indigo Theme */}
           <Section style={header}>
             <Row>
               <Column style={{ width: '100%' }}>
-                <Img
-                  src={`${baseUrl}/logo-swirl.png`}
-                  width="60"
-                  height="60"
-                  alt="SmartSlate Polaris"
-                  style={logoStyle}
-                />
+                {/* Branded Logo Fallback (Text-based to avoid broken images) */}
+                <div style={logoContainer}>
+                  <div style={logoIcon}>S</div>
+                </div>
                 <Text style={brandText}>
-                  SmartSlate <span style={polarisText}>Polaris</span>
+                  Smartslate <span style={polarisText}>Polaris</span>
                 </Text>
-                <Text style={tagline}>AI-Powered Learning Blueprint Generation</Text>
+                <Text style={tagline}>AI-Powered Learning Experience Design</Text>
               </Column>
             </Row>
           </Section>
@@ -75,22 +72,22 @@ export function BaseEmail({ preview, children }: BaseEmailProps) {
 
             {/* Footer Links */}
             <Row style={{ marginBottom: '20px' }}>
-              <Column style={{ width: '100%', textAlign: 'left' as const }}>
+              <Column style={{ width: '100%', textAlign: 'center' as const }}>
                 <Text style={footerLinksText}>
                   <Link href={`${baseUrl}/dashboard`} style={footerLink}>
                     Dashboard
                   </Link>
                   {' • '}
                   <Link href={`${baseUrl}/blueprints`} style={footerLink}>
-                    My Blueprints
+                    Blueprints
                   </Link>
                   {' • '}
                   <Link href={`${baseUrl}/support`} style={footerLink}>
-                    Support Center
+                    Support
                   </Link>
                   {' • '}
                   <Link href={`${baseUrl}/privacy`} style={footerLink}>
-                    Privacy Policy
+                    Privacy
                   </Link>
                 </Text>
               </Column>
@@ -98,17 +95,14 @@ export function BaseEmail({ preview, children }: BaseEmailProps) {
 
             {/* Company Info */}
             <Row>
-              <Column style={{ width: '100%', textAlign: 'left' as const }}>
+              <Column style={{ width: '100%', textAlign: 'center' as const }}>
                 <Text style={footerCopyright}>
-                  © {currentYear} SmartSlate Technologies. All rights reserved.
-                </Text>
-                <Text style={footerAddress}>
-                  Transforming learning through intelligent blueprint generation
+                  © {currentYear} Smartslate. All rights reserved.
                 </Text>
                 <Text style={footerUnsubscribe}>
-                  You're receiving this email because you have an account with SmartSlate Polaris.{' '}
+                  You're receiving this because you have a Smartslate account.{' '}
                   <Link href={`${baseUrl}/settings/notifications`} style={unsubscribeLink}>
-                    Manage email preferences
+                    Manage preferences
                   </Link>
                 </Text>
               </Column>
@@ -120,9 +114,9 @@ export function BaseEmail({ preview, children }: BaseEmailProps) {
   );
 }
 
-// Styles - Modern glassmorphism design
+// Styles - Premium Indigo Design
 const main = {
-  backgroundColor: '#f8fafc',
+  backgroundColor: '#f6f9fc',
   fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   padding: '40px 20px',
 };
@@ -131,43 +125,58 @@ const container = {
   backgroundColor: '#ffffff',
   margin: '0 auto',
   maxWidth: '600px',
-  borderRadius: '16px',
+  borderRadius: '24px',
   overflow: 'hidden',
-  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  boxShadow: '0 10px 25px -5px rgba(79, 70, 229, 0.1), 0 8px 10px -6px rgba(79, 70, 229, 0.05)',
+  border: '1px solid #e0e7ff',
 };
 
 const header = {
-  background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
-  padding: '40px 48px',
-  textAlign: 'left' as const,
+  background: '#ffffff',
+  padding: '40px 48px 20px 48px',
+  textAlign: 'center' as const,
 };
 
-const logoStyle = {
+const logoContainer = {
+  display: 'inline-block',
   marginBottom: '16px',
-  filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))',
+};
+
+const logoIcon = {
+  width: '44px',
+  height: '44px',
+  backgroundColor: '#4f46e5',
+  borderRadius: '12px',
+  color: '#ffffff',
+  fontSize: '24px',
+  fontWeight: '800',
+  lineHeight: '44px',
+  textAlign: 'center' as const,
+  margin: '0 auto',
 };
 
 const brandText = {
-  fontSize: '28px',
+  fontSize: '24px',
   fontWeight: '700',
-  color: '#000000',
-  margin: '0 0 8px 0',
+  color: '#1e1b4b', // Indigo 950
+  margin: '0 0 4px 0',
   letterSpacing: '-0.5px',
-  textAlign: 'left' as const,
+  textAlign: 'center' as const,
 };
 
 const polarisText = {
-  color: '#134e4a',
+  color: '#4f46e5', // Indigo 600
   fontWeight: '800',
 };
 
 const tagline = {
-  fontSize: '14px',
+  fontSize: '13px',
   fontWeight: '500',
-  color: '#0f766e',
+  color: '#6366f1', // Indigo 500
   margin: '0',
-  textAlign: 'left' as const,
-  letterSpacing: '0.025em',
+  textAlign: 'center' as const,
+  letterSpacing: '0.05em',
+  textTransform: 'uppercase' as const,
 };
 
 const contentWrapper = {
@@ -175,7 +184,7 @@ const contentWrapper = {
 };
 
 const contentInner = {
-  padding: '32px 48px',
+  padding: '20px 48px 48px 48px',
 };
 
 const footerSection = {
@@ -184,53 +193,44 @@ const footerSection = {
 };
 
 const footerDivider = {
-  borderColor: '#e2e8f0',
+  borderColor: '#e0e7ff',
   borderWidth: '1px',
   margin: '0 0 24px 0',
 };
 
 const footerLinksText = {
-  fontSize: '14px',
+  fontSize: '13px',
   lineHeight: '20px',
   color: '#64748b',
-  margin: '0 0 8px 0',
-  textAlign: 'left' as const,
+  margin: '0 0 12px 0',
+  textAlign: 'center' as const,
 };
 
 const footerLink = {
-  color: '#14b8a6',
+  color: '#4f46e5',
   textDecoration: 'none',
-  fontWeight: '500',
+  fontWeight: '600',
 };
 
 const footerCopyright = {
-  fontSize: '13px',
-  color: '#64748b',
-  margin: '0 0 4px 0',
-  fontWeight: '500',
-  textAlign: 'left' as const,
-};
-
-const footerAddress = {
   fontSize: '12px',
   color: '#94a3b8',
-  margin: '0 0 12px 0',
-  fontStyle: 'italic',
-  textAlign: 'left' as const,
+  margin: '0 0 4px 0',
+  fontWeight: '500',
+  textAlign: 'center' as const,
 };
 
 const footerUnsubscribe = {
-  fontSize: '12px',
+  fontSize: '11px',
   color: '#94a3b8',
-  lineHeight: '18px',
+  lineHeight: '16px',
   margin: '0',
-  textAlign: 'left' as const,
+  textAlign: 'center' as const,
 };
 
 const unsubscribeLink = {
-  color: '#14b8a6',
+  color: '#6366f1',
   textDecoration: 'underline',
-  fontWeight: '500',
 };
 
 export default BaseEmail;

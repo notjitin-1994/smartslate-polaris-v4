@@ -102,7 +102,7 @@ export class JSONGenerator {
 
       // Additional metadata
       metadata: {
-        generatedBy: 'SmartSlate Polaris v3',
+        generatedBy: 'Smartslate Polaris v3',
         generatedAt: new Date().toISOString(),
         exportOptions: {
           includeCharts: options.includeCharts || false,

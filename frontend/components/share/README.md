@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a comprehensive, industry-leading share feature implementation for SmartSlate Polaris v3, inspired by best practices from Notion, Figma, Google Docs, and other leading platforms.
+This is a comprehensive, industry-leading share feature implementation for Smartslate Polaris v3, inspired by best practices from Notion, Figma, Google Docs, and other leading platforms.
 
 ## Features
 
@@ -284,4 +284,4 @@ For issues or questions, please file an issue in the repository.
 
 ## License
 
-This implementation is part of SmartSlate Polaris v3 and follows the project's licensing terms.
+This implementation is part of Smartslate Polaris v3 and follows the project's licensing terms.

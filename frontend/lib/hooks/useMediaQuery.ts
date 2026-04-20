@@ -1,6 +1,6 @@
 /**
  * useMediaQuery Hook
- * Monitors responsive breakpoints for SmartSlate Polaris
+ * Monitors responsive breakpoints for Smartslate Polaris
  * Mobile-first responsive system
  */
 

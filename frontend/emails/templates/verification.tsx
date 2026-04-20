@@ -20,7 +20,7 @@ export function VerificationEmail({
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.smartslate.io';
 
   return (
-    <BaseEmail preview="Verify your SmartSlate Polaris account">
+    <BaseEmail preview="Verify your Smartslate Polaris account">
       {/* Welcome Icon */}
       <Section style={iconSection}>
         <div style={iconWrapper}>
@@ -33,7 +33,7 @@ export function VerificationEmail({
       <Text style={greeting}>Hi {userName},</Text>
 
       <Text style={paragraph}>
-        Welcome to SmartSlate Polaris! You're just one step away from accessing AI-powered learning
+        Welcome to Smartslate Polaris! You're just one step away from accessing AI-powered learning
         blueprint generation. Please verify your email address to get started.
       </Text>
 
@@ -148,7 +148,7 @@ export function VerificationEmail({
       {/* Security Notice */}
       <Section style={securitySection}>
         <Text style={securityText}>
-          🔒 If you didn't create an account on SmartSlate Polaris, you can safely ignore this
+          🔒 If you didn't create an account on Smartslate Polaris, you can safely ignore this
           email. Someone may have entered your email address by mistake.
         </Text>
       </Section>

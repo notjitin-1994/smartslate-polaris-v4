@@ -222,7 +222,7 @@ export function BlueprintViewerSidebar({
       {/* Footer Info */}
       <div className="flex-shrink-0 border-t border-white/10 p-4">
         <div className="text-center">
-          <p className="text-text-disabled mb-2 text-xs">SmartSlate Polaris v3</p>
+          <p className="text-text-disabled mb-2 text-xs">Smartslate Polaris v3</p>
           <p className="text-text-disabled text-xs">AI-Powered Learning Blueprints</p>
         </div>
       </div>

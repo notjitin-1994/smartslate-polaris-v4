@@ -1,5 +1,5 @@
 /**
- * Mobile-First Responsive Design System for SmartSlate Polaris v3
+ * Mobile-First Responsive Design System for Smartslate Polaris v3
  *
  * This module provides a comprehensive responsive breakpoint system
  * designed from mobile-first principles, ensuring optimal user experiences

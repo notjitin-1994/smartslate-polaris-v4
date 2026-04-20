@@ -33,7 +33,7 @@ export async function generateSharePageMetadata({ params }: PageProps): Promise<
       const title = blueprint?.title || 'Learning Blueprint';
 
       // Extract executive summary for description
-      let description = 'Interactive learning blueprint created with SmartSlate Polaris';
+      let description = 'Interactive learning blueprint created with Smartslate Polaris';
       if (blueprintData?.executive_summary?.content) {
         // Strip HTML and limit to 160 characters
         const cleanSummary = blueprintData.executive_summary.content
@@ -52,7 +52,7 @@ export async function generateSharePageMetadata({ params }: PageProps): Promise<
           description,
           type: 'article',
           url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}/share/${token}`,
-          siteName: 'SmartSlate Polaris',
+          siteName: 'Smartslate Polaris',
           images: [
             {
               url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}/images/og-blueprint.png`,
@@ -78,7 +78,7 @@ export async function generateSharePageMetadata({ params }: PageProps): Promise<
 
   // Fallback metadata
   return {
-    title: 'Learning Blueprint - SmartSlate Polaris',
-    description: 'Interactive learning blueprint created with SmartSlate Polaris',
+    title: 'Learning Blueprint - Smartslate Polaris',
+    description: 'Interactive learning blueprint created with Smartslate Polaris',
   };
 }

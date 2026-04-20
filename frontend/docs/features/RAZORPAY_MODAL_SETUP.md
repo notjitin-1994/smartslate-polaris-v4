@@ -117,8 +117,8 @@ NEXT_PUBLIC_RAZORPAY_LOGO_URL=https://cdn.yoursite.com/logo.png
 # or
 NEXT_PUBLIC_RAZORPAY_LOGO_URL=/razorpay-logo.png
 
-# Custom name (defaults to "SmartSlate")
-NEXT_PUBLIC_RAZORPAY_NAME=SmartSlate
+# Custom name (defaults to "Smartslate")
+NEXT_PUBLIC_RAZORPAY_NAME=Smartslate
 
 # Theme color (defaults to #6366f1)
 NEXT_PUBLIC_RAZORPAY_THEME_COLOR=#020c1b

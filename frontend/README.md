@@ -1,4 +1,4 @@
-# SmartSlate Dynamic Questionnaire System
+# Smartslate Dynamic Questionnaire System
 
 A Next.js 15 application for generating personalized learning blueprints through AI-powered dynamic questionnaires.
 

@@ -1,10 +1,10 @@
 ---
-description: SmartSlate theming and styling rules for consistent, accessible UI
+description: Smartslate theming and styling rules for consistent, accessible UI
 globs: app/**/*.tsx, components/**/*.tsx, **/*.css
 alwaysApply: true
 ---
 
-# SmartSlate Style & Theming Rules
+# Smartslate Style & Theming Rules
 
 ## **Token-First Design System**
 

@@ -209,7 +209,7 @@ export default function ShareAccessView({
           </form>
 
           <div className="mt-6 border-t pt-6 text-center text-xs text-gray-500">
-            <p>Shared via SmartSlate Polaris</p>
+            <p>Shared via Smartslate Polaris</p>
           </div>
         </div>
       </div>
@@ -249,10 +249,10 @@ export default function ShareAccessView({
       <header className="glass-strong shadow-lg print:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
-            {/* SmartSlate Logo */}
+            {/* Smartslate Logo */}
             <img
               src="/logo.png"
-              alt="SmartSlate"
+              alt="Smartslate"
               className="h-7 w-auto drop-shadow-sm select-none"
               draggable="false"
             />

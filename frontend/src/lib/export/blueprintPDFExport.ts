@@ -114,7 +114,7 @@ function generateCoverPage(title: string, date: string): string {
       <h1 style="font-size: 42px; font-weight: 800; color: #0f172a; margin: 40px 0; line-height: 1.2; font-family: system-ui, -apple-system, sans-serif;">${title}</h1>
       <p style="color: #64748b; font-size: 18px; margin: 30px 0 60px 0;">Created on ${date}</p>
       <div style="margin-top: 80px; padding-top: 40px; border-top: 2px solid #cbd5e1;">
-        <p style="color: #94a3b8; font-size: 14px; font-weight: 500;">Generated with SmartSlate AI</p>
+        <p style="color: #94a3b8; font-size: 14px; font-weight: 500;">Generated with Smartslate AI</p>
       </div>
     </div>
   `;
@@ -270,7 +270,7 @@ function generateMarkdownPage(markdown: string, date: string): string {
       
       <!-- Footer -->
       <div style="margin-top: 80px; padding-top: 30px; border-top: 2px solid #e2e8f0; text-align: center;">
-        <p style="color: #94a3b8; font-size: 13px; font-weight: 500;">Generated with SmartSlate AI • ${date}</p>
+        <p style="color: #94a3b8; font-size: 13px; font-weight: 500;">Generated with Smartslate AI • ${date}</p>
       </div>
     </div>
   `;

@@ -1,6 +1,6 @@
-# Custom Checkout Modal - SmartSlate Polaris
+# Custom Checkout Modal - Smartslate Polaris
 
-A premium, brand-compliant custom checkout experience for SmartSlate Polaris subscription payments.
+A premium, brand-compliant custom checkout experience for Smartslate Polaris subscription payments.
 
 ## Features
 
@@ -338,7 +338,7 @@ failure@razorpay
 
 ## License
 
-Proprietary - SmartSlate Polaris
+Proprietary - Smartslate Polaris
 
 ## Support
 

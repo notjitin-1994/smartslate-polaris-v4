@@ -231,7 +231,7 @@ async function tryCreateRealPlans(): Promise<Map<string, string>> {
  * Main execution function
  */
 async function main(): Promise<void> {
-  console.log('🚀 Setting up Razorpay Plans for SmartSlate Polaris v3');
+  console.log('🚀 Setting up Razorpay Plans for Smartslate Polaris v3');
   console.log('================================================\n');
 
   const config = checkRazorpayConfiguration();

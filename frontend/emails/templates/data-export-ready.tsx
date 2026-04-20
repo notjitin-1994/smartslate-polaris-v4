@@ -37,7 +37,7 @@ export function DataExportReadyEmail({
   );
 
   return (
-    <BaseEmail preview="Your SmartSlate Polaris data export is ready for download">
+    <BaseEmail preview="Your Smartslate Polaris data export is ready for download">
       {/* Success Icon */}
       <Section style={iconSection}>
         <div style={iconWrapper}>
@@ -50,7 +50,7 @@ export function DataExportReadyEmail({
       <Text style={greeting}>Hi {userName},</Text>
 
       <Text style={paragraph}>
-        Great news! Your requested data export from SmartSlate Polaris is now ready for download.
+        Great news! Your requested data export from Smartslate Polaris is now ready for download.
         We've compiled your {exportType} data into a convenient {exportFormat.toUpperCase()} file.
       </Text>
 
@@ -116,7 +116,7 @@ export function DataExportReadyEmail({
               <Text style={infoTitle}>What's Included</Text>
               <Text style={infoText}>
                 Your complete {exportType} data including all learning blueprints, questionnaire
-                responses, and related metadata from your SmartSlate Polaris account.
+                responses, and related metadata from your Smartslate Polaris account.
               </Text>
             </div>
           </Column>

@@ -33,7 +33,9 @@ export async function GET(request: Request) {
     if (!error) {
       // Check if this is a password recovery flow
       if (type === 'recovery') {
-        return NextResponse.redirect(`${origin}/reset-password`);
+        // Build clear redirect to reset page
+        const resetUrl = new URL('/reset-password', origin);
+        return NextResponse.redirect(resetUrl);
       }
 
       // Handle redirect parameter after successful OAuth
@@ -41,6 +43,8 @@ export async function GET(request: Request) {
       const destination =
         redirectUrl && redirectUrl !== '/' ? decodeURIComponent(redirectUrl) : '/';
       return NextResponse.redirect(`${origin}${destination}`);
+    } else {
+      console.error('[Auth Callback] Code exchange error:', error);
     }
   }
 

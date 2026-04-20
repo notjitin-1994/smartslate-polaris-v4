@@ -1,6 +1,6 @@
 /**
  * TypeScript Type Definitions for User Feedback & Issue Tracking System
- * SmartSlate Polaris v3
+ * Smartslate Polaris v3
  */
 
 import { z } from 'zod';

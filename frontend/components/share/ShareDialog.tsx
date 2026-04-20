@@ -1,5 +1,5 @@
 /**
- * Advanced Share Dialog Component - SmartSlate Polaris
+ * Advanced Share Dialog Component - Smartslate Polaris
  * Viewport-friendly design with nested modals for settings
  * Supports creating multiple share links with different permissions
  */

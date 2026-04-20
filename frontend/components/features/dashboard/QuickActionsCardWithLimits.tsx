@@ -34,7 +34,7 @@ const quickActions = [
   {
     icon: FileText,
     title: 'Learn More',
-    description: 'About SmartSlate ecosystem',
+    description: 'About Smartslate ecosystem',
     href: '/features',
     color: 'from-primary to-primary',
     bgColor: 'bg-primary/10',

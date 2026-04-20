@@ -65,7 +65,7 @@ export const GlobalLayout = memo(function GlobalLayout({
           'Answer these personalized questions to complete your learning blueprint';
         break;
       default:
-        currentHeaderTitle = 'SmartSlate';
+        currentHeaderTitle = 'Smartslate';
         currentHeaderSubtitle = 'Your learning companion';
     }
   }

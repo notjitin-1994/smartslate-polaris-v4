@@ -1,6 +1,6 @@
 /**
  * Zod Validation Schemas for Checkout Forms
- * SmartSlate Polaris - Payment Data Validation
+ * Smartslate Polaris - Payment Data Validation
  */
 
 import { z } from 'zod';

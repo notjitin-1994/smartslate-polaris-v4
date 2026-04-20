@@ -3,7 +3,7 @@
 /**
  * SignupErrorMessage Component Demo Page
  *
- * Visual showcase of all error states for the SmartSlate Polaris
+ * Visual showcase of all error states for the Smartslate Polaris
  * sign-up error message component.
  */
 
@@ -36,7 +36,7 @@ export default function SignupErrorsDemoPage() {
         <div className="space-y-4 text-center">
           <h1 className="text-display text-primary font-bold">SignupErrorMessage Component</h1>
           <p className="text-body text-secondary mx-auto max-w-2xl">
-            Interactive demo showcasing all error states for SmartSlate Polaris sign-up flows. Click
+            Interactive demo showcasing all error states for Smartslate Polaris sign-up flows. Click
             the buttons below to view different error scenarios.
           </p>
         </div>

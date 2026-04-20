@@ -2,7 +2,7 @@
 
 ## Overview
 
-Comprehensive structured logging system for the SmartSlate Perplexity Dynamic Questionnaire feature.
+Comprehensive structured logging system for the Smartslate Perplexity Dynamic Questionnaire feature.
 
 ## Features
 

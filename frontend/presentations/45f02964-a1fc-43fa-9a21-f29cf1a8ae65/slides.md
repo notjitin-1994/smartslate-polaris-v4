@@ -1069,10 +1069,10 @@ class: text-center
 
 <div class="thank-you-content">
   <div class="thank-you-logo">
-    <img src="/logo-swirl.png" alt="SmartSlate Polaris" class="w-24 h-24 mx-auto" />
+    <img src="/logo-swirl.png" alt="Smartslate Polaris" class="w-24 h-24 mx-auto" />
   </div>
   <div class="thank-you-text">
-    <p class="text-xl">Built with <span class="text-primary">SmartSlate Polaris</span></p>
+    <p class="text-xl">Built with <span class="text-primary">Smartslate Polaris</span></p>
     <p class="text-lg text-text-secondary">Powered by Solara Learning Engine</p>
   </div>
 </div>

@@ -1,7 +1,7 @@
 /**
  * Feedback System Components
  *
- * Comprehensive feedback system for SmartSlate Polaris v3.
+ * Comprehensive feedback system for Smartslate Polaris v3.
  * Includes general feedback and feature request submission.
  */
 

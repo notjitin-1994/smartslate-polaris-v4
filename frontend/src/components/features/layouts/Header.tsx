@@ -62,7 +62,7 @@ export const Header = memo(function Header({
         };
       default:
         return {
-          title: title || 'SmartSlate',
+          title: title || 'Smartslate',
           subtitle: subtitle || 'Your learning companion',
         };
     }

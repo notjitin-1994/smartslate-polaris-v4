@@ -268,7 +268,7 @@ async function createPlan(razorpay: any, planConfig: any): Promise<string | null
         ...planConfig.notes,
         created_by: 'create-razorpay-plans-script',
         created_at: new Date().toISOString(),
-        app_name: 'SmartSlate Polaris v3',
+        app_name: 'Smartslate Polaris v3',
       },
     });
 
@@ -328,7 +328,7 @@ function generateUpdatedConfig(createdPlans: Map<string, string>): string {
  * Main execution function
  */
 async function main(): Promise<void> {
-  console.log('🚀 Creating Razorpay Plans for SmartSlate Polaris v3');
+  console.log('🚀 Creating Razorpay Plans for Smartslate Polaris v3');
   console.log('================================================\n');
 
   // Validate environment

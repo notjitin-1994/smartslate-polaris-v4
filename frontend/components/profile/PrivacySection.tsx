@@ -54,7 +54,7 @@ export function PrivacySection() {
 
             <div className="mt-4 space-y-3">
               <p className="text-sm text-slate-300">
-                Download a complete copy of all your personal data stored in SmartSlate Polaris. The
+                Download a complete copy of all your personal data stored in Smartslate Polaris. The
                 export includes your profile, blueprints, activity logs, and preferences in
                 machine-readable formats (JSON and CSV).
               </p>

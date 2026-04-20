@@ -24,7 +24,7 @@ export function PasswordChangedEmail({
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.smartslate.io';
 
   return (
-    <BaseEmail preview="Your SmartSlate Polaris password has been changed">
+    <BaseEmail preview="Your Smartslate Polaris password has been changed">
       {/* Security Icon and Title */}
       <Section style={iconSection}>
         <div style={iconWrapper}>
@@ -37,7 +37,7 @@ export function PasswordChangedEmail({
       <Text style={greeting}>Hi {userName},</Text>
 
       <Text style={paragraph}>
-        Your SmartSlate Polaris account password was successfully updated. This change ensures your
+        Your Smartslate Polaris account password was successfully updated. This change ensures your
         learning blueprints and personal data remain secure.
       </Text>
 
@@ -117,7 +117,7 @@ export function PasswordChangedEmail({
       <Section style={tipsSection}>
         <Text style={tipsTitle}>Security Best Practices</Text>
         <ul style={tipsList}>
-          <li style={tipItem}>Use a unique password for SmartSlate Polaris</li>
+          <li style={tipItem}>Use a unique password for Smartslate Polaris</li>
           <li style={tipItem}>Enable two-factor authentication for extra security</li>
           <li style={tipItem}>Never share your password with anyone</li>
           <li style={tipItem}>Update your password every 90 days</li>

@@ -26,13 +26,13 @@ export function WelcomeEmail({
       : `${subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1)} Member`;
 
   return (
-    <BaseEmail preview="Welcome to SmartSlate Polaris - Your AI-powered learning journey begins!">
+    <BaseEmail preview="Welcome to Smartslate Polaris - Your AI-powered learning journey begins!">
       {/* Welcome Hero Section */}
       <Section style={heroSection}>
         <div style={heroIconWrapper}>
           <Text style={heroIcon}>🎉</Text>
         </div>
-        <Text style={heroTitle}>Welcome to SmartSlate Polaris!</Text>
+        <Text style={heroTitle}>Welcome to Smartslate Polaris!</Text>
         <Text style={heroSubtitle}>Your personalized learning journey starts here</Text>
       </Section>
 
@@ -40,7 +40,7 @@ export function WelcomeEmail({
 
       <Text style={paragraph}>
         Congratulations on taking the first step towards transforming your learning experience!
-        SmartSlate Polaris uses cutting-edge AI technology to create personalized learning
+        Smartslate Polaris uses cutting-edge AI technology to create personalized learning
         blueprints tailored to your unique goals and needs.
       </Text>
 
@@ -131,7 +131,7 @@ export function WelcomeEmail({
 
       {/* Features Highlight */}
       <Section style={featuresSection}>
-        <Text style={featuresTitle}>What Makes SmartSlate Polaris Special</Text>
+        <Text style={featuresTitle}>What Makes Smartslate Polaris Special</Text>
 
         <Row style={featureRow}>
           <Column style={{ width: '48%', paddingRight: '2%' }}>
@@ -242,7 +242,7 @@ export function WelcomeEmail({
       {/* Footer Note */}
       <Section style={footerSection}>
         <Text style={footerNote}>
-          We're excited to have you as part of the SmartSlate Polaris community! Your learning
+          We're excited to have you as part of the Smartslate Polaris community! Your learning
           transformation journey begins now. 🚀
         </Text>
       </Section>

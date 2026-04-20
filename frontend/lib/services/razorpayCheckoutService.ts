@@ -137,7 +137,7 @@ export async function processCardPayment(
       amount: amount * 100, // Amount in paise
       currency: 'INR',
       order_id: orderId,
-      name: 'SmartSlate Polaris',
+      name: 'Smartslate Polaris',
       description: 'AI-Assisted Learning Experience Design',
       image: '/logo.png',
       prefill: {
@@ -198,7 +198,7 @@ export async function processUPIPayment(
       amount: amount * 100,
       currency: 'INR',
       order_id: orderId,
-      name: 'SmartSlate Polaris',
+      name: 'Smartslate Polaris',
       description: 'AI-Assisted Learning Experience Design',
       image: '/logo.png',
       prefill: {
@@ -277,7 +277,7 @@ export async function processNetbankingPayment(
       amount: amount * 100,
       currency: 'INR',
       order_id: orderId,
-      name: 'SmartSlate Polaris',
+      name: 'Smartslate Polaris',
       description: 'AI-Assisted Learning Experience Design',
       image: '/logo.png',
       prefill: {
@@ -342,7 +342,7 @@ export async function processWalletPayment(
       amount: amount * 100,
       currency: 'INR',
       order_id: orderId,
-      name: 'SmartSlate Polaris',
+      name: 'Smartslate Polaris',
       description: 'AI-Assisted Learning Experience Design',
       image: '/logo.png',
       prefill: {
@@ -598,7 +598,7 @@ export async function openRazorpayCheckout(
         amount: orderData.order.amount * 100, // Amount in paise
         currency: 'INR',
         order_id: orderData.order.id,
-        name: 'SmartSlate Polaris',
+        name: 'Smartslate Polaris',
         description: 'AI-Assisted Learning Experience Design',
         image: '/logo.png',
         prefill: {

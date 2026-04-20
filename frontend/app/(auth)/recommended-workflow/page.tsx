@@ -151,7 +151,7 @@ INSTRUCTIONS FOR STAKEHOLDERS:
 
 // Compiled template (for static questionnaire input)
 const COMPILED_TEMPLATE_TEXT = `LEARNING GAP DESCRIPTION TEMPLATE
-(For SmartSlate Static Questionnaire Input)
+(For Smartslate Static Questionnaire Input)
 
 After receiving the completed discovery form from your stakeholders, compile their responses into this concise format. Focus on the essential information that will drive effective learning design.
 
@@ -264,7 +264,7 @@ COMPILATION GUIDELINES
 • Add background context not directly relevant to training
 • Exceed word count guidelines
 
-This compiled format ensures SmartSlate's AI generates the most relevant dynamic questions for your specific context.`;
+This compiled format ensures Smartslate's AI generates the most relevant dynamic questions for your specific context.`;
 
 // Section 1 Component
 function Section1LearningGapTemplate() {
@@ -469,7 +469,7 @@ function Section1LearningGapTemplate() {
                 </h3>
                 <p className="mt-2 text-base text-[rgb(176,197,198)]">
                   After receiving the completed discovery form, use this template to compile
-                  stakeholder responses into the format required for SmartSlate&apos;s static
+                  stakeholder responses into the format required for Smartslate&apos;s static
                   questionnaire
                 </p>
               </div>
@@ -799,7 +799,7 @@ export default function RecommendedWorkflowPage() {
             <p className="mb-8 text-xl leading-relaxed text-[rgb(176,197,198)]">
               Your stakeholders don&apos;t have 90 minutes for a workshop. But they do have 22
               minutes between meetings to answer a smart questionnaire on their phone.
-              SmartSlate&apos;s AI generates a custom questionnaire based on their Learning Gap
+              Smartslate&apos;s AI generates a custom questionnaire based on their Learning Gap
               Template—no scheduling circus required.
             </p>
 
@@ -992,7 +992,7 @@ export default function RecommendedWorkflowPage() {
 
               <div className="mt-8 rounded-lg border border-[rgba(167,218,219,0.3)] bg-[rgba(167,218,219,0.05)] p-4">
                 <p className="text-center text-lg font-semibold text-[rgb(167,218,219)]">
-                  Traditional needs assessment surveys have a 23% completion rate. SmartSlate&apos;s
+                  Traditional needs assessment surveys have a 23% completion rate. Smartslate&apos;s
                   dynamic questionnaires hit 87%
                 </p>
               </div>
@@ -1056,7 +1056,7 @@ export default function RecommendedWorkflowPage() {
 
             <p className="mb-12 text-xl leading-relaxed text-[rgb(176,197,198)]">
               Here&apos;s where most tools fail: They make you wait 6 hours for a consultant to
-              &apos;synthesize findings.&apos; SmartSlate&apos;s AI delivers a comprehensive
+              &apos;synthesize findings.&apos; Smartslate&apos;s AI delivers a comprehensive
               learning blueprint faster than you can refill your coffee—then lets you export it in
               whatever format your audience needs.
             </p>
@@ -1202,7 +1202,7 @@ export default function RecommendedWorkflowPage() {
             >
               <div className="mb-4 text-3xl text-[rgb(167,218,219)]">"</div>
               <p className="mb-6 text-xl leading-relaxed text-[rgb(224,224,224)] italic">
-                I sent a SmartSlate blueprint to three LMS vendors for quotes. All three came back
+                I sent a Smartslate blueprint to three LMS vendors for quotes. All three came back
                 saying &apos;This is the most detailed RFP we&apos;ve ever received.&apos; Saved us
                 weeks of scope clarification calls.
               </p>
@@ -1353,7 +1353,7 @@ export default function RecommendedWorkflowPage() {
                     </div>
                     <div>
                       <div className="mb-1 text-sm font-semibold text-[rgb(167,218,219)]">
-                        SmartSlate solution:
+                        Smartslate solution:
                       </div>
                       <p className="text-sm text-[rgb(176,197,198)]">{useCase.solution}</p>
                     </div>

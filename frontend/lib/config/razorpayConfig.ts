@@ -1,8 +1,8 @@
 /**
- * Razorpay Configuration - Brand-Aligned for SmartSlate Polaris
+ * Razorpay Configuration - Brand-Aligned for Smartslate Polaris
  *
  * @description Centralized configuration for Razorpay payment gateway integration
- * @version 1.1.0 - Brand-optimized with SmartSlate Polaris design system
+ * @version 1.1.0 - Brand-optimized with Smartslate Polaris design system
  * @date 2025-11-10
  *
  * BRAND IDENTITY:
@@ -56,7 +56,7 @@ export interface RazorpayConfig {
  * Get Razorpay configuration from environment variables
  *
  * CONFIGURATION RATIONALE:
- * - theme.color: #A7DADB (SmartSlate primary brand color)
+ * - theme.color: #A7DADB (Smartslate primary brand color)
  *   - Provides instant brand recognition
  *   - Used for primary CTA, selected payment methods, form focus states
  *   - WCAG AA compliant contrast (4.5:1+ on white backgrounds)
@@ -100,7 +100,7 @@ export function getRazorpayConfig(): RazorpayConfig {
     // ============================================================================
     // Displayed prominently at top of checkout modal
     // Can include newlines (\n) for multi-line display, though limited styling
-    name: process.env.NEXT_PUBLIC_RAZORPAY_NAME || 'SmartSlate Polaris',
+    name: process.env.NEXT_PUBLIC_RAZORPAY_NAME || 'Smartslate Polaris',
 
     // ============================================================================
     // DESCRIPTION
@@ -120,7 +120,7 @@ export function getRazorpayConfig(): RazorpayConfig {
     // ============================================================================
     // Attached to every payment for tracking and debugging
     defaultNotes: {
-      platform: 'SmartSlate Polaris v3',
+      platform: 'Smartslate Polaris v3',
       timestamp: new Date().toISOString(),
     },
 
@@ -132,7 +132,7 @@ export function getRazorpayConfig(): RazorpayConfig {
        * PRIMARY ACCENT COLOR: #A7DADB (Cyan-Teal)
        *
        * BRAND RATIONALE:
-       * - This is SmartSlate Polaris's primary brand signature color
+       * - This is Smartslate Polaris's primary brand signature color
        * - Instantly recognizable to users from pricing page and app UI
        * - Creates seamless brand experience during checkout
        *
@@ -145,7 +145,7 @@ export function getRazorpayConfig(): RazorpayConfig {
        * ALTERNATIVES CONSIDERED:
        * 1. #4F46E5 (Secondary Indigo) - Less distinctive, more generic
        * 2. #7BC5C7 (Primary Dark) - Less vibrant, reduced visual impact
-       * 3. #6366f1 (Previous config) - Not a SmartSlate brand color
+       * 3. #6366f1 (Previous config) - Not a Smartslate brand color
        *
        * ACCESSIBILITY:
        * - Contrast ratio: 4.5:1+ with white backgrounds (WCAG AA compliant)

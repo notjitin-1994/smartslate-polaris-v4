@@ -1,11 +1,11 @@
-# SmartSlate Polaris Slidev Theme
+# Smartslate Polaris Slidev Theme
 
-A premium, glassmorphic presentation theme designed specifically for SmartSlate Polaris learning blueprints. Features stunning animations, brand-consistent design, and professional layouts optimized for educational content.
+A premium, glassmorphic presentation theme designed specifically for Smartslate Polaris learning blueprints. Features stunning animations, brand-consistent design, and professional layouts optimized for educational content.
 
 ## Features
 
-✨ **Glassmorphic Design** - Premium frosted glass aesthetic matching the SmartSlate Polaris brand
-🎨 **Brand-Consistent Colors** - Uses exact SmartSlate color tokens (#A7DADB primary)
+✨ **Glassmorphic Design** - Premium frosted glass aesthetic matching the Smartslate Polaris brand
+🎨 **Brand-Consistent Colors** - Uses exact Smartslate color tokens (#A7DADB primary)
 🎬 **Smooth Animations** - Entrance animations, hover effects, and transitions
 📱 **Responsive** - Optimized for 16:9 presentations
 ♿ **Accessible** - WCAG AA compliant with proper contrast and focus states
@@ -91,7 +91,7 @@ Additional content here
 - Animated gradient background
 - Large title with gradient text
 - Metadata cards (author, date, duration)
-- SmartSlate branding
+- Smartslate branding
 
 ---
 
@@ -679,7 +679,7 @@ See `example.md` for a complete blueprint presentation showcasing all layouts an
 - **Documentation**: This README
 - **Examples**: `example.md` (comprehensive demo)
 - **Issues**: [GitHub Issues](https://github.com/smartslate/polaris/issues)
-- **Community**: [SmartSlate Discord](https://discord.gg/smartslate)
+- **Community**: [Smartslate Discord](https://discord.gg/smartslate)
 
 ---
 
@@ -691,9 +691,9 @@ MIT License - Free for commercial and personal use
 
 ## Credits
 
-**Design**: SmartSlate Polaris Team
+**Design**: Smartslate Polaris Team
 **Theme Framework**: Slidev by Anthony Fu
-**Brand Colors**: SmartSlate Polaris Design System
+**Brand Colors**: Smartslate Polaris Design System
 **Typography**: Google Fonts (Lato, Quicksand)
 
 ---
@@ -712,4 +712,4 @@ MIT License - Free for commercial and personal use
 
 ---
 
-**Built with ❤️ for SmartSlate Polaris by the Solara Team**
+**Built with ❤️ for Smartslate Polaris by the Solara Team**

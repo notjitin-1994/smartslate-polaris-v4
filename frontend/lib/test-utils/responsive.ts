@@ -1,5 +1,5 @@
 /**
- * Responsive Testing Framework for SmartSlate Polaris v3
+ * Responsive Testing Framework for Smartslate Polaris v3
  *
  * This module provides comprehensive testing utilities for validating
  * responsive behavior across all defined breakpoints and device types.

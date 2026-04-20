@@ -71,7 +71,7 @@ export default function AILearningExperienceDesignPage() {
               <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(167,218,219,0.3)] bg-[rgba(167,218,219,0.05)] px-6 py-3 shadow-[0_0_20px_rgba(167,218,219,0.15)]">
                 <Sparkles className="h-4 w-4 text-[rgb(167,218,219)]" />
                 <span className="text-sm font-medium text-[rgb(167,218,219)]">
-                  Powered by SmartSlate Learning Ecosystem
+                  Powered by Smartslate Learning Ecosystem
                 </span>
               </div>
             </motion.div>
@@ -91,7 +91,7 @@ export default function AILearningExperienceDesignPage() {
               variants={fadeInUp}
               className="font-body max-w-4xl text-left text-lg leading-relaxed text-[rgb(176,197,198)] md:text-xl lg:text-2xl"
             >
-              SmartSlate is building the complete AI-powered ecosystem for Learning & Development
+              Smartslate is building the complete AI-powered ecosystem for Learning & Development
               teams. <strong className="text-[rgb(167,218,219)]">Polaris</strong>, our blueprint
               generation platform, is mission control—the strategic foundation that powers
               Constellation (instructional design), Nova (content development), Orbit (LMS + AI
@@ -242,7 +242,7 @@ export default function AILearningExperienceDesignPage() {
                 <span className="text-[rgb(224,224,224)]">Your Strategic Command Center</span>
               </h2>
               <p className="font-body max-w-3xl text-left text-lg text-[rgb(176,197,198)] md:text-xl">
-                SmartSlate is not just another tool—it is a unified ecosystem where every L&D
+                Smartslate is not just another tool—it is a unified ecosystem where every L&D
                 workflow connects seamlessly. Polaris is the strategic foundation, capturing
                 requirements and generating comprehensive blueprints that feed into Constellation
                 (instructional design), Nova (assisted content creation), Orbit (AI-first LMS with
@@ -443,7 +443,7 @@ export default function AILearningExperienceDesignPage() {
             {/* Section header */}
             <motion.div variants={fadeInUp} className="space-y-4 text-left">
               <h2 className="font-heading text-left text-3xl font-bold text-[rgb(224,224,224)] md:text-5xl">
-                The Complete <span className="text-[rgb(167,218,219)]">SmartSlate Ecosystem</span>
+                The Complete <span className="text-[rgb(167,218,219)]">Smartslate Ecosystem</span>
               </h2>
               <p className="font-body max-w-3xl text-left text-lg text-[rgb(176,197,198)] md:text-xl">
                 Polaris is just the beginning. We are building a constellation of interconnected
@@ -556,7 +556,7 @@ export default function AILearningExperienceDesignPage() {
         </div>
       </section>
 
-      {/* Why SmartSlate Section */}
+      {/* Why Smartslate Section */}
       <section className="relative px-4 py-20 md:py-32">
         <div className="mx-auto max-w-7xl">
           <motion.div
@@ -569,7 +569,7 @@ export default function AILearningExperienceDesignPage() {
             {/* Section header */}
             <motion.div variants={fadeInUp} className="space-y-4 text-left">
               <h2 className="font-heading text-left text-3xl font-bold text-[rgb(224,224,224)] md:text-5xl">
-                Why <span className="text-[rgb(167,218,219)]">SmartSlate Polaris?</span>
+                Why <span className="text-[rgb(167,218,219)]">Smartslate Polaris?</span>
               </h2>
             </motion.div>
 

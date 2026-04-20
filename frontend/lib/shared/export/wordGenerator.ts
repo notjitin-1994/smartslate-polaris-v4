@@ -38,7 +38,7 @@ function isFullBlueprint(blueprint: any): blueprint is BlueprintData {
  * brand-compliant styling, and executive-level presentation quality
  */
 export class WordGenerator {
-  // SmartSlate Brand Colors (from globals.css) - Enhanced Palette
+  // Smartslate Brand Colors (from globals.css) - Enhanced Palette
   private readonly brandTeal = 'A7DADB'; // Primary accent #a7dadb
   private readonly brandTealLight = 'D0EDF0'; // #d0edf0
   private readonly brandTealDark = '7BC5C7'; // #7bc5c7
@@ -59,7 +59,7 @@ export class WordGenerator {
   private logoBase64: string | null = null;
 
   /**
-   * Load SmartSlate logo from public directory
+   * Load Smartslate logo from public directory
    */
   private async loadLogo(): Promise<void> {
     if (this.logoBase64) return;
@@ -176,7 +176,7 @@ export class WordGenerator {
 
       // Create document with branded styling and headers/footers
       const doc = new Document({
-        creator: 'SmartSlate',
+        creator: 'Smartslate',
         title: data.metadata.title,
         description: data.metadata.description,
         styles: {
@@ -326,7 +326,7 @@ export class WordGenerator {
                     new Paragraph({
                       children: [
                         new TextRun({
-                          text: 'SmartSlate',
+                          text: 'Smartslate',
                           bold: true,
                           size: 18,
                           color: this.brandTeal,
@@ -503,12 +503,12 @@ export class WordGenerator {
       );
     }
 
-    // SmartSlate branding with sophisticated typography
+    // Smartslate branding with sophisticated typography
     paragraphs.push(
       new Paragraph({
         children: [
           new TextRun({
-            text: 'SmartSlate',
+            text: 'Smartslate',
             bold: true,
             size: 36,
             color: this.brandTeal,
@@ -972,7 +972,7 @@ export class WordGenerator {
       new Paragraph({
         children: [
           new TextRun({
-            text: '© 2025 SmartSlate • smartslate.io',
+            text: '© 2025 Smartslate • smartslate.io',
             size: 12,
             color: this.textMuted,
             font: 'Lato',

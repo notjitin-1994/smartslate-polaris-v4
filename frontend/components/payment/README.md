@@ -1,10 +1,10 @@
 # Custom Razorpay Payment Modal
 
-A premium, branded payment modal for SmartSlate Polaris that provides a seamless and secure payment experience with modern design elements.
+A premium, branded payment modal for Smartslate Polaris that provides a seamless and secure payment experience with modern design elements.
 
 ## Features
 
-- **🎨 SmartSlate Brand Integration**: Perfectly matches the Polaris design system
+- **🎨 Smartslate Brand Integration**: Perfectly matches the Polaris design system
 - **🔐 Security & Trust**: PCI DSS compliant, 256-bit SSL encryption indicators
 - **📱 Mobile-Responsive**: Optimized for all devices with touch-friendly interactions
 - **✨ Modern Animations**: Smooth transitions and micro-interactions
@@ -221,7 +221,7 @@ const { openModal } = useCustomRazorpayModal();
 
 ### Brand Colors
 
-The modal automatically uses SmartSlate's brand colors:
+The modal automatically uses Smartslate's brand colors:
 
 - **Primary**: `var(--primary-accent, #a7dadb)`
 - **Secondary**: `var(--secondary-accent, #4f46e5)`

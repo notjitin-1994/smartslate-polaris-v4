@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the implementation of the world-class marketing section for the SmartSlate Polaris login page, featuring a premium 2-column layout with compelling marketing content.
+This document outlines the implementation of the world-class marketing section for the Smartslate Polaris login page, featuring a premium 2-column layout with compelling marketing content.
 
 ## Implementation Summary
 

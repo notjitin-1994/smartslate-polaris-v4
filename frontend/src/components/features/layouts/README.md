@@ -1,6 +1,6 @@
 # Layout Components
 
-This directory contains the header and sidebar components integrated from the external SmartSlate repository, adapted for use with Next.js and the current project structure.
+This directory contains the header and sidebar components integrated from the external Smartslate repository, adapted for use with Next.js and the current project structure.
 
 ## Components Overview
 

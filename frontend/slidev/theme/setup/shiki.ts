@@ -1,5 +1,5 @@
 /**
- * Syntax Highlighting Configuration for SmartSlate Polaris Theme
+ * Syntax Highlighting Configuration for Smartslate Polaris Theme
  * Using Shiki with custom theme matching brand colors
  */
 

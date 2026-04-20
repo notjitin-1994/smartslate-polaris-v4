@@ -112,7 +112,7 @@ export default function CheckoutDemoPage() {
             <h1 className="text-display text-text-primary font-bold">Custom Checkout Demo</h1>
           </div>
           <p className="text-body text-text-secondary mx-auto max-w-2xl">
-            Experience the premium SmartSlate Polaris checkout flow. Select a plan below to test the
+            Experience the premium Smartslate Polaris checkout flow. Select a plan below to test the
             custom checkout modal.
           </p>
         </div>

@@ -70,7 +70,7 @@ const testData = {
     category: 'Collaboration',
     priority: 'high',
     useCase:
-      'Our company wants to use SmartSlate Polaris for team training. We need managers to create learning blueprints for their teams and track progress across multiple team members.',
+      'Our company wants to use Smartslate Polaris for team training. We need managers to create learning blueprints for their teams and track progress across multiple team members.',
     contactEmail: 'team.lead@company.com',
     timestamp: new Date().toISOString(),
   },
@@ -88,14 +88,14 @@ export async function testEmailTemplates() {
     results.passwordChanged = {
       html: await render(PasswordChangedEmail(testData.passwordChanged)),
       text: await render(PasswordChangedEmail(testData.passwordChanged), { plainText: true }),
-      subject: 'Your SmartSlate Polaris password has been changed',
+      subject: 'Your Smartslate Polaris password has been changed',
     };
 
     // Test Data Export Ready Email
     results.dataExportReady = {
       html: await render(DataExportReadyEmail(testData.dataExportReady)),
       text: await render(DataExportReadyEmail(testData.dataExportReady), { plainText: true }),
-      subject: 'Your SmartSlate Polaris data export is ready for download',
+      subject: 'Your Smartslate Polaris data export is ready for download',
     };
 
     // Test Account Deletion Scheduled Email
@@ -104,21 +104,21 @@ export async function testEmailTemplates() {
       text: await render(AccountDeletionScheduledEmail(testData.accountDeletion), {
         plainText: true,
       }),
-      subject: 'Important: Your SmartSlate Polaris account is scheduled for deletion',
+      subject: 'Important: Your Smartslate Polaris account is scheduled for deletion',
     };
 
     // Test Verification Email
     results.verification = {
       html: await render(VerificationEmail(testData.verification)),
       text: await render(VerificationEmail(testData.verification), { plainText: true }),
-      subject: 'Verify your SmartSlate Polaris account',
+      subject: 'Verify your Smartslate Polaris account',
     };
 
     // Test Welcome Email
     results.welcome = {
       html: await render(WelcomeEmail(testData.welcome)),
       text: await render(WelcomeEmail(testData.welcome), { plainText: true }),
-      subject: 'Welcome to SmartSlate Polaris - Your AI-powered learning journey begins!',
+      subject: 'Welcome to Smartslate Polaris - Your AI-powered learning journey begins!',
     };
 
     // Test Feedback Notification
@@ -157,29 +157,29 @@ export async function testSingleTemplate(templateName: keyof typeof testData) {
       case 'passwordChanged':
         html = await render(PasswordChangedEmail(testData.passwordChanged));
         text = await render(PasswordChangedEmail(testData.passwordChanged), { plainText: true });
-        subject = 'Your SmartSlate Polaris password has been changed';
+        subject = 'Your Smartslate Polaris password has been changed';
         break;
       case 'dataExportReady':
         html = await render(DataExportReadyEmail(testData.dataExportReady));
         text = await render(DataExportReadyEmail(testData.dataExportReady), { plainText: true });
-        subject = 'Your SmartSlate Polaris data export is ready for download';
+        subject = 'Your Smartslate Polaris data export is ready for download';
         break;
       case 'accountDeletion':
         html = await render(AccountDeletionScheduledEmail(testData.accountDeletion));
         text = await render(AccountDeletionScheduledEmail(testData.accountDeletion), {
           plainText: true,
         });
-        subject = 'Important: Your SmartSlate Polaris account is scheduled for deletion';
+        subject = 'Important: Your Smartslate Polaris account is scheduled for deletion';
         break;
       case 'verification':
         html = await render(VerificationEmail(testData.verification));
         text = await render(VerificationEmail(testData.verification), { plainText: true });
-        subject = 'Verify your SmartSlate Polaris account';
+        subject = 'Verify your Smartslate Polaris account';
         break;
       case 'welcome':
         html = await render(WelcomeEmail(testData.welcome));
         text = await render(WelcomeEmail(testData.welcome), { plainText: true });
-        subject = 'Welcome to SmartSlate Polaris - Your AI-powered learning journey begins!';
+        subject = 'Welcome to Smartslate Polaris - Your AI-powered learning journey begins!';
         break;
       case 'feedback':
         html = await render(FeedbackNotification(testData.feedback));

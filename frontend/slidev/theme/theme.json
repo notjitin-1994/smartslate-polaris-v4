@@ -1,8 +1,8 @@
 {
-  "name": "SmartSlate Polaris",
-  "description": "Premium glassmorphic presentation theme for SmartSlate Polaris learning blueprints",
+  "name": "Smartslate Polaris",
+  "description": "Premium glassmorphic presentation theme for Smartslate Polaris learning blueprints",
   "version": "1.0.0",
-  "author": "SmartSlate Team",
+  "author": "Smartslate Team",
   "defaults": {
     "aspectRatio": "16/9",
     "canvasWidth": 980,

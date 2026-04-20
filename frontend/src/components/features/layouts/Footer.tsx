@@ -75,7 +75,7 @@ export function Footer(): React.JSX.Element {
               <Link href="/" className="inline-block transition-opacity hover:opacity-90">
                 <Image
                   src="/logo.png"
-                  alt="SmartSlate Logo"
+                  alt="Smartslate Logo"
                   width={378}
                   height={95}
                   loading="lazy"
@@ -174,7 +174,7 @@ export function Footer(): React.JSX.Element {
         <div className="mt-12 border-t border-white/10 pt-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2 text-sm text-white/60">
-              <span>© {currentYear} SmartSlate. All rights reserved.</span>
+              <span>© {currentYear} Smartslate. All rights reserved.</span>
             </div>
 
             <div className="flex items-center gap-1 text-sm text-white/60">

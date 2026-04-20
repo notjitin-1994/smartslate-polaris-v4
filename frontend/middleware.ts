@@ -22,6 +22,7 @@ const PUBLIC_PATHS = new Set([
   '/recommended-workflow', // Recommended workflow page - public access
   '/api/auth/check-email', // Email existence check for signup - public access
   '/api/auth/signup', // Signup API endpoint - public access
+  '/api/auth/reset-request', // Password reset request - public access
   '/api/blueprints/share', // Public blueprint sharing API - no auth required
   '/api/feedback/send-email', // Internal email API - has its own origin validation
   '/api/feature-requests/send-email', // Internal email API - has its own origin validation

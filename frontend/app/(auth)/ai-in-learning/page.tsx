@@ -25,9 +25,9 @@ import {
 import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
-  title: 'AI in Learning: The Future of Corporate Training | SmartSlate',
+  title: 'AI in Learning: The Future of Corporate Training | Smartslate',
   description:
-    "Discover how AI is transforming corporate learning. SmartSlate's ecosystem powers personalized training, blueprint generation, and learning analytics.",
+    "Discover how AI is transforming corporate learning. Smartslate's ecosystem powers personalized training, blueprint generation, and learning analytics.",
   keywords: [
     'AI in learning',
     'corporate training',
@@ -41,9 +41,9 @@ export const metadata: Metadata = {
     'learning ecosystem',
   ],
   openGraph: {
-    title: 'AI in Learning: The Future of Corporate Training | SmartSlate',
+    title: 'AI in Learning: The Future of Corporate Training | Smartslate',
     description:
-      "SmartSlate's ecosystem powers personalized training, blueprint generation, and learning analytics for the future of corporate learning.",
+      "Smartslate's ecosystem powers personalized training, blueprint generation, and learning analytics for the future of corporate learning.",
     type: 'website',
   },
 };
@@ -117,7 +117,7 @@ function HeroSection() {
         {/* Subheadline */}
         <p className="max-w-4xl text-left text-xl leading-relaxed text-[rgb(176,197,198)] md:text-2xl">
           AI in learning is not coming—it is already reshaping how forward-thinking organizations
-          develop talent. SmartSlate is building the comprehensive AI-powered learning ecosystem
+          develop talent. Smartslate is building the comprehensive AI-powered learning ecosystem
           that will define the next decade of corporate training.
         </p>
 
@@ -234,8 +234,8 @@ function IndustryTrendsSection() {
   );
 }
 
-// SmartSlate vision section
-function SmartSlateVisionSection() {
+// Smartslate vision section
+function SmartslateVisionSection() {
   return (
     <section id="ecosystem" className="relative px-4 py-32">
       <div className="mx-auto max-w-7xl space-y-16">
@@ -243,7 +243,7 @@ function SmartSlateVisionSection() {
         <div className="animate-fade-in-up space-y-6 text-left">
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(167,218,219,0.3)] bg-[rgba(167,218,219,0.1)] px-4 py-2">
             <Sparkles className="h-5 w-5 text-[rgb(167,218,219)]" />
-            <span className="font-semibold text-[rgb(167,218,219)]">The SmartSlate Ecosystem</span>
+            <span className="font-semibold text-[rgb(167,218,219)]">The Smartslate Ecosystem</span>
           </div>
           <h2 className="text-left text-5xl font-bold text-[rgb(224,224,224)] md:text-7xl">
             One Platform.
@@ -251,7 +251,7 @@ function SmartSlateVisionSection() {
             <span className="text-[rgb(167,218,219)]">Infinite Learning Possibilities.</span>
           </h2>
           <p className="max-w-4xl text-left text-xl leading-relaxed text-[rgb(176,197,198)]">
-            While other platforms offer disconnected point solutions, SmartSlate is building the
+            While other platforms offer disconnected point solutions, Smartslate is building the
             first truly integrated AI learning ecosystem—from blueprint creation to content
             generation, learner personalization to analytics. Everything you need to design,
             deliver, and measure world-class learning experiences, all powered by AI, all in one
@@ -368,7 +368,7 @@ function PolarisTodaySection() {
             Transforming Learning Design
           </h2>
           <p className="max-w-3xl text-left text-xl text-[rgb(176,197,198)]">
-            Available today. Free to start. The foundation of the SmartSlate ecosystem begins with
+            Available today. Free to start. The foundation of the Smartslate ecosystem begins with
             revolutionary blueprint generation.
           </p>
         </div>
@@ -514,7 +514,7 @@ function EcosystemTomorrowSection() {
             <span className="text-[rgb(167,218,219)]">The Complete AI Learning Platform</span>
           </h2>
           <p className="max-w-4xl text-left text-xl leading-relaxed text-[rgb(176,197,198)]">
-            Polaris is just the beginning. Over the next 18 months, SmartSlate will evolve into a
+            Polaris is just the beginning. Over the next 18 months, Smartslate will evolve into a
             comprehensive ecosystem that handles every aspect of the learning lifecycle—from design
             to delivery, personalization to analytics.
           </p>
@@ -630,8 +630,8 @@ function EcosystemTomorrowSection() {
   );
 }
 
-// Why choose SmartSlate section
-function WhyChooseSmartSlateSection() {
+// Why choose Smartslate section
+function WhyChooseSmartslateSection() {
   const comparisons = [
     {
       category: 'Design Philosophy',
@@ -676,13 +676,13 @@ function WhyChooseSmartSlateSection() {
       icon: Layers,
       title: 'Ecosystem Thinking',
       description:
-        'While competitors offer disconnected point solutions, SmartSlate provides a unified platform where design, content, delivery, and analytics work together seamlessly. No more juggling 10 different tools.',
+        'While competitors offer disconnected point solutions, Smartslate provides a unified platform where design, content, delivery, and analytics work together seamlessly. No more juggling 10 different tools.',
     },
     {
       icon: Shield,
       title: 'Partnership, Not Replacement',
       description:
-        'AI augments your expertise, not replaces it. SmartSlate amplifies L&D professionals, giving you superpowers to do more strategic work while AI handles the repetitive tasks.',
+        'AI augments your expertise, not replaces it. Smartslate amplifies L&D professionals, giving you superpowers to do more strategic work while AI handles the repetitive tasks.',
     },
   ];
 
@@ -701,7 +701,7 @@ function WhyChooseSmartSlateSection() {
         {/* Comparison table */}
         <div className="space-y-6 overflow-x-auto rounded-xl border border-[rgba(167,218,219,0.2)] bg-[rgba(167,218,219,0.05)] p-10">
           <h3 className="mb-8 text-left text-2xl font-bold text-[rgb(224,224,224)]">
-            Generic AI Tools vs. SmartSlate Ecosystem
+            Generic AI Tools vs. Smartslate Ecosystem
           </h3>
           <table className="w-full">
             <thead>
@@ -713,7 +713,7 @@ function WhyChooseSmartSlateSection() {
                   Generic AI Tools
                 </th>
                 <th className="px-4 py-4 text-left font-semibold text-[rgb(167,218,219)]">
-                  SmartSlate Ecosystem
+                  Smartslate Ecosystem
                 </th>
               </tr>
             </thead>
@@ -773,7 +773,7 @@ function JoinTheJourneySection() {
             <span className="text-[rgb(167,218,219)]">Starts with Your First Blueprint</span>
           </h2>
           <p className="max-w-3xl text-left text-xl leading-relaxed text-[rgb(176,197,198)]">
-            In 18 months, organizations using SmartSlate will be years ahead of competitors still
+            In 18 months, organizations using Smartslate will be years ahead of competitors still
             relying on traditional L&D approaches. The question is not whether AI will transform
             learning—it is whether you will lead the transformation or struggle to catch up.
           </p>
@@ -843,10 +843,10 @@ export default function AIInLearningPage() {
       <Suspense fallback={<div className="min-h-screen" />}>
         <HeroSection />
         <IndustryTrendsSection />
-        <SmartSlateVisionSection />
+        <SmartslateVisionSection />
         <PolarisTodaySection />
         <EcosystemTomorrowSection />
-        <WhyChooseSmartSlateSection />
+        <WhyChooseSmartslateSection />
         <JoinTheJourneySection />
       </Suspense>
     </main>

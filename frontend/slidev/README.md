@@ -1,8 +1,8 @@
-# SmartSlate Polaris Slidev Theme
+# Smartslate Polaris Slidev Theme
 
 > **Premium glassmorphic presentation theme for learning blueprints**
 
-A complete, production-ready Slidev theme that transforms SmartSlate Polaris learning blueprints into stunning, brand-compliant presentations.
+A complete, production-ready Slidev theme that transforms Smartslate Polaris learning blueprints into stunning, brand-compliant presentations.
 
 ---
 
@@ -45,7 +45,7 @@ slidev/
 
 | Feature               | Description                                                             |
 | --------------------- | ----------------------------------------------------------------------- |
-| **Brand Consistency** | Exact SmartSlate colors (#A7DADB), typography (Lato/Quicksand), spacing |
+| **Brand Consistency** | Exact Smartslate colors (#A7DADB), typography (Lato/Quicksand), spacing |
 | **Glassmorphism**     | Premium frosted glass cards with 24px blur, gradient borders            |
 | **8 Layouts**         | Cover, default, section, two-cols, timeline, metrics, table, quote      |
 | **Animations**        | Entrance effects, staggered timing, hover states, GPU-accelerated       |
@@ -116,7 +116,7 @@ npx slidev my-blueprint.md
 
 ### Implementation
 
-- **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** - Connect to SmartSlate platform
+- **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** - Connect to Smartslate platform
 - **[BRAND_DESIGN_SYSTEM.md](BRAND_DESIGN_SYSTEM.md)** - Visual design reference
 - **[SUMMARY.md](SUMMARY.md)** - Complete feature overview
 
@@ -236,7 +236,7 @@ Large quote mark, centered layout, attribution
 
 ## 🎯 Use Cases
 
-### For SmartSlate Polaris Platform
+### For Smartslate Polaris Platform
 
 1. **Blueprint Presentations**: Auto-generate from `blueprint_json`
 2. **Stakeholder Reviews**: Share read-only preview links
@@ -259,7 +259,7 @@ Large quote mark, centered layout, attribution
 ### Programmatic Generation
 
 ```typescript
-// 1. User completes blueprint in SmartSlate
+// 1. User completes blueprint in Smartslate
 const blueprint = await fetchBlueprint(blueprintId);
 
 // 2. Generate Slidev markdown from blueprint JSON
@@ -284,7 +284,7 @@ const url = `/presentations/${blueprintId}/`;
 
 ---
 
-## 🔧 Integration with SmartSlate
+## 🔧 Integration with Smartslate
 
 ### API Endpoint
 
@@ -594,14 +594,14 @@ theme: ./theme         # From slidev folder
 ### Contact
 
 - Email: support@smartslate-polaris.com
-- Discord: SmartSlate Community
+- Discord: Smartslate Community
 - GitHub: Report issues/feature requests
 
 ---
 
 ## 🎯 Success Criteria
 
-✅ **Brand Consistency**: 100% SmartSlate design system
+✅ **Brand Consistency**: 100% Smartslate design system
 ✅ **Professional Quality**: Conference-ready presentations
 ✅ **Accessibility**: WCAG AA compliant
 ✅ **Performance**: <1s load time
@@ -618,7 +618,7 @@ MIT License - Free for commercial and personal use
 
 ## 🙏 Credits
 
-**Design**: SmartSlate Polaris Team
+**Design**: Smartslate Polaris Team
 **Framework**: Slidev by Anthony Fu
 **Fonts**: Google Fonts (Lato, Quicksand)
 **Implementation**: Claude Code Assistant
@@ -644,7 +644,7 @@ MIT License - Free for commercial and personal use
 
 1. **Immediate**: Install dependencies, test example
 2. **Short-term**: Create first presentation, customize
-3. **Long-term**: Integrate with SmartSlate, automate generation
+3. **Long-term**: Integrate with Smartslate, automate generation
 
 ---
 
@@ -656,4 +656,4 @@ MIT License - Free for commercial and personal use
 
 ---
 
-_Built with love for SmartSlate Polaris • Powered by Solara_
+_Built with love for Smartslate Polaris • Powered by Solara_

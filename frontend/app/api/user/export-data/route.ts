@@ -129,7 +129,7 @@ export async function POST() {
       `GDPR Data Export
 ================
 
-This archive contains all your personal data stored in SmartSlate Polaris.
+This archive contains all your personal data stored in Smartslate Polaris.
 
 Export Date: ${new Date().toISOString()}
 User ID: ${user.id}

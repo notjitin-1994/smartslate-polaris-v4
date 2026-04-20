@@ -98,7 +98,7 @@ export default function FeedbackNotification({
               <Text style={{ ...sentimentLabel, color: config.color }}>{config.label}</Text>
             </div>
             <Heading style={h1}>New User Feedback Received</Heading>
-            <Text style={subtitle}>SmartSlate Polaris Feedback System</Text>
+            <Text style={subtitle}>Smartslate Polaris Feedback System</Text>
           </Section>
 
           {/* Quick Stats Bar */}
@@ -208,7 +208,7 @@ export default function FeedbackNotification({
             <Row>
               <Column style={{ width: '48%', paddingRight: '2%' }}>
                 <Link
-                  href={`mailto:${contactEmail || userEmail}?subject=Re: Your Feedback on SmartSlate Polaris`}
+                  href={`mailto:${contactEmail || userEmail}?subject=Re: Your Feedback on Smartslate Polaris`}
                   style={primaryActionButton}
                 >
                   Reply to User
@@ -229,10 +229,10 @@ export default function FeedbackNotification({
           <Section style={footer}>
             <Hr style={footerDivider} />
             <Text style={footerText}>
-              This is an automated notification from the SmartSlate Polaris feedback system.
+              This is an automated notification from the Smartslate Polaris feedback system.
             </Text>
             <Text style={footerText}>
-              You're receiving this because you're listed as an admin for SmartSlate Polaris.
+              You're receiving this because you're listed as an admin for Smartslate Polaris.
             </Text>
             <Text style={footerLinks}>
               <Link href={`${baseUrl}/admin/feedback`} style={footerLink}>
