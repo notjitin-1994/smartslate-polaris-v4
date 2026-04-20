@@ -59,4 +59,4 @@ export async function GET(): Promise<NextResponse> {
 }
 
 // Allow long-running blueprint generation
-export const maxDuration = 800;
+export const maxDuration = 300;

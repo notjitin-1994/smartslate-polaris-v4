@@ -13,10 +13,9 @@ import { createServiceLogger } from '@/lib/logging';
 const logger = createServiceLogger('api');
 
 export const dynamic = 'force-dynamic';
-// Allow up to ~13.3 minutes (800 seconds) for complex question generation
-// Average generation time: ~13 minutes (779.7 seconds)
-// Note: On Vercel, this requires Pro or Enterprise plan (max 800s for Pro plan)
-export const maxDuration = 800;
+// Allow up to ~5 minutes (300 seconds) for complex question generation
+// Note: On Vercel, this requires Pro or Enterprise plan (max 300s for Pro plan)
+export const maxDuration = 300;
 
 // Request schema
 const requestSchema = z.object({

@@ -5,9 +5,9 @@ import { z } from 'zod';
 import { getClientForUser } from '@/lib/auth/adminUtils';
 
 export const dynamic = 'force-dynamic';
-// Allow up to ~13.3 minutes (800 seconds) for complex question generation
-// Note: On Vercel, this requires Pro or Enterprise plan (max 800s for Pro plan)
-export const maxDuration = 800;
+// Allow up to ~5 minutes (300 seconds) for complex question generation
+// Note: On Vercel, this requires Pro or Enterprise plan (max 300s for Pro plan)
+export const maxDuration = 300;
 
 // Schema for the request body
 const generateDynamicQuestionsSchema = z.object({
