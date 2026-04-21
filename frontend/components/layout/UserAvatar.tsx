@@ -1,7 +1,8 @@
 'use client';
 
-import { memo, useState, useEffect } from 'react';
+import { memo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
+import Image from 'next/image';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export function resolveUserAvatarUrl(user: User | null): string | null {
@@ -66,20 +67,18 @@ export const UserAvatar = memo(function UserAvatar({
 
   if (showImg) {
     return (
-      <img
-        src={avatarUrl as string}
-        alt="User avatar"
-        className={`${sizeClass} rounded-full object-cover shadow-sm`}
-        style={{
-          imageRendering: 'auto',
-          WebkitFontSmoothing: 'antialiased',
-          border: '2px solid rgba(255, 255, 255, 0.1)',
-        }}
-        loading="lazy"
-        referrerPolicy="no-referrer"
-        onError={() => setImgError(true)}
-        draggable="false"
-      />
+      <div className={`${sizeClass} relative rounded-full overflow-hidden shadow-sm border-2 border-white/10`}>
+        <Image
+          src={avatarUrl as string}
+          alt="User avatar"
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 32px, 48px"
+          onError={() => setImgError(true)}
+          draggable="false"
+          unoptimized={avatarUrl?.startsWith('http')} // Supabase/OAuth URLs might change, better to allow them if they are from a CDN
+        />
+      </div>
     );
   }
 

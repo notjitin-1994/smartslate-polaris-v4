@@ -216,6 +216,7 @@ export function SignupFormContent({
       {/* Password Input */}
       <div className="space-y-2.5" ref={passwordFieldRef}>
         <PasswordInput
+          id="signup-password"
           label="Password"
           value={password}
           onChange={handlePasswordChange}
@@ -233,6 +234,7 @@ export function SignupFormContent({
         />
 
         <PasswordInput
+          id="signup-confirm-password"
           label="Confirm password"
           value={confirm}
           onChange={setConfirm}

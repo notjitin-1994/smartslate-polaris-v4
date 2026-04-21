@@ -29,18 +29,30 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-// Import comprehensive mocks
-import { createMockRazorpayClient } from './__tests__/mocks/razorpay';
-import { createMockSupabaseClient } from './__tests__/mocks/supabase';
-
-// Mock Razorpay SDK with comprehensive implementation
-const mockRazorpayClient = createMockRazorpayClient();
-vi.mock('razorpay', () => ({
-  default: vi.fn(() => mockRazorpayClient),
-}));
-
-// Mock Supabase client with comprehensive implementation
-const mockSupabaseClient = createMockSupabaseClient();
+// Mock Supabase client
+const mockSupabaseClient = {
+  auth: {
+    getSession: vi.fn(() => Promise.resolve({ data: { session: null }, error: null })),
+    getUser: vi.fn(() => Promise.resolve({ data: { user: null }, error: null })),
+    signInWithPassword: vi.fn(),
+    signUp: vi.fn(),
+    signOut: vi.fn(),
+    onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+  },
+  from: vi.fn(() => ({
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    single: vi.fn().mockReturnThis(),
+  })),
+  storage: {
+    from: vi.fn(() => ({
+      getPublicUrl: vi.fn(() => ({ data: { publicUrl: 'http://example.com/test.jpg' } })),
+    })),
+  },
+};
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(() => mockSupabaseClient),
@@ -48,6 +60,21 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@/lib/supabase/client', () => ({
   createBrowserClient: vi.fn(() => mockSupabaseClient),
+  getSupabaseBrowserClient: vi.fn(() => mockSupabaseClient),
+}));
+
+// Mock Razorpay
+vi.mock('razorpay', () => ({
+  default: vi.fn(() => ({
+    subscriptions: {
+      create: vi.fn(),
+      fetch: vi.fn(),
+    },
+    payments: {
+      fetch: vi.fn(),
+      capture: vi.fn(),
+    },
+  })),
 }));
 
 // Mock Zustand stores
@@ -117,12 +144,8 @@ vi.mock('next/headers', () => ({
 // Mock crypto for webhook signature verification
 Object.defineProperty(global, 'crypto', {
   value: {
-    ...crypto,
     subtle: {
-      digest: vi.fn((algorithm: string, data: Uint8Array) => {
-        // Return a mock digest for testing
-        return Promise.resolve(new Uint8Array([1, 2, 3, 4, 5]));
-      }),
+      digest: vi.fn(() => Promise.resolve(new Uint8Array([1, 2, 3, 4, 5]))),
     },
     timingSafeEqual: vi.fn((a: Buffer, b: Buffer) => {
       return a.length === b.length && a.every((byte, i) => byte === b[i]);
@@ -130,18 +153,6 @@ Object.defineProperty(global, 'crypto', {
   },
   writable: true,
 });
-
-// Mock setTimeout and other timers for testing
-const originalSetTimeout = global.setTimeout;
-const originalClearTimeout = global.clearTimeout;
-
-global.setTimeout = vi.fn((fn: Function, delay?: number) => {
-  return originalSetTimeout(fn, delay);
-}) as any;
-
-global.clearTimeout = vi.fn((id: number) => {
-  return originalClearTimeout(id);
-}) as any;
 
 // Mock console methods to avoid noise in tests
 const originalConsole = { ...console };

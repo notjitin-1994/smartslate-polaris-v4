@@ -1,5 +1,3 @@
-import ExcelJS from 'exceljs';
-
 /**
  * Report Export Service
  * Handles exporting reports to various formats: PDF, Excel, CSV, JSON
@@ -116,6 +114,7 @@ export function exportToCSV(reportData: ReportData): Blob {
  * Creates a multi-sheet workbook with formatted data
  */
 export async function exportToExcel(reportData: ReportData): Promise<Blob> {
+  const { default: ExcelJS } = await import('exceljs');
   const workbook = new ExcelJS.Workbook();
 
   // Create summary sheet

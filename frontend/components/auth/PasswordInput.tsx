@@ -5,6 +5,7 @@ import type React from 'react';
 import { Lock, Eye, EyeOff, Check, X } from 'lucide-react';
 
 type Props = {
+  id?: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export function PasswordInput({
+  id = 'password-input',
   label,
   value,
   onChange,
@@ -61,7 +63,7 @@ export function PasswordInput({
   return (
     <div className="space-y-1">
       {/* Label - Compact */}
-      <label htmlFor="password-input" className="block text-[11px] font-semibold text-white/60 uppercase tracking-wider">
+      <label htmlFor={id} className="block text-[11px] font-semibold text-white/60 uppercase tracking-wider">
         {label}
       </label>
 
@@ -88,7 +90,7 @@ export function PasswordInput({
 
           {/* Input Field - Compact padding */}
           <input
-            id="password-input"
+            id={id}
             type={visible ? 'text' : 'password'}
             autoComplete={autoComplete}
             name={name}

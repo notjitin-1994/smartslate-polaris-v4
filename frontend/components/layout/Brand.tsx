@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const Brand = memo(function Brand() {
   return (
@@ -14,12 +15,14 @@ export const Brand = memo(function Brand() {
       />
 
       {/* Logo */}
-      <div className="relative">
-        <img
+      <div className="relative h-7 w-24">
+        <Image
           src="/logo.png"
           alt="Smartslate"
-          className="relative h-7 w-auto drop-shadow-sm transition-all duration-300 select-none group-hover:scale-[1.02] group-hover:drop-shadow-md"
+          fill
+          className="relative object-contain drop-shadow-sm transition-all duration-300 select-none group-hover:scale-[1.02] group-hover:drop-shadow-md"
           draggable="false"
+          priority
         />
       </div>
     </Link>

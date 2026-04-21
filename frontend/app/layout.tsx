@@ -10,8 +10,6 @@ import { SidebarProvider } from '@/contexts/SidebarContext';
 import { Toaster } from 'sonner';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 
-// Force dynamic rendering for all pages to avoid event handler serialization errors
-export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
 
 const quicksand = Quicksand({
@@ -125,10 +123,10 @@ export default function RootLayout({
         <meta name="application-name" content="Smartslate Polaris" />
         <meta name="theme-color" content="#3b82f6" />
 
-        {/* Mobile optimization meta tags - Force 1:1 scale on all devices */}
+        {/* Mobile optimization meta tags - Allow user scaling for accessibility/SEO */}
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover"
+          content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"
         />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
