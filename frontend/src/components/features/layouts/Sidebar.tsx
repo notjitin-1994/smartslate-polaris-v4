@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { User } from '@supabase/supabase-js';
 import { Brand } from '@/components/layout/Brand';
 import { UserAvatar } from '@/components/layout/UserAvatar';
@@ -12,7 +13,9 @@ import {
   IconSun,
   IconLogout,
   IconSettings,
+  IconChevronRight,
 } from '@/components/layout/icons';
+import { useSidebar } from '@/contexts/SidebarContext';
 
 interface SidebarProps {
   user: User | null;
@@ -22,42 +25,28 @@ interface SidebarProps {
 export function Sidebar({ user, onSignOut }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false); // Default to expanded
+  const { sidebarCollapsed, setSidebarCollapsed } = useSidebar();
   const [isMounted, setIsMounted] = useState(false);
+  const [quickAccessOpen, setQuickAccessOpen] = useState(true);
+  const [solaraSuiteOpen, setSolaraSuiteOpen] = useState(true);
 
-  // Load state from localStorage after mount to avoid hydration mismatch
   useEffect(() => {
     setIsMounted(true);
-
-    // Load sidebar collapsed state
-    try {
-      const stored = localStorage.getItem('portal:sidebarCollapsed');
-      if (stored) {
-        setSidebarCollapsed(stored === '1');
-      }
-    } catch {
-      // Ignore errors
-    }
   }, []);
-
-  useEffect(() => {
-    if (!isMounted) return;
-    try {
-      localStorage.setItem('portal:sidebarCollapsed', sidebarCollapsed ? '1' : '0');
-    } catch {}
-  }, [sidebarCollapsed, isMounted]);
 
   // Add keyboard shortcut for sidebar toggle (Ctrl/Cmd + B)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
         e.preventDefault();
-        setSidebarCollapsed((v) => !v);
+        setSidebarCollapsed(!sidebarCollapsed);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [sidebarCollapsed, setSidebarCollapsed]);
+
+  if (!isMounted) return null;
 
   const getFirstName = (): string => {
     const rawName =
@@ -74,44 +63,46 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
 
-  const collapsedQuickItems = [
+  const quickAccessItems = [
     { title: 'Dashboard', icon: IconApps, path: '/' },
-    { title: 'Explore', icon: IconEye, path: '/explore', badge: 'Coming Soon', disabled: true },
-    { title: 'Learning', icon: IconSun, path: '/learning', badge: 'Coming Soon', disabled: true },
+    { title: 'Explore', icon: IconEye, path: '/explore', badge: 'Soon', disabled: true },
+    { title: 'Learning', icon: IconSun, path: '/learning', badge: 'Soon', disabled: true },
   ];
 
-  const productLinks = [
-    {
-      name: 'Constellation',
-      path: '/constellation',
-      badge: 'Coming Soon',
-      badgeType: 'soon' as const,
-    },
-    { name: 'Nova', path: '/nova', badge: 'Coming Soon', badgeType: 'soon' as const },
-    { name: 'Orbit', path: '/orbit', badge: 'Coming Soon', badgeType: 'soon' as const },
-    { name: 'Spectrum', path: '/spectrum', badge: 'Coming Soon', badgeType: 'soon' as const },
+  const solaraSuiteLinks = [
+    { name: 'Constellation', path: '/constellation', badge: 'Soon', badgeType: 'soon' as const },
+    { name: 'Nova', path: '/nova', badge: 'Soon', badgeType: 'soon' as const },
+    { name: 'Orbit', path: '/orbit', badge: 'Soon', badgeType: 'soon' as const },
+    { name: 'Spectrum', path: '/spectrum', badge: 'Soon', badgeType: 'soon' as const },
   ];
 
   return (
     <aside
-      className={`hidden h-full min-h-0 flex-col md:flex ${sidebarCollapsed ? 'md:w-16 lg:w-16' : 'md:w-72 lg:w-80'} bg-surface shadow-sm backdrop-blur-xl transition-all duration-300 ease-out`}
+      className={`hidden h-screen flex-col md:flex fixed left-0 top-0 z-50 transition-all duration-300 ease-out border-r border-white/5 bg-surface/80 backdrop-blur-xl ${
+        sidebarCollapsed ? 'w-16' : 'w-72 lg:w-80'
+      }`}
       aria-label="Main navigation"
       role="navigation"
     >
       {/* Header with Brand & Toggle */}
       <div
-        className={` ${sidebarCollapsed ? 'px-2 py-3' : 'px-6 py-5'} flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'} bg-surface/80 sticky top-0 z-20 backdrop-blur-sm`}
+        className={`flex items-center ${sidebarCollapsed ? 'justify-center px-2 py-3' : 'justify-between px-6 py-5'} sticky top-0 z-20`}
       >
         {!sidebarCollapsed && (
-          <div className="animate-in fade-in slide-in-from-left-2 duration-300">
+          <motion.div 
+            initial={{ opacity: 0, x: -10 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            transition={{ duration: 0.3 }}
+          >
             <Brand />
-          </div>
+          </motion.div>
         )}
         <button
           type="button"
-          onClick={() => setSidebarCollapsed((v) => !v)}
-          aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className={`group text-text-secondary hover:text-foreground hover:bg-foreground/5 active:bg-foreground/10 focus-visible:ring-secondary/50 relative flex items-center justify-center rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 ${sidebarCollapsed ? 'h-8 w-8' : 'h-9 w-9'}`}
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className={`group text-text-secondary hover:text-foreground hover:bg-foreground/5 p-2 rounded-lg transition-all ${
+            sidebarCollapsed ? 'h-8 w-8' : 'h-9 w-9'
+          }`}
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <IconSidebarToggle
@@ -121,184 +112,201 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
       </div>
 
       {/* Navigation Content */}
-      {!sidebarCollapsed && (
-        // Expanded View: Full Navigation
-        <nav
-          className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-4"
-          aria-label="Primary navigation"
-        >
-          {/* Quick Access Section */}
-          <div className="space-y-1.5">
-            <h2 className="text-primary mb-2 px-3 text-[5px] font-bold tracking-wider uppercase">
-              Quick Access
-            </h2>
-            {collapsedQuickItems.map(({ title, icon: Icon, path, badge, disabled }) => {
-              const isActive = pathname === path;
-              return (
-                <button
-                  key={title}
-                  type="button"
-                  onClick={() => !disabled && router.push(path)}
-                  disabled={disabled}
-                  className={`group focus-visible:ring-secondary/50 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                    isActive
-                      ? 'bg-primary/10 text-primary shadow-sm'
-                      : disabled
-                        ? 'text-text-disabled cursor-not-allowed'
-                        : 'text-text-secondary hover:text-foreground hover:bg-foreground/5 active:scale-[0.98]'
-                  } `}
-                >
-                  <Icon className="h-5 w-5 shrink-0" />
-                  <span className="flex-1 truncate text-left">{title}</span>
-                  {badge && (
-                    <span className="border-primary/40 bg-primary/10 text-primary shadow-primary/20 inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase shadow transition-all duration-200">
-                      {badge}
-                    </span>
-                  )}
-                  {isActive && !disabled && (
-                    <div className="bg-primary absolute top-1/2 right-0 h-8 w-1 -translate-y-1/2 rounded-l-full" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Product Links */}
-          <div className="space-y-1">
-            <h2 className="text-primary mb-2 px-3 text-[5px] font-bold tracking-wider uppercase">
-              Explore Suite
-            </h2>
-            {productLinks.map(({ name, path, badge, badgeType }) => {
-              const isActive = pathname === path;
-              return (
-                <button
-                  key={name}
-                  type="button"
-                  onClick={() => router.push(path)}
-                  disabled={badgeType === 'soon'}
-                  className={`group flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                    isActive
-                      ? 'bg-primary/10 text-primary shadow-sm'
-                      : badgeType === 'soon'
-                        ? 'text-text-disabled cursor-not-allowed'
-                        : 'text-text-secondary hover:text-foreground hover:bg-foreground/5 focus-visible:ring-secondary/50 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98]'
-                  } `}
-                >
-                  <span className="flex-1 truncate text-left">{name}</span>
-                  <span
-                    className={`inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase transition-all duration-200 ${
-                      badgeType === 'soon'
-                        ? 'border-primary/40 bg-primary/10 text-primary shadow-primary/20 shadow'
-                        : 'text-text-disabled border-neutral-300 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800'
-                    } `}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar relative z-10">
+        {!sidebarCollapsed ? (
+          <nav className="px-4 py-4 space-y-6">
+            {/* Quick Access Section */}
+            <div className="space-y-1.5">
+              <button
+                onClick={() => setQuickAccessOpen(!quickAccessOpen)}
+                className="w-full flex items-center justify-between px-3 py-1 text-primary hover:text-foreground transition-colors group"
+              >
+                <span className="!text-[10px] font-bold tracking-[0.2em] uppercase text-left">
+                  Quick Access
+                </span>
+                <IconChevronRight 
+                  className={`h-3 w-3 transition-transform duration-300 ${quickAccessOpen ? 'rotate-90' : ''}`} 
+                />
+              </button>
+              <AnimatePresence initial={false}>
+                {quickAccessOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="overflow-hidden space-y-1"
                   >
-                    {badge}
-                  </span>
-                </button>
+                    {quickAccessItems.map(({ title, icon: Icon, path, badge, disabled }) => {
+                      const isActive = pathname === path;
+                      return (
+                        <button
+                          key={title}
+                          type="button"
+                          onClick={() => !disabled && router.push(path)}
+                          disabled={disabled}
+                          className={`group focus-visible:ring-secondary/50 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 relative ${
+                            isActive
+                              ? 'bg-primary/10 text-primary shadow-sm font-bold'
+                              : disabled
+                                ? 'text-text-disabled cursor-not-allowed opacity-60'
+                                : 'text-text-secondary hover:bg-white/5 hover:text-foreground active:scale-[0.98]'
+                          }`}
+                        >
+                          <Icon className="h-5 w-5 shrink-0" />
+                          <span className="flex-1 truncate text-left">{title}</span>
+                          {badge && (
+                            <span className="border-primary/40 bg-primary/10 text-primary shadow-primary/20 inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase shadow transition-all duration-200">
+                              {badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Solara Suite Section */}
+            <div className="space-y-1.5">
+              <button
+                onClick={() => setSolaraSuiteOpen(!solaraSuiteOpen)}
+                className="w-full flex items-center justify-between px-3 py-1 text-primary hover:text-foreground transition-colors group"
+              >
+                <span className="!text-[10px] font-bold tracking-[0.2em] uppercase text-left">
+                  Solara Suite
+                </span>
+                <IconChevronRight 
+                  className={`h-3 w-3 transition-transform duration-300 ${solaraSuiteOpen ? 'rotate-90' : ''}`} 
+                />
+              </button>
+              <AnimatePresence initial={false}>
+                {solaraSuiteOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="overflow-hidden space-y-1"
+                  >
+                    {solaraSuiteLinks.map(({ name, path, badge, badgeType }) => (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() => router.push(path)}
+                        disabled={badgeType === 'soon'}
+                        className="group flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-text-secondary hover:text-foreground hover:bg-white/5 disabled:text-text-disabled disabled:cursor-not-allowed active:scale-[0.98]"
+                      >
+                        <span className="truncate flex-1 text-left">{name}</span>
+                        <span
+                          className={`inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase transition-all duration-200 ${
+                            badgeType === 'soon'
+                              ? 'border-neutral-700 bg-neutral-800 text-text-disabled'
+                              : 'border-primary/40 bg-primary/10 text-primary shadow-primary/20 shadow'
+                          }`}
+                        >
+                          {badge}
+                        </span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </nav>
+        ) : (
+          <nav className="flex flex-col items-center space-y-4 py-6">
+            {quickAccessItems.map(({ title, icon: Icon, path, disabled }) => {
+              const isActive = pathname === path;
+              return (
+                <motion.div key={title} whileHover={{ x: 3 }}>
+                  <button
+                    type="button"
+                    onClick={() => !disabled && router.push(path)}
+                    disabled={disabled}
+                    title={title}
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-primary/20 text-primary shadow-[0_0_15px_rgba(167,218,219,0.15)]' 
+                        : disabled
+                          ? 'text-text-disabled opacity-40 cursor-not-allowed'
+                          : 'text-text-secondary hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </button>
+                </motion.div>
               );
             })}
-          </div>
-        </nav>
-      )}
+          </nav>
+        )}
+      </div>
 
       {/* Footer Section */}
-      <div className="bg-surface/50 mt-auto w-full flex-shrink-0 backdrop-blur-sm">
+      <div className="mt-auto w-full p-4 relative z-10 border-t border-white/10 bg-surface/50 backdrop-blur-sm">
         {sidebarCollapsed ? (
-          // Collapsed Footer - Subscribe and Logout Buttons
-          <div className="flex flex-col items-center space-y-2 px-2 py-3">
-            {/* Subscribe Button - Collapsed */}
+          <div className="flex flex-col items-center gap-4 px-2 py-4">
             <button
               type="button"
               onClick={() => router.push('/pricing')}
               title="Subscribe to Polaris"
-              aria-label="Subscribe to Polaris"
-              className="group hover:shadow-secondary/25 focus-visible:ring-secondary/50 bg-secondary hover:bg-secondary/90 relative flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95"
+              className="h-8 w-8 rounded-lg bg-secondary flex items-center justify-center text-white shadow-sm hover:bg-secondary/90 transition-all active:scale-95"
             >
-              <svg
-                className="text-secondary-foreground h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth={2.5}
-              >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </button>
+            <UserAvatar user={user} sizeClass="w-8 h-8" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => router.push('/pricing')}
+              className="group flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-200 text-secondary hover:bg-secondary/10 active:scale-[0.98]"
+            >
+              <span className="truncate">Subscribe to Polaris</span>
+              <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </button>
 
-            {/* Logout Button - Collapsed */}
-            <button
-              type="button"
-              onClick={onSignOut}
-              title="Sign out"
-              aria-label="Sign out"
-              className="group relative flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 transition-all duration-200 hover:bg-red-700 hover:shadow-red-500/25 focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:ring-offset-2 active:scale-95"
-            >
-              <IconLogout className="h-4 w-4 text-white" />
-            </button>
-          </div>
-        ) : (
-          // Expanded Footer
-          <div className="space-y-2 px-4 py-4">
-            {/* Subscribe Button - Expanded */}
-            <button
-              type="button"
-              onClick={() => router.push('/pricing')}
-              className="group hover:shadow-secondary/20 focus-visible:ring-secondary/50 bg-secondary hover:bg-secondary/90 relative w-full overflow-hidden rounded-lg transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98]"
-            >
-              <div className="flex items-center justify-center gap-2 px-4 py-2.5">
-                <svg
-                  className="text-secondary-foreground h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-                <span className="text-secondary-foreground text-sm font-semibold">
-                  Subscribe to Polaris
-                </span>
-              </div>
-            </button>
-
-            {/* Divider below subscribe removed per request; keep profile divider intact above */}
-
             <button
               type="button"
               onClick={() => router.push('/profile')}
-              className="group hover:bg-foreground/5 focus-visible:ring-secondary/50 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98]"
+              className="group hover:bg-white/5 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 active:scale-[0.98]"
             >
               <div className="relative">
                 <UserAvatar user={user} sizeClass="w-9 h-9" textClass="text-sm font-bold" />
-                <div className="bg-success border-surface absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2" />
+                <div className="bg-success absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-surface" />
               </div>
               <div className="min-w-0 flex-1 text-left">
-                <p className="text-foreground truncate text-sm font-semibold">
+                <p className="text-foreground truncate text-sm font-semibold leading-tight">
                   {getCapitalizedFirstName()}
                 </p>
-                <p className="text-text-secondary truncate text-xs">{user?.email}</p>
+                <p className="text-text-secondary truncate text-xs leading-tight mt-0.5">{user?.email}</p>
               </div>
             </button>
-            <button
-              type="button"
-              onClick={() => router.push('/settings')}
-              className="group text-text-secondary hover:text-foreground hover:bg-foreground/5 focus-visible:ring-secondary/50 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98]"
-            >
-              <IconSettings className="h-5 w-5 shrink-0" />
-              <span className="flex-1 text-left">Settings</span>
-            </button>
-            <button
-              type="button"
-              onClick={onSignOut}
-              className="group text-text-secondary hover:text-error hover:bg-error/5 focus-visible:ring-error/50 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98]"
-            >
-              <IconLogout className="h-5 w-5 shrink-0" />
-              <span className="flex-1 text-left">Sign Out</span>
-            </button>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => router.push('/settings')}
+                className="group flex items-center gap-2 px-3 py-2 text-sm text-text-secondary hover:text-foreground hover:bg-white/5 rounded-lg transition-all active:scale-[0.98]"
+              >
+                <IconSettings className="h-[18px] w-[18px] shrink-0" />
+                <span className="truncate">Settings</span>
+              </button>
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="group flex items-center gap-2 px-3 py-2 text-sm text-text-secondary hover:text-error hover:bg-error/5 rounded-lg transition-all active:scale-[0.98]"
+              >
+                <IconLogout className="h-[18px] w-[18px] shrink-0" />
+                <span className="truncate">Sign Out</span>
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -10,6 +10,7 @@ import { Brand } from './Brand';
 import { NavSection, type NavItem } from './NavSection';
 import { UserAvatar } from './UserAvatar';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSidebar } from '@/contexts/SidebarContext';
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
@@ -26,6 +27,7 @@ export const GlobalLayout = memo(function GlobalLayout({
 }: GlobalLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { sidebarCollapsed } = useSidebar();
   const pathname = usePathname();
 
   // Don't show global layout for auth pages and public share pages
@@ -59,14 +61,15 @@ export const GlobalLayout = memo(function GlobalLayout({
         currentHeaderSubtitle =
           'Choose the perfect plan for your journey • 14-day free trial • No credit card required';
         break;
-      case pathname?.startsWith('/dynamic-wizard') ? pathname : '':
-        currentHeaderTitle = 'Dynamic Questionnaire';
-        currentHeaderSubtitle =
-          'Answer these personalized questions to complete your learning blueprint';
-        break;
       default:
-        currentHeaderTitle = 'Smartslate';
-        currentHeaderSubtitle = 'Your learning companion';
+        if (pathname?.startsWith('/dynamic-wizard')) {
+          currentHeaderTitle = 'Dynamic Questionnaire';
+          currentHeaderSubtitle =
+            'Answer these personalized questions to complete your learning blueprint';
+        } else {
+          currentHeaderTitle = 'Smartslate';
+          currentHeaderSubtitle = 'Your learning companion';
+        }
     }
   }
 
@@ -95,7 +98,11 @@ export const GlobalLayout = memo(function GlobalLayout({
           <Sidebar user={user} onSignOut={signOut} />
 
           {/* Main Content Area */}
-          <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <main 
+            className={`flex min-h-0 min-w-0 flex-1 flex-col transition-all duration-300 ease-out ${
+              sidebarCollapsed ? 'md:ml-16' : 'md:ml-72 lg:ml-80'
+            }`}
+          >
             {/* Only show Header on pages that don't have their own */}
             {shouldShowHeader && (
               <Header
@@ -112,7 +119,15 @@ export const GlobalLayout = memo(function GlobalLayout({
         </div>
 
         {/* Footer - Only show on pages that don't handle their own layout */}
-        {shouldShowFooter && <Footer />}
+        {shouldShowFooter && (
+          <div 
+            className={`transition-all duration-300 ease-out ${
+              sidebarCollapsed ? 'md:ml-16' : 'md:ml-72 lg:ml-80'
+            }`}
+          >
+            <Footer />
+          </div>
+        )}
       </div>
 
       {/* Mobile Menu Overlay */}

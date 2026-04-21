@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/theme';
 import { GlobalErrorBoundary } from '@/components/error/GlobalErrorBoundary';
 import { RazorpayProvider } from '@/components/providers/RazorpayProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { SidebarProvider } from '@/contexts/SidebarContext';
 import { Toaster } from 'sonner';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 
@@ -209,10 +210,12 @@ export default function RootLayout({
         <GlobalErrorBoundary>
           <ThemeProvider defaultTheme="dark">
             <AuthProvider>
-              <RazorpayProvider>
-                {children}
-                <InstallPrompt />
-              </RazorpayProvider>
+              <SidebarProvider>
+                <RazorpayProvider>
+                  {children}
+                  <InstallPrompt />
+                </RazorpayProvider>
+              </SidebarProvider>
             </AuthProvider>
           </ThemeProvider>
         </GlobalErrorBoundary>

@@ -152,9 +152,6 @@ export function SettingsSidebarContent() {
           >
             <Icon className="h-5 w-5 shrink-0" />
             <span className="flex-1 truncate text-left">{item.label}</span>
-            {isActive && (
-              <div className="bg-primary absolute top-1/2 right-0 h-8 w-1 -translate-y-1/2 rounded-l-full" />
-            )}
           </Link>
         );
       })}

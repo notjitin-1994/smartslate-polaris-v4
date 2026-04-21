@@ -3,6 +3,7 @@
 import { Sidebar } from '@/components/layout/Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { BlueprintSidebarProvider } from '@/contexts/BlueprintSidebarContext';
+import { useSidebar } from '@/contexts/SidebarContext';
 
 interface SharedLayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ interface SharedLayoutProps {
 
 export function SharedLayout({ children }: SharedLayoutProps) {
   const { user, signOut } = useAuth();
+  const { sidebarCollapsed } = useSidebar();
 
   return (
     <BlueprintSidebarProvider>
@@ -18,7 +20,11 @@ export function SharedLayout({ children }: SharedLayoutProps) {
         <Sidebar user={user} onSignOut={signOut} />
 
         {/* Main Content Area */}
-        <div className="ml-16 flex flex-1 flex-col md:ml-0">
+        <div 
+          className={`flex flex-1 flex-col transition-all duration-300 ease-out ${
+            sidebarCollapsed ? 'md:ml-16' : 'md:ml-72 lg:ml-80'
+          }`}
+        >
           <main className="flex-1 overflow-y-auto">{children}</main>
         </div>
       </div>

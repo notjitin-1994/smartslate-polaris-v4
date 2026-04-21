@@ -10,6 +10,7 @@ import { UserAvatar } from './UserAvatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { OfflineIndicator } from '@/components/offline/OfflineIndicator';
 import { BlueprintSidebarProvider } from '@/contexts/BlueprintSidebarContext';
+import { useSidebar } from '@/contexts/SidebarContext';
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
@@ -25,7 +26,7 @@ export const GlobalLayout = memo(function GlobalLayout({
   className = '',
 }: GlobalLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { sidebarCollapsed } = useSidebar();
   const [isMounted, setIsMounted] = useState(false);
   const { user, signOut } = useAuth();
   const pathname = usePathname();
@@ -33,47 +34,8 @@ export const GlobalLayout = memo(function GlobalLayout({
   // Hide sidebar on login and signup pages
   const hideSidebar = pathname === '/login' || pathname === '/signup';
 
-  // Load and track sidebar collapsed state
   useEffect(() => {
     setIsMounted(true);
-
-    const loadSidebarState = () => {
-      try {
-        const stored = localStorage.getItem('portal:sidebarCollapsed');
-        setSidebarCollapsed(stored === '1');
-      } catch {
-        // Ignore errors
-      }
-    };
-
-    loadSidebarState();
-
-    // Listen for storage changes (from other tabs)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'portal:sidebarCollapsed') {
-        setSidebarCollapsed(e.newValue === '1');
-      }
-    };
-
-    // Listen for keyboard shortcut (Ctrl/Cmd + B)
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-        // Re-read state after a small delay for the Sidebar component to update
-        setTimeout(loadSidebarState, 100);
-      }
-    };
-
-    // Also poll periodically to catch any missed updates
-    const interval = setInterval(loadSidebarState, 500);
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
   }, []);
 
   const learningItems: NavItem[] = ['Explore Learning', 'My Learning', 'Dynamic Learning'];
@@ -86,6 +48,12 @@ export const GlobalLayout = memo(function GlobalLayout({
     const label = typeof item === 'string' ? item : item.label;
     console.log(`Navigate to: ${label}`);
   }
+
+  // Width calculation that avoids hydration mismatch
+  // Default to 288 (expanded) on server, then adjust on client after mount
+  const sidebarWidth = !isMounted 
+    ? 288 
+    : (sidebarCollapsed ? 64 : (window.innerWidth >= 1024 ? 320 : 288));
 
   return (
     <BlueprintSidebarProvider>
@@ -104,9 +72,7 @@ export const GlobalLayout = memo(function GlobalLayout({
           {!hideSidebar && (
             <motion.div
               initial={false}
-              animate={{ 
-                width: sidebarCollapsed ? 64 : (typeof window !== 'undefined' && window.innerWidth >= 1024 ? 320 : 288),
-              }}
+              animate={{ width: sidebarWidth }}
               transition={{ type: 'spring', stiffness: 300, damping: 35 }}
               className="hidden shrink-0 md:block"
             />

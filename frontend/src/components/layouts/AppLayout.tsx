@@ -9,6 +9,7 @@ import { NavSection, type NavItem } from './NavSection';
 import { UserAvatar } from './UserAvatar';
 import { IconSidebarToggle } from './icons';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSidebar } from '@/contexts/SidebarContext';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -24,7 +25,8 @@ export const AppLayout = memo(function AppLayout({
   className = '',
 }: AppLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const { sidebarCollapsed } = useSidebar();
 
   const learningItems: NavItem[] = ['Explore Learning', 'My Learning', 'Dynamic Learning'];
 
@@ -43,10 +45,14 @@ export const AppLayout = memo(function AppLayout({
     >
       <div className="flex h-full">
         {/* Desktop Sidebar */}
-        <Sidebar user={null} onSignOut={async () => {}} />
+        <Sidebar user={user} onSignOut={signOut} />
 
         {/* Main Content Area */}
-        <main className="h-full min-w-0 flex-1 overflow-y-auto">
+        <main 
+          className={`h-full min-w-0 flex-1 overflow-y-auto transition-all duration-300 ease-out ${
+            sidebarCollapsed ? 'md:ml-16' : 'md:ml-72 lg:ml-80'
+          }`}
+        >
           <Header
             title={headerTitle}
             subtitle={headerSubtitle}
