@@ -13,7 +13,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { BlueprintGenerationService } from '../blueprintGenerationService';
-import type { BlueprintContext } from '@/lib/claude/prompts';
+import type { BlueprintContext } from '@/lib/ai/prompts/blueprint-prompts';
 
 // Mock all dependencies at module level
 vi.mock('@/lib/claude/clientWithCostTracking', () => ({
@@ -24,7 +24,7 @@ vi.mock('@/lib/claude/config', () => ({
   getClaudeConfig: vi.fn(),
 }));
 
-vi.mock('@/lib/claude/prompts', () => ({
+vi.mock('@/lib/ai/prompts/blueprint-prompts', () => ({
   BLUEPRINT_SYSTEM_PROMPT: 'You are a learning blueprint generator...',
   buildBlueprintPrompt: vi.fn(() => 'User prompt with context...'),
 }));
@@ -271,7 +271,7 @@ describe('BlueprintGenerationService', () => {
     // Apply mocks using dynamic imports
     const { TrackedClaudeClient } = await import('@/lib/claude/clientWithCostTracking');
     const { getClaudeConfig } = await import('@/lib/claude/config');
-    const { buildBlueprintPrompt } = await import('@/lib/claude/prompts');
+    const { buildBlueprintPrompt } = await import('@/lib/ai/prompts/blueprint-prompts');
     const { validateAndNormalizeBlueprint } = await import('@/lib/claude/validation');
     const { shouldFallbackToSonnet4, logFallbackDecision } = await import('@/lib/claude/fallback');
     const { createServiceLogger } = await import('@/lib/logging');
@@ -728,7 +728,7 @@ describe('BlueprintGenerationService', () => {
     it('should build system and user prompts', async () => {
       // Arrange
       mockClaudeClient.generate.mockResolvedValue(mockClaudeResponse);
-      const { buildBlueprintPrompt } = await import('@/lib/claude/prompts');
+      const { buildBlueprintPrompt } = await import('@/lib/ai/prompts/blueprint-prompts');
 
       // Act
       await service.generate(mockContext);

@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { getServerSession } from '@/lib/supabase/server';
 import { getSupabaseServerClientWithLogging } from '@/lib/supabase/server';
 import { createBlueprintGenerationService } from '@/lib/services/blueprintGenerationService';
-import { extractLearningObjectives } from '@/lib/claude/prompts';
+import { extractLearningObjectives } from '@/lib/ai/prompts/blueprint-prompts';
 import { convertBlueprintToMarkdown } from '@/lib/services/blueprintMarkdownConverter';
 import { createServiceLogger } from '@/lib/logging';
 import { BlueprintUsageService } from '@/lib/services/blueprintUsageService';

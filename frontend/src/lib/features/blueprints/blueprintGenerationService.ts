@@ -9,7 +9,7 @@ import {
   BLUEPRINT_SYSTEM_PROMPT,
   buildBlueprintPrompt,
   type BlueprintContext,
-} from '@/lib/claude/prompts';
+} from '@/lib/ai/prompts/blueprint-prompts';
 import { validateAndNormalizeBlueprint } from '@/lib/claude/validation';
 import { shouldFallbackToSonnet4, logFallbackDecision } from '@/lib/claude/fallback';
 import { createServiceLogger } from '@/lib/logging';

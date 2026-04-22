@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
-import { TOUCH_TARGETS, TOUCH_STATES, getRecommendedTouchSize } from '@/lib/touch-targets';
+import { TOUCH_TARGETS, TOUCH_STATES, getRecommendedTouchSize } from '@/lib/utils/touch-targets';
 
 /**
  * Touch-First Input Component

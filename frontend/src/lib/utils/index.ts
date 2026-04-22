@@ -8,6 +8,7 @@ export * from './sessionTracker';
 export * from './subscriptionCTA';
 export * from './safeRegex';
 export * from './sanitizeHtml';
+export * from './touch-targets';
 // Note: activityLogger, environmentValidation, and rateLimit are server-side only 
 // and should be imported directly from their respective files to avoid bundling 
 // issues in client components.

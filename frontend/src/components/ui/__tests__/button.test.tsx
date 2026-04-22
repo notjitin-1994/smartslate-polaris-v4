@@ -9,10 +9,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Button, ButtonGroup, IconButton, LoadingButton, TouchButtonVariants } from '../button';
-import { TOUCH_TARGETS, validateTouchTarget } from '@/lib/touch-targets';
+import { TOUCH_TARGETS, validateTouchTarget } from '@/lib/utils/touch-targets';
 
 // Mock the touch targets module for testing
-vi.mock('@/lib/touch-targets', () => ({
+vi.mock('@/lib/utils/touch-targets', () => ({
   TOUCH_TARGETS: {
     minimum: 'min-h-[44px] min-w-[44px]',
     small: 'min-h-[36px] min-w-[36px]',
