@@ -28,6 +28,8 @@
       "@/hooks/*": ["./src/hooks/*"],
       "@/contexts/*": ["./src/contexts/*"],
       "@/types/*": ["./src/types/*"],
+      "@/emails/*": ["./src/emails/*"],
+      "@/email-templates/*": ["./src/email-templates/*"],
       "@/app/*": ["./app/*"],
       "@/public/*": ["./public/*"],
       "@/*": ["./src/*"]
