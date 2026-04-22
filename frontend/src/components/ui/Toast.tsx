@@ -1,167 +1,124 @@
-/**
- * Toast Notification Component
- * User-friendly error and success messages
- */
-
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
+import * as React from 'react';
+import * as ToastPrimitives from '@radix-ui/react-toast';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-type ToastType = 'success' | 'error' | 'warning' | 'info';
+const ToastProvider = ToastPrimitives.Provider;
 
-interface Toast {
-  id: string;
-  type: ToastType;
-  message: string;
-  description?: string;
-}
+const ToastViewport = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Viewport>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Viewport
+    ref={ref}
+    className={cn(
+      'fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:top-auto sm:right-0 sm:bottom-0 sm:flex-col md:max-w-[420px]',
+      className
+    )}
+    {...props}
+  />
+));
+ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
-interface ToastContextType {
-  showToast: (type: ToastType, message: string, description?: string) => void;
-  showSuccess: (message: string, description?: string) => void;
-  showError: (message: string, description?: string) => void;
-  showWarning: (message: string, description?: string) => void;
-  showInfo: (message: string, description?: string) => void;
-}
-
-const ToastContext = createContext<ToastContextType | null>(null);
-
-export function useToast(): ToastContextType {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within ToastProvider');
+const toastVariants = cva(
+  'group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-lg border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full',
+  {
+    variants: {
+      variant: {
+        default: 'border bg-background text-foreground',
+        destructive: 'destructive group border-error bg-error text-white',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
   }
-  return context;
-}
+);
 
-/**
-* Provides a Toast context and UI; manages an internal list of toast notifications, exposes helper functions (showToast, showSuccess, showError, showWarning, showInfo), and auto-dismisses toasts after a timeout.
-* @example
-* <ToastProvider><App /></ToastProvider>
-* React.JSX.Element (a Provider element that renders children and the toast container)
-* @param {{ReactNode}} {{children}} - Child nodes to render inside the provider.
-* @returns {{React.JSX.Element}} A provider React element that renders its children and the toast container.
-**/
-export function ToastProvider({ children }: { children: ReactNode }): React.JSX.Element {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const showToast = useCallback((type: ToastType, message: string, description?: string) => {
-    const id = `toast-${Date.now()}-${Math.random()}`;
-    const toast: Toast = { id, type, message, description };
-
-    setToasts((prev) => [...prev, toast]);
-
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 5000);
-  }, []);
-
-  const showSuccess = useCallback(
-    (message: string, description?: string) => {
-      showToast('success', message, description);
-    },
-    [showToast]
-  );
-
-  const showError = useCallback(
-    (message: string, description?: string) => {
-      showToast('error', message, description);
-    },
-    [showToast]
-  );
-
-  const showWarning = useCallback(
-    (message: string, description?: string) => {
-      showToast('warning', message, description);
-    },
-    [showToast]
-  );
-
-  const showInfo = useCallback(
-    (message: string, description?: string) => {
-      showToast('info', message, description);
-    },
-    [showToast]
-  );
-
-  const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
-
+const Toast = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Root>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> & VariantProps<typeof toastVariants>
+>(({ className, variant, ...props }, ref) => {
   return (
-    <ToastContext.Provider value={{ showToast, showSuccess, showError, showWarning, showInfo }}>
-      {children}
-
-      {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-50 flex max-w-md flex-col gap-2">
-        <AnimatePresence>
-          {toasts.map((toast) => (
-            <ToastItem key={toast.id} toast={toast} onDismiss={() => dismissToast(toast.id)} />
-          ))}
-        </AnimatePresence>
-      </div>
-    </ToastContext.Provider>
+    <ToastPrimitives.Root
+      ref={ref}
+      className={cn(toastVariants({ variant }), className)}
+      {...props}
+    />
   );
-}
+});
+Toast.displayName = ToastPrimitives.Root.displayName;
 
-/**
-* Render a toast notification item with appropriate icon, styling, message, optional description, and dismiss button.
-* @example
-* ToastItem({ toast: { type: 'success', message: 'Saved', description: 'Your changes were saved.' }, onDismiss: () => {} })
-* React.JSX.Element
-* @param {{toast: Toast, onDismiss: () => void}} props - Props object containing the toast data and a dismiss callback.
-* @returns {React.JSX.Element} Rendered toast item as a React JSX element.
-**/
-function ToastItem({
-  toast,
-  onDismiss,
-}: {
-  toast: Toast;
-  onDismiss: () => void;
-}): React.JSX.Element {
-  const icons = {
-    success: CheckCircle,
-    error: XCircle,
-    warning: AlertTriangle,
-    info: Info,
-  };
+const ToastAction = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Action>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Action
+    ref={ref}
+    className={cn(
+      'ring-offset-background hover:bg-secondary focus:ring-ring group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-error/30 group-[.destructive]:hover:bg-error group-[.destructive]:focus:ring-error inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium transition-colors group-[.destructive]:hover:text-white focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none disabled:opacity-50',
+      className
+    )}
+    {...props}
+  />
+));
+ToastAction.displayName = ToastPrimitives.Action.displayName;
 
-  const colors = {
-    success: 'border-success bg-success/10 text-success',
-    error: 'border-error bg-error/10 text-error',
-    warning: 'border-warning bg-warning/10 text-warning',
-    info: 'border-primary bg-primary/10 text-primary',
-  };
+const ToastClose = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Close>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Close
+    ref={ref}
+    className={cn(
+      'text-foreground/50 hover:text-foreground absolute top-2 right-2 rounded-md p-1 opacity-0 transition-opacity group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 focus:opacity-100 focus:ring-2 focus:outline-none group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600',
+      className
+    )}
+    toast-close=""
+    {...props}
+  >
+    <X className="h-4 w-4" />
+  </ToastPrimitives.Close>
+));
+ToastClose.displayName = ToastPrimitives.Close.displayName;
 
-  const Icon = icons[toast.type];
+const ToastTitle = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Title>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Title ref={ref} className={cn('text-sm font-semibold', className)} {...props} />
+));
+ToastTitle.displayName = ToastPrimitives.Title.displayName;
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 300 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 300 }}
-      className={`glass-strong rounded-xl border p-4 shadow-lg ${colors[toast.type]}`}
-    >
-      <div className="flex items-start gap-3">
-        <Icon className="mt-0.5 h-5 w-5 flex-shrink-0" />
+const ToastDescription = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Description>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
+>(({ className, ...props }, ref) => (
+  <ToastPrimitives.Description
+    ref={ref}
+    className={cn('text-sm opacity-90', className)}
+    {...props}
+  />
+));
+ToastDescription.displayName = ToastPrimitives.Description.displayName;
 
-        <div className="min-w-0 flex-1">
-          <div className="text-foreground text-sm font-semibold">{toast.message}</div>
-          {toast.description && (
-            <div className="text-text-secondary mt-1 text-xs">{toast.description}</div>
-          )}
-        </div>
+type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>;
 
-        <button
-          onClick={onDismiss}
-          className="text-text-secondary hover:text-foreground flex-shrink-0 transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-    </motion.div>
-  );
-}
+type ToastActionElement = React.ReactElement<typeof ToastAction>;
+
+export {
+  type ToastProps,
+  type ToastActionElement,
+  ToastProvider,
+  ToastViewport,
+  Toast,
+  ToastTitle,
+  ToastDescription,
+  ToastClose,
+  ToastAction,
+};
+
+export { useToast, toast } from './use-toast';

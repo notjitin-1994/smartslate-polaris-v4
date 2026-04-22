@@ -3,6 +3,8 @@
  * Exports blueprint with brand-styled dashboard and markdown content
  */
 
+import { sanitizeHtml, escapeHtml } from '@/lib/utils/sanitizeHtml';
+
 export interface BlueprintExportData {
   id: string;
   title: string | null;
@@ -68,7 +70,8 @@ export async function exportBlueprintToPDF(data: BlueprintExportData): Promise<v
   const markdown = data.blueprint_markdown ?? '# Blueprint\n\nNo content available.';
   htmlContent += generateMarkdownPage(markdown, createdDate);
 
-  exportContainer.innerHTML = htmlContent;
+  // Sanitize final HTML content before inserting (defense in depth)
+  exportContainer.innerHTML = sanitizeHtml(htmlContent, 'pdf');
 
   // Wait for fonts and rendering
   await new Promise((resolve) => setTimeout(resolve, 500));
@@ -104,6 +107,10 @@ export async function exportBlueprintToPDF(data: BlueprintExportData): Promise<v
 }
 
 function generateCoverPage(title: string, date: string): string {
+  // Sanitize title to prevent XSS
+  const safeTitle = escapeHtml(title);
+  const safeDate = escapeHtml(date);
+
   return `
     <div style="padding: 80px 60px; text-align: center; page-break-after: always; min-height: 1000px; display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
       <div style="margin-bottom: 40px;">
@@ -111,8 +118,8 @@ function generateCoverPage(title: string, date: string): string {
           <span style="color: #ffffff; font-size: 16px; font-weight: 600; letter-spacing: 0.5px;">✨ AI-Generated Learning Blueprint</span>
         </div>
       </div>
-      <h1 style="font-size: 42px; font-weight: 800; color: #0f172a; margin: 40px 0; line-height: 1.2; font-family: system-ui, -apple-system, sans-serif;">${title}</h1>
-      <p style="color: #64748b; font-size: 18px; margin: 30px 0 60px 0;">Created on ${date}</p>
+      <h1 style="font-size: 42px; font-weight: 800; color: #0f172a; margin: 40px 0; line-height: 1.2; font-family: system-ui, -apple-system, sans-serif;">${safeTitle}</h1>
+      <p style="color: #64748b; font-size: 18px; margin: 30px 0 60px 0;">Created on ${safeDate}</p>
       <div style="margin-top: 80px; padding-top: 40px; border-top: 2px solid #cbd5e1;">
         <p style="color: #94a3b8; font-size: 14px; font-weight: 500;">Generated with Smartslate AI</p>
       </div>
@@ -176,14 +183,16 @@ function generateObjectivesSection(objectives: string[]): string {
       <div style="display: grid; grid-template-columns: repeat(1, 1fr); gap: 14px;">
         ${objectives
           .slice(0, 10)
-          .map(
-            (obj) => `
+          .map((obj) => {
+            // Sanitize objective content to prevent XSS
+            const safeObjective = escapeHtml(obj);
+            return `
           <div style="background: linear-gradient(135deg, #f0f9ff 0%, #f8fafc 100%); border-left: 4px solid #7bc5c7; border-radius: 8px; padding: 16px 20px; display: flex; align-items: start; gap: 14px;">
             <span style="color: #7bc5c7; font-size: 20px; line-height: 1; margin-top: 2px;">✓</span>
-            <span style="color: #334155; font-size: 14px; line-height: 1.6; flex: 1;">${obj}</span>
+            <span style="color: #334155; font-size: 14px; line-height: 1.6; flex: 1;">${safeObjective}</span>
           </div>
-        `
-          )
+        `;
+          })
           .join('')}
       </div>
     </div>
@@ -200,13 +209,15 @@ function generateModulesSection(modules: any[]): string {
         ${modules
           .slice(0, 8)
           .map((module, index) => {
+            // Sanitize module title to prevent XSS
+            const safeModuleTitle = escapeHtml(module.title || 'Untitled Module');
             const duration = typeof module.duration === 'number' ? module.duration : 0;
             const topicCount = Array.isArray(module.topics) ? module.topics.length : 0;
             const activityCount = Array.isArray(module.activities) ? module.activities.length : 0;
             return `
               <div style="background: linear-gradient(135deg, #faf5ff 0%, #f8fafc 100%); border: 2px solid #e9d5ff; border-radius: 14px; padding: 20px 24px;">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 14px;">
-                  <h4 style="color: #0f172a; font-size: 16px; font-weight: 600; margin: 0; flex: 1;">${module.title}</h4>
+                  <h4 style="color: #0f172a; font-size: 16px; font-weight: 600; margin: 0; flex: 1;">${safeModuleTitle}</h4>
                   <span style="background: linear-gradient(135deg, #7bc5c7 0%, #4F46E5 100%); color: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; margin-left: 12px;">Module ${index + 1}</span>
                 </div>
                 <div style="display: flex; gap: 20px; color: #64748b; font-size: 13px; font-weight: 500;">
@@ -225,7 +236,11 @@ function generateModulesSection(modules: any[]): string {
 
 function generateMarkdownPage(markdown: string, date: string): string {
   const markdownToHtml = (md: string) => {
-    return md
+    // First escape all HTML to prevent XSS
+    const escapedMd = escapeHtml(md);
+
+    // Then apply markdown formatting (safe because input is now escaped)
+    return escapedMd
       .replace(
         /^### (.*$)/gim,
         '<h3 style="color: #334155; font-size: 20px; font-weight: 600; margin: 28px 0 14px 0; line-height: 1.4;">$1</h3>'
@@ -255,22 +270,24 @@ function generateMarkdownPage(markdown: string, date: string): string {
       .replace(/\n/g, '<br />');
   };
 
+  const safeDate = escapeHtml(date);
+
   return `
     <div style="padding: 50px 40px; background: #ffffff;">
       <div style="text-align: center; margin-bottom: 50px;">
         <h2 style="font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">Blueprint Content</h2>
         <p style="color: #64748b; font-size: 16px;">Detailed learning path and resources</p>
       </div>
-      
+
       <div style="font-size: 15px; line-height: 1.8; color: #475569;">
         <p style="color: #475569; margin: 0 0 18px 0; line-height: 1.8; font-size: 15px;">
           ${markdownToHtml(markdown)}
         </p>
       </div>
-      
+
       <!-- Footer -->
       <div style="margin-top: 80px; padding-top: 30px; border-top: 2px solid #e2e8f0; text-align: center;">
-        <p style="color: #94a3b8; font-size: 13px; font-weight: 500;">Generated with Smartslate AI • ${date}</p>
+        <p style="color: #94a3b8; font-size: 13px; font-weight: 500;">Generated with Smartslate AI • ${safeDate}</p>
       </div>
     </div>
   `;

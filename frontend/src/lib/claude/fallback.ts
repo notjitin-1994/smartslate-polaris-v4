@@ -34,9 +34,9 @@ export interface FallbackDecision {
 }
 
 /**
- * Determine if error should trigger fallback to Opus 4
+ * Determine if error should trigger fallback to Sonnet 4
  */
-export function shouldFallbackToOpus(error: Error): FallbackDecision {
+export function shouldFallbackToSonnet4(error: Error): FallbackDecision {
   const decision: FallbackDecision = {
     shouldFallback: false,
     originalError: error,

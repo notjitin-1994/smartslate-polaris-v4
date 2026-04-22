@@ -118,7 +118,7 @@ export const resumeUIHelpers = {
         blueprintId: data.blueprintId,
         progress: data.progress,
         lastSaved: new Date(data.lastSaved),
-        timeAgo: this.getTimeAgo(new Date(data.lastSaved), now),
+        timeAgo: this.getTimeAgo(new Date(data.lastSaved || Date.now()), now),
         canResume: data.progress > 0 && data.progress < 100,
       })),
     };

@@ -30,7 +30,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { getAvailableUpgradePlans } from '@/lib/utils/tierDisplay';
 import { CustomCheckoutButton } from '@/components/pricing/CustomCheckoutButton';
 import { RazorpayProvider } from '@/components/providers/RazorpayProvider';
-import { ToastProvider } from '@/src/components/ui/Toast';
+import { ToastProvider } from '@/components/ui/toast';
 import { getPlanPrice } from '@/lib/config/razorpayPlans';
 import { Footer } from '@/components/layout/Footer';
 import TeamPlanModal from '@/components/pricing/TeamPlanModal';

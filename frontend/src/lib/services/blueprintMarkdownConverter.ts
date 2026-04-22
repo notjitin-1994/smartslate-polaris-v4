@@ -3,8 +3,8 @@
  * Converts blueprint JSON to formatted markdown document
  */
 
-import { formatSectionTitle, formatDate, formatCurrency } from '@/components/blueprint/utils';
-import type { BlueprintJSON } from '@/components/blueprint/types';
+import { formatSectionTitle, formatDate, formatCurrency } from '@/components/features/blueprints/utils';
+import type { BlueprintJSON } from '@/components/features/blueprints/types';
 
 /**
  * Convert blueprint JSON to markdown

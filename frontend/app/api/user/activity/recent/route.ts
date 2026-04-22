@@ -64,55 +64,49 @@ export async function GET(request: NextRequest) {
 
     // Get total count for pagination
     console.log('[API Activity] Fetching activity count for user:', user.id);
-    const { data: totalCount, error: countError } = await supabase.rpc('get_user_activity_count', {
-      p_user_id: user.id,
-    });
-
-    if (countError) {
-      console.error('[API Activity] Error fetching activity count:', {
-        message: countError.message,
-        code: countError.code,
-        details: countError.details,
-        userId: user.id
+    let totalCount = 0;
+    try {
+      const { data, error: countError } = await supabase.rpc('get_user_activity_count', {
+        p_user_id: user.id,
       });
-      return NextResponse.json(
-        { error: 'Failed to fetch activity count', details: countError.message },
-        { status: 500 }
-      );
+      if (!countError) {
+        totalCount = data || 0;
+      } else {
+        console.warn('[API Activity] RPC get_user_activity_count not available or failed:', countError.message);
+      }
+    } catch (e) {
+      console.warn('[API Activity] Failed to call RPC get_user_activity_count');
     }
 
     // Get recent activity with pagination
     console.log('[API Activity] Fetching recent activity for user:', user.id, { limit, offset });
-    const { data: activities, error: activitiesError } = await supabase.rpc(
-      'get_user_recent_activity',
-      {
-        p_user_id: user.id,
-        p_limit: limit,
-        p_offset: offset,
-      }
-    );
-
-    if (activitiesError) {
-      console.error('[API Activity] Error fetching recent activity:', {
-        message: activitiesError.message,
-        code: activitiesError.code,
-        details: activitiesError.details,
-        userId: user.id
-      });
-      return NextResponse.json(
-        { error: 'Failed to fetch recent activity', details: activitiesError.message },
-        { status: 500 }
+    let activities: any[] = [];
+    try {
+      const { data, error: activitiesError } = await supabase.rpc(
+        'get_user_recent_activity',
+        {
+          p_user_id: user.id,
+          p_limit: limit,
+          p_offset: offset,
+        }
       );
+      if (!activitiesError) {
+        activities = data || [];
+      } else {
+        console.warn('[API Activity] RPC get_user_recent_activity not available or failed:', activitiesError.message);
+      }
+    } catch (e) {
+      console.warn('[API Activity] Failed to call RPC get_user_recent_activity');
     }
 
     // Calculate has_more flag
-    const hasMore = offset + limit < (totalCount || 0);
+    const hasMore = offset + limit < totalCount;
 
     // Return paginated response
     return NextResponse.json({
-      activities: activities || [],
+      activities,
       pagination: {
-        total: totalCount || 0,
+        total: totalCount,
         limit,
         offset,
         has_more: hasMore,

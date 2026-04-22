@@ -16,6 +16,16 @@ export interface Database {
           last_name: string | null;
           avatar_url: string | null;
           preferences: Json;
+          subscription_tier: string;
+          user_role: string;
+          subscription_metadata: Json;
+          role_assigned_at: string;
+          role_assigned_by: string | null;
+          blueprint_creation_count: number;
+          blueprint_saving_count: number;
+          blueprint_creation_limit: number;
+          blueprint_saving_limit: number;
+          blueprint_usage_metadata: Json;
           created_at: string;
           updated_at: string;
         };
@@ -26,6 +36,16 @@ export interface Database {
           last_name?: string | null;
           avatar_url?: string | null;
           preferences?: Json;
+          subscription_tier?: string;
+          user_role?: string;
+          subscription_metadata?: Json;
+          role_assigned_at?: string;
+          role_assigned_by?: string | null;
+          blueprint_creation_count?: number;
+          blueprint_saving_count?: number;
+          blueprint_creation_limit?: number;
+          blueprint_saving_limit?: number;
+          blueprint_usage_metadata?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -35,6 +55,16 @@ export interface Database {
           last_name?: string | null;
           avatar_url?: string | null;
           preferences?: Json;
+          subscription_tier?: string;
+          user_role?: string;
+          subscription_metadata?: Json;
+          role_assigned_at?: string;
+          role_assigned_by?: string | null;
+          blueprint_creation_count?: number;
+          blueprint_saving_count?: number;
+          blueprint_creation_limit?: number;
+          blueprint_saving_limit?: number;
+          blueprint_usage_metadata?: Json;
           updated_at?: string;
         };
         Relationships: [
@@ -105,6 +135,139 @@ export interface Database {
           },
         ];
       };
+      presentations: {
+        Row: {
+          id: string;
+          blueprint_id: string;
+          user_id: string;
+          title: string;
+          description: string | null;
+          author: string | null;
+          settings: Json;
+          metadata: Json;
+          status: 'draft' | 'published' | 'archived';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          blueprint_id: string;
+          user_id: string;
+          title: string;
+          description?: string | null;
+          author?: string | null;
+          settings?: Json;
+          metadata?: Json;
+          status?: 'draft' | 'published' | 'archived';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          description?: string | null;
+          author?: string | null;
+          settings?: Json;
+          metadata?: Json;
+          status?: 'draft' | 'published' | 'archived';
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'presentations_blueprint_id_fkey';
+            columns: ['blueprint_id'];
+            isOneToOne: false;
+            referencedRelation: 'blueprint_generator';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'presentations_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      presentation_slides: {
+        Row: {
+          id: string;
+          presentation_id: string;
+          slide_index: number;
+          slide_id: string;
+          slide_type:
+            | 'cover'
+            | 'section'
+            | 'content'
+            | 'metrics'
+            | 'module'
+            | 'timeline'
+            | 'resources'
+            | 'chart';
+          title: string;
+          subtitle: string | null;
+          content: Json;
+          transition: 'fade' | 'slide' | 'zoom' | 'none';
+          duration: number | null;
+          speaker_notes: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          presentation_id: string;
+          slide_index: number;
+          slide_id: string;
+          slide_type:
+            | 'cover'
+            | 'section'
+            | 'content'
+            | 'metrics'
+            | 'module'
+            | 'timeline'
+            | 'resources'
+            | 'chart';
+          title: string;
+          subtitle?: string | null;
+          content?: Json;
+          transition?: 'fade' | 'slide' | 'zoom' | 'none';
+          duration?: number | null;
+          speaker_notes?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          slide_index?: number;
+          slide_id?: string;
+          slide_type?:
+            | 'cover'
+            | 'section'
+            | 'content'
+            | 'metrics'
+            | 'module'
+            | 'timeline'
+            | 'resources'
+            | 'chart';
+          title?: string;
+          subtitle?: string | null;
+          content?: Json;
+          transition?: 'fade' | 'slide' | 'zoom' | 'none';
+          duration?: number | null;
+          speaker_notes?: string | null;
+          metadata?: Json;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'presentation_slides_presentation_id_fkey';
+            columns: ['presentation_id'];
+            isOneToOne: false;
+            referencedRelation: 'presentations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -115,6 +278,26 @@ export interface Database {
         Returns: Json;
       };
       validate_static_answers: unknown;
+      create_user_profile: {
+        Args: {
+          p_user_id: string;
+          p_full_name?: string | null;
+          p_first_name?: string | null;
+          p_last_name?: string | null;
+          p_avatar_url?: string | null;
+        };
+        Returns: Database['public']['Tables']['user_profiles']['Row'];
+      };
+      get_or_create_user_profile: {
+        Args: {
+          p_user_id: string;
+          p_full_name?: string | null;
+          p_first_name?: string | null;
+          p_last_name?: string | null;
+          p_avatar_url?: string | null;
+        };
+        Returns: Database['public']['Tables']['user_profiles']['Row'];
+      };
     };
     Enums: Record<string, never>;
   };

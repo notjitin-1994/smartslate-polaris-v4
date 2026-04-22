@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { checkAdminAccess } from '@/lib/auth/adminAuth';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { ToastProvider } from '@/src/components/ui/Toast';
+import { ToastProvider } from '@/components/ui/toast';
 import AdminLayout from '@/components/admin/AdminLayout';
 
 export const metadata = {

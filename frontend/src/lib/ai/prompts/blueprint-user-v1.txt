@@ -1,0 +1,214 @@
+Generate comprehensive learning blueprint:
+
+CONTEXT:
+Organization: {organization} | Industry: {industry} | Role: {role}
+
+STATIC ANSWERS (Phase 1):
+{static_answers}
+
+DYNAMIC ANSWERS (Phase 2):
+{dynamic_answers}
+
+OBJECTIVES:
+{objectives}
+
+{test_mode_instructions}
+
+OUTPUT SCHEMA:
+{
+  "metadata": {
+    "title": "Blueprint Title",
+    "organization": "{organization}",
+    "role": "{role}",
+    "generated_at": "{generated_at}",
+    "version": "1.0",
+    "model": "gemini-3.1-pro-preview"
+  },
+  "executive_summary": {
+    "content": "2-3 paragraph executive summary",
+    "displayType": "markdown"
+  },
+  "learning_objectives": {
+    "objectives": [
+      {
+        "id": "obj1",
+        "title": "Objective title",
+        "description": "Detailed description",
+        "metric": "How success is measured",
+        "baseline": "Current state",
+        "target": "Desired outcome",
+        "due_date": "Target completion date"
+      }
+    ],
+    "displayType": "infographic",
+    "chartConfig": {
+      "type": "radar",
+      "metrics": ["baseline", "target"]
+    }
+  },
+  "target_audience": {
+    "demographics": {
+      "roles": ["Role 1", "Role 2"],
+      "experience_levels": ["Junior", "Mid", "Senior"],
+      "department_distribution": [
+        {"department": "Engineering", "percentage": 40},
+        {"department": "Product", "percentage": 30}
+      ]
+    },
+    "learning_preferences": {
+      "modalities": [
+        {"type": "Visual", "percentage": 35},
+        {"type": "Hands-on", "percentage": 45}
+      ]
+    },
+    "displayType": "infographic"
+  },
+  "instructional_strategy": {
+    "overview": "Strategy narrative",
+    "modalities": [
+      {
+        "type": "Self-paced online",
+        "rationale": "Why this modality fits",
+        "allocation_percent": 40,
+        "tools": ["Tool 1", "Tool 2"]
+      }
+    ],
+    "cohort_model": "Description of cohort approach",
+    "accessibility_considerations": ["Consideration 1", "Consideration 2"],
+    "displayType": "markdown"
+  },
+  "content_outline": {
+    "modules": [
+      {
+        "module_id": "m1",
+        "title": "Module Title",
+        "description": "Module overview",
+        "topics": ["Topic 1", "Topic 2"],
+        "duration": "2 weeks",
+        "delivery_method": "Asynchronous + Live sessions",
+        "learning_activities": [
+          {
+            "activity": "Activity description",
+            "type": "Exercise/Discussion/Project",
+            "duration": "30 minutes"
+          }
+        ],
+        "assessment": {
+          "type": "Quiz/Project/Presentation",
+          "description": "Assessment details"
+        }
+      }
+    ],
+    "displayType": "timeline"
+  },
+  "resources": {
+    "human_resources": [
+      {"role": "Instructional Designer", "fte": 0.5, "duration": "3 months"},
+      {"role": "Subject Matter Expert", "fte": 0.25, "duration": "6 weeks"}
+    ],
+    "tools_and_platforms": [
+      {"category": "LMS", "name": "Canvas/Moodle", "cost_type": "Subscription"},
+      {"category": "Content Authoring", "name": "Articulate 360", "cost_type": "License"}
+    ],
+    "budget": {
+      "currency": "USD",
+      "items": [
+        {"item": "Content Development", "amount": 50000},
+        {"item": "Tools & Licenses", "amount": 10000}
+      ],
+      "total": 60000
+    },
+    "displayType": "table"
+  },
+  "assessment_strategy": {
+    "overview": "Assessment philosophy and approach",
+    "kpis": [
+      {
+        "metric": "Completion Rate",
+        "target": "85%",
+        "measurement_method": "LMS analytics",
+        "frequency": "Weekly"
+      }
+    ],
+    "evaluation_methods": [
+      {
+        "method": "Knowledge Checks",
+        "timing": "End of each module",
+        "weight": "20%"
+      }
+    ],
+    "displayType": "infographic",
+    "chartConfig": {
+      "type": "bar",
+      "metric": "target"
+    }
+  },
+  "implementation_timeline": {
+    "phases": [
+      {
+        "phase": "Design",
+        "start_date": "{current_date}",
+        "end_date": "{future_date}",
+        "milestones": ["Milestone 1", "Milestone 2"],
+        "dependencies": []
+      }
+    ],
+    "critical_path": ["Phase 1", "Phase 2"],
+    "displayType": "timeline"
+  },
+  "risk_mitigation": {
+    "risks": [
+      {
+        "risk": "Low engagement",
+        "probability": "Medium",
+        "impact": "High",
+        "mitigation_strategy": "Specific mitigation actions"
+      }
+    ],
+    "contingency_plans": ["Plan A", "Plan B"],
+    "displayType": "table"
+  },
+  "success_metrics": {
+    "metrics": [
+      {
+        "metric": "Metric name",
+        "current_baseline": "Current value",
+        "target": "Target value",
+        "measurement_method": "How to measure",
+        "timeline": "When to achieve"
+      }
+    ],
+    "reporting_cadence": "Weekly/Monthly",
+    "dashboard_requirements": ["Requirement 1", "Requirement 2"],
+    "displayType": "infographic"
+  },
+  "sustainability_plan": {
+    "content": "Long-term sustainability narrative",
+    "maintenance_schedule": {
+      "review_frequency": "Quarterly",
+      "update_triggers": ["Trigger 1", "Trigger 2"]
+    },
+    "scaling_considerations": ["Consideration 1", "Consideration 2"],
+    "displayType": "markdown"
+  }
+}
+
+CRITICAL REQUIREMENTS:
+1. Return ONLY valid JSON - Do NOT use markdown code blocks (no ```json, no ```, no backticks)
+   Start your response with { and end with }. No text before or after the JSON.
+2. Include displayType for EVERY top-level section (except metadata)
+3. Use specific, contextual content (not generic templates)
+4. Include chartConfig when displayType is "chart" or "infographic" with charts
+5. Ensure all dates are ISO format strings
+6. All monetary amounts should be numbers
+7. Percentages should be numbers (0-100)
+8. Be comprehensive but ensure ALL content is COMPLETE - do NOT exceed token limits
+9. **ABSOLUTE REQUIREMENT**: You must generate a COMPLETE response. If approaching token limits:
+   - Reduce description lengths to 80-120 characters
+   - Use concise but informative language
+   - Prioritize completeness over verbosity
+   - NEVER truncate mid-section or mid-array
+10. Quality Priority: Complete blueprint > Verbose descriptions
+11. REMINDER: Your entire response must be valid, COMPLETE JSON only. No markdown formatting.
+12. An incomplete/truncated response will be REJECTED and you will be called again.
+{test_mode_reminder}

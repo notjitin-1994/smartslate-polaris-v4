@@ -162,7 +162,7 @@ export const actionHistory = new ActionHistoryManager();
 
 // Zustand middleware for action history
 export const withActionHistory =
-  <T extends object = any>(config: any, historyManager: ActionHistoryManager = actionHistory) =>
+  <T extends object>(config: any, historyManager: ActionHistoryManager = actionHistory) =>
   (set: any, get: any, api: any) => {
     const store = config(
       (...args: any[]) => {

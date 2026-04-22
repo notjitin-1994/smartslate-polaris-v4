@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClientWithLogging, getServerSession } from '@/lib/supabase/server';
-import { generateDynamicQuestionsV2 } from '@/src/lib/services/dynamicQuestionGenerationV2';
+import { generateDynamicQuestionsV2 } from '@/lib/services/dynamicQuestionGenerationV2';
 import { z } from 'zod';
 import { getClientForUser } from '@/lib/auth/adminUtils';
 

@@ -2,234 +2,107 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { UIState, NotificationData } from './types';
 
-export type NotificationType = 'success' | 'error' | 'warning' | 'info';
-
-export interface Notification {
-  id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  duration?: number;
-  timestamp: Date;
-  read: boolean;
-}
-
-export type ModalType =
-  | 'confirmation'
-  | 'export-preview'
-  | 'blueprint-details'
-  | 'settings'
-  | 'help'
-  | 'none';
-
-export interface ModalState {
-  type: ModalType;
-  isOpen: boolean;
-  data?: any;
-  onConfirm?: () => void;
-  onCancel?: () => void;
-}
-
-export type SidebarState = 'expanded' | 'collapsed' | 'hidden';
-
-export interface UIState {
-  // Navigation state
-  currentPage: string;
-  sidebarState: SidebarState;
-  breadcrumbs: Array<{ label: string; href?: string }>;
-
-  // Modal management
-  modal: ModalState;
-
-  // Notifications
-  notifications: Notification[];
-  unreadCount: number;
-
-  // Loading states
-  globalLoading: boolean;
-  loadingStates: Record<string, boolean>;
-
-  // Theme and preferences
-  theme: 'light' | 'dark' | 'system';
-  sidebarWidth: number;
-  compactMode: boolean;
-
-  // Navigation actions
-  setCurrentPage: (page: string) => void;
-  setSidebarState: (state: SidebarState) => void;
-  setBreadcrumbs: (breadcrumbs: Array<{ label: string; href?: string }>) => void;
-  addBreadcrumb: (breadcrumb: { label: string; href?: string }) => void;
-  removeBreadcrumb: (index: number) => void;
-
-  // Modal actions
-  openModal: (type: ModalType, data?: any, onConfirm?: () => void, onCancel?: () => void) => void;
-  closeModal: () => void;
-  setModalData: (data: any) => void;
-
-  // Notification actions
-  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
-  removeNotification: (id: string) => void;
-  markNotificationRead: (id: string) => void;
-  markAllNotificationsRead: () => void;
-  clearNotifications: () => void;
-
-  // Loading actions
-  setGlobalLoading: (loading: boolean) => void;
-  setLoadingState: (key: string, loading: boolean) => void;
-  clearLoadingState: (key: string) => void;
-  clearAllLoadingStates: () => void;
-
-  // Theme and preference actions
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
-  setSidebarWidth: (width: number) => void;
-  setCompactMode: (compact: boolean) => void;
-
-  // Utility actions
-  reset: () => void;
-}
-
-const defaultModal: ModalState = {
-  type: 'none',
-  isOpen: false,
-  data: undefined,
-  onConfirm: undefined,
-  onCancel: undefined,
+const initialState = {
+  currentStep: 0,
+  totalSteps: 0,
+  canGoNext: false,
+  canGoPrevious: false,
+  modals: {
+    resumeDialog: false,
+    conflictDialog: false,
+    exportDialog: false,
+    settingsDialog: false,
+  },
+  notifications: [],
+  loadingStates: {
+    saving: false,
+    loading: false,
+    exporting: false,
+  },
 };
 
 export const useUIStore = create<UIState>()(
   persist(
     (set, get) => ({
-      // Navigation state
-      currentPage: '/',
-      sidebarState: 'expanded',
-      breadcrumbs: [],
+      ...initialState,
 
-      // Modal management
-      modal: defaultModal,
+      setCurrentStep: (step: number) => {
+        const state = get();
+        const maxStep = Math.max(0, state.totalSteps - 1);
+        const newStep = Math.max(0, Math.min(step, maxStep));
 
-      // Notifications
-      notifications: [],
-      unreadCount: 0,
-
-      // Loading states
-      globalLoading: false,
-      loadingStates: {},
-
-      // Theme and preferences
-      theme: 'system',
-      sidebarWidth: 280,
-      compactMode: false,
-
-      // Navigation actions
-      setCurrentPage: (page) => set({ currentPage: page }),
-
-      setSidebarState: (state) => set({ sidebarState: state }),
-
-      setBreadcrumbs: (breadcrumbs) => set({ breadcrumbs }),
-
-      addBreadcrumb: (breadcrumb) => {
-        set((state) => ({
-          breadcrumbs: [...state.breadcrumbs, breadcrumb],
-        }));
-      },
-
-      removeBreadcrumb: (index) => {
-        set((state) => ({
-          breadcrumbs: state.breadcrumbs.filter((_, i) => i !== index),
-        }));
-      },
-
-      // Modal actions
-      openModal: (type, data, onConfirm, onCancel) => {
         set({
-          modal: {
-            type,
-            isOpen: true,
-            data,
-            onConfirm,
-            onCancel,
-          },
+          currentStep: newStep,
+          canGoNext: newStep < maxStep,
+          canGoPrevious: newStep > 0,
         });
       },
 
-      closeModal: () => {
-        set({ modal: defaultModal });
+      setTotalSteps: (steps: number) => {
+        const state = get();
+        const newSteps = Math.max(1, steps);
+
+        set({
+          totalSteps: newSteps,
+          canGoNext: state.currentStep < newSteps - 1,
+          canGoPrevious: state.currentStep > 0,
+        });
       },
 
-      setModalData: (data) => {
+      setCanGoNext: (canGo: boolean) => {
+        set({ canGoNext: canGo });
+      },
+
+      setCanGoPrevious: (canGo: boolean) => {
+        set({ canGoPrevious: canGo });
+      },
+
+      openModal: (modal: keyof UIState['modals']) => {
         set((state) => ({
-          modal: { ...state.modal, data },
+          modals: {
+            ...state.modals,
+            [modal]: true,
+          },
         }));
       },
 
-      // Notification actions
-      addNotification: (notification) => {
-        const newNotification: Notification = {
+      closeModal: (modal: keyof UIState['modals']) => {
+        set((state) => ({
+          modals: {
+            ...state.modals,
+            [modal]: false,
+          },
+        }));
+      },
+
+      addNotification: (notification: Omit<NotificationData, 'id'>) => {
+        const id = `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const newNotification: NotificationData = {
           ...notification,
-          id: `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          timestamp: new Date(),
-          read: false,
+          id,
         };
 
         set((state) => ({
-          notifications: [newNotification, ...state.notifications],
-          unreadCount: state.unreadCount + 1,
+          notifications: [...state.notifications, newNotification],
         }));
 
         // Auto-remove notification after duration
         if (notification.duration && notification.duration > 0) {
           setTimeout(() => {
-            get().removeNotification(newNotification.id);
+            get().removeNotification(id);
           }, notification.duration);
         }
       },
 
-      removeNotification: (id) => {
-        set((state) => {
-          const notification = state.notifications.find((n) => n.id === id);
-          const wasUnread = notification && !notification.read;
-
-          return {
-            notifications: state.notifications.filter((n) => n.id !== id),
-            unreadCount: wasUnread ? state.unreadCount - 1 : state.unreadCount,
-          };
-        });
-      },
-
-      markNotificationRead: (id) => {
-        set((state) => {
-          const notification = state.notifications.find((n) => n.id === id);
-          if (notification && !notification.read) {
-            return {
-              notifications: state.notifications.map((n) =>
-                n.id === id ? { ...n, read: true } : n
-              ),
-              unreadCount: state.unreadCount - 1,
-            };
-          }
-          return state;
-        });
-      },
-
-      markAllNotificationsRead: () => {
+      removeNotification: (id: string) => {
         set((state) => ({
-          notifications: state.notifications.map((n) => ({ ...n, read: true })),
-          unreadCount: 0,
+          notifications: state.notifications.filter((n) => n.id !== id),
         }));
       },
 
-      clearNotifications: () => {
-        set({
-          notifications: [],
-          unreadCount: 0,
-        });
-      },
-
-      // Loading actions
-      setGlobalLoading: (loading) => set({ globalLoading: loading }),
-
-      setLoadingState: (key, loading) => {
+      setLoadingState: (key: keyof UIState['loadingStates'], loading: boolean) => {
         set((state) => ({
           loadingStates: {
             ...state.loadingStates,
@@ -238,50 +111,127 @@ export const useUIStore = create<UIState>()(
         }));
       },
 
-      clearLoadingState: (key) => {
-        set((state) => {
-          const newStates = { ...state.loadingStates };
-          delete newStates[key];
-          return { loadingStates: newStates };
-        });
-      },
-
-      clearAllLoadingStates: () => {
-        set({ loadingStates: {} });
-      },
-
-      // Theme and preference actions
-      setTheme: (theme) => set({ theme }),
-
-      setSidebarWidth: (width) => set({ sidebarWidth: width }),
-
-      setCompactMode: (compact) => set({ compactMode: compact }),
-
-      // Utility actions
       reset: () => {
-        set({
-          currentPage: '/',
-          sidebarState: 'expanded',
-          breadcrumbs: [],
-          modal: defaultModal,
-          notifications: [],
-          unreadCount: 0,
-          globalLoading: false,
-          loadingStates: {},
-          theme: 'system',
-          sidebarWidth: 280,
-          compactMode: false,
-        });
+        set(initialState);
       },
     }),
     {
       name: 'ui-storage',
       partialize: (state) => ({
-        theme: state.theme,
-        sidebarWidth: state.sidebarWidth,
-        compactMode: state.compactMode,
-        sidebarState: state.sidebarState,
+        currentStep: state.currentStep,
+        totalSteps: state.totalSteps,
+        modals: {
+          settingsDialog: state.modals.settingsDialog, // Only persist settings modal
+        },
       }),
     }
   )
 );
+
+// Selectors for better performance
+export const uiSelectors = {
+  currentStep: (state: UIState) => state.currentStep,
+  totalSteps: (state: UIState) => state.totalSteps,
+  canGoNext: (state: UIState) => state.canGoNext,
+  canGoPrevious: (state: UIState) => state.canGoPrevious,
+  modals: (state: UIState) => state.modals,
+  notifications: (state: UIState) => state.notifications,
+  loadingStates: (state: UIState) => state.loadingStates,
+
+  // Computed selectors
+  progress: (state: UIState) => {
+    if (state.totalSteps === 0) return 0;
+    return ((state.currentStep + 1) / state.totalSteps) * 100;
+  },
+
+  isFirstStep: (state: UIState) => state.currentStep === 0,
+  isLastStep: (state: UIState) => state.currentStep === state.totalSteps - 1,
+
+  // Modal helpers
+  isModalOpen: (modal: keyof UIState['modals']) => (state: UIState) => {
+    return state.modals[modal];
+  },
+
+  // Notification helpers
+  notificationsByType: (type: NotificationData['type']) => (state: UIState) => {
+    return state.notifications.filter((n) => n.type === type);
+  },
+
+  hasNotifications: (state: UIState) => state.notifications.length > 0,
+
+  // Loading helpers
+  isLoading: (state: UIState) => {
+    return Object.values(state.loadingStates).some((loading) => loading);
+  },
+
+  isSaving: (state: UIState) => state.loadingStates.saving,
+  isLoadingData: (state: UIState) => state.loadingStates.loading,
+  isExporting: (state: UIState) => state.loadingStates.exporting,
+};
+
+// Helper functions for common UI operations
+export const uiHelpers = {
+  // Navigation helpers
+  goToNextStep: () => {
+    const state = useUIStore.getState();
+    if (state.canGoNext) {
+      state.setCurrentStep(state.currentStep + 1);
+    }
+  },
+
+  goToPreviousStep: () => {
+    const state = useUIStore.getState();
+    if (state.canGoPrevious) {
+      state.setCurrentStep(state.currentStep - 1);
+    }
+  },
+
+  goToStep: (step: number) => {
+    const state = useUIStore.getState();
+    state.setCurrentStep(step);
+  },
+
+  // Notification helpers
+  showSuccess: (title: string, message: string, duration = 5000) => {
+    useUIStore.getState().addNotification({
+      type: 'success',
+      title,
+      message,
+      duration,
+    });
+  },
+
+  showError: (title: string, message: string, duration = 0) => {
+    useUIStore.getState().addNotification({
+      type: 'error',
+      title,
+      message,
+      duration,
+    });
+  },
+
+  showWarning: (title: string, message: string, duration = 7000) => {
+    useUIStore.getState().addNotification({
+      type: 'warning',
+      title,
+      message,
+      duration,
+    });
+  },
+
+  showInfo: (title: string, message: string, duration = 5000) => {
+    useUIStore.getState().addNotification({
+      type: 'info',
+      title,
+      message,
+      duration,
+    });
+  },
+
+  clearAllNotifications: () => {
+    const state = useUIStore.getState();
+    state.notifications.forEach((notification) => {
+      state.removeNotification(notification.id);
+    });
+  },
+};

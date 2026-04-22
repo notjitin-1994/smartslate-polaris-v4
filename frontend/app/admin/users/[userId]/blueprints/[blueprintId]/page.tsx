@@ -25,7 +25,7 @@ import { Button } from '@/components/ui/button';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { useToast } from '@/src/components/ui/Toast';
+import { useToast } from '@/components/ui/toast';
 import { InteractiveBlueprintDashboard } from '@/components/features/blueprints/InteractiveBlueprintDashboard';
 import type { BlueprintJSON } from '@/components/features/blueprints/types';
 import { DynamicQuestionRenderer } from '@/components/demo-dynamicv2/DynamicQuestionRenderer';

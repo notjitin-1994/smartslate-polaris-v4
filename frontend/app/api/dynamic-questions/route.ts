@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { generateDynamicQuestionsV2 } from '@/src/lib/services/dynamicQuestionGenerationV2';
+import { generateDynamicQuestionsV2 } from '@/lib/services/dynamicQuestionGenerationV2';
 import { createServiceLogger } from '@/lib/logging';
 
 const logger = createServiceLogger('api');

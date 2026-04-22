@@ -45,7 +45,7 @@ export const invalidateQueries = {
 
 // Prefetch helpers
 export const prefetchQueries = {
-  blueprint: async (_id: string) => {
+  blueprint: async (id: string) => {
     // This would be implemented with actual API calls
     // await queryClient.prefetchQuery({
     //   queryKey: ['blueprints', 'detail', id],

@@ -20,14 +20,6 @@ interface TimelineChartProps {
   className?: string;
 }
 
-/**
-* Render a custom timeline tooltip showing formatted date, learning hours, progress and milestones.
-* @example
-* timelineTooltip({ active: true, payload: [{ payload: { learningHours: 3, progressPercentage: 75, milestones: ['Onboarding'] } }], label: '2025-11-12T00:00:00Z' })
-* <motion.div>...Tooltip JSX...</motion.div>
-* @param {{{ active?: boolean; payload?: Array<{ payload: TimelineData }>; label?: string }}} {{props}} - Destructured tooltip props: active flag, payload array and ISO date label.
-* @returns {{JSX.Element|null}} Rendered tooltip JSX when active and payload exist, otherwise null.
-*/
 const CustomTooltip = ({
   active,
   payload,
@@ -75,14 +67,6 @@ const CustomTooltip = ({
   return null;
 };
 
-/**
-* Renders a responsive timeline area chart showing learning hours and progress with milestone reference lines.
-* @example
-* TimelineChart({ data: [{ date: '2023-01-01', learningHours: 2, progressPercentage: 10, milestones: [] }], className: 'w-full' })
-* <TimelineChart data={[{...}]} className="w-full" /> // React element rendering the timeline chart
-* @param {{TimelineChartProps}} {{props}} - Component props: includes a data array of timeline points and an optional className.
-* @returns {{React.JSX.Element}} The rendered React element for the timeline chart.
-**/
 export function TimelineChart({ data, className }: TimelineChartProps): React.JSX.Element {
   // Transform data for better chart display
   const chartData = data.map((item) => ({

@@ -17,21 +17,6 @@ interface KPICardProps {
   prefix?: string;
 }
 
-/**
-* Renders an animated KPI card that counts up to a numeric value with icon, title, and an animated progress bar.
-* @example
-* KPICard({ title: 'Active Users', value: 1200, icon: <UserIcon />, color: 'bg-blue-500', delay: 0.2, suffix: '+', prefix: '' })
-* <motion.div>...JSX Element...</motion.div>
-* @param {KPICardProps} props - Props for the KPI card component.
-* @param {string} props.title - Title displayed below the value.
-* @param {number} props.value - Target numeric value to animate to.
-* @param {React.ReactNode} props.icon - Icon displayed in the card header.
-* @param {string} props.color - Tailwind CSS color classes used for accents and background gradient.
-* @param {number} [props.delay=0] - Optional delay (in seconds) before the count and entrance animations start.
-* @param {string} [props.suffix=''] - Optional string appended to the displayed value.
-* @param {string} [props.prefix=''] - Optional string prepended to the displayed value.
-* @returns {React.JSX.Element} A JSX element representing the KPI card with animated count and progress bar.
-*/
 function KPICard({
   title,
   value,
@@ -132,14 +117,6 @@ interface KPICardsProps {
   className?: string;
 }
 
-/**
-* Renders a responsive grid of KPI cards based on provided KPI values and optional container className.
-* @example
-* KPICards({ kpis: { totalLearningHours: 120, totalModules: 10, completedModules: 7, totalResources: 25 }, className: 'mt-4' })
-* <KPICards ... /> // returns a JSX.Element containing four KPICard components
-* @param {{KPICardsProps}} {{props}} - Props object containing kpis (totalLearningHours, totalModules, completedModules, totalResources) and optional className.
-* @returns {{React.JSX.Element}} Rendered JSX element containing the KPI cards.
-**/
 export function KPICards({ kpis, className }: KPICardsProps): React.JSX.Element {
   const cards = [
     {

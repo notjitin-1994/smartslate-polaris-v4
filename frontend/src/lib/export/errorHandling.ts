@@ -113,7 +113,7 @@ export class DefaultErrorHandler implements ErrorHandler {
     alert(message);
   }
 
-  private showGenericError(error: Error): void {
+  private showGenericError(_error: Error): void {
     alert('Export failed. Please try again or contact support if the issue persists.');
   }
 }

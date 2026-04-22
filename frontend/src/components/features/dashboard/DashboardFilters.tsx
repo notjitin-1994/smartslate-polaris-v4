@@ -11,14 +11,6 @@ interface DashboardFiltersProps {
   className?: string;
 }
 
-/**
-* Renders the dashboard filters panel allowing users to set date range, module status, categories, and display settings; syncs changes with the dashboard store.
-* @example
-* DashboardFilters({ className: 'my-dashboard-filters' })
-* React.JSX.Element
-* @param {{string}} {{className}} - Optional CSS class name to apply to the component root.
-* @returns {{React.JSX.Element}} Rendered dashboard filters React element.
-**/
 export function DashboardFilters({ className }: DashboardFiltersProps): React.JSX.Element {
   const { filters, setFilters, resetFilters, settings, setSettings } = useDashboardStore();
 
@@ -62,7 +54,7 @@ export function DashboardFilters({ className }: DashboardFiltersProps): React.JS
           </div>
           <Button
             variant="outline"
-            size="sm"
+            size="small"
             onClick={resetFilters}
             className="text-slate-600 dark:text-slate-400"
           >

@@ -51,27 +51,11 @@ const formatOptions: Array<{
   },
 ];
 
-/**
-* Renders an ExportButton that opens a dropdown with export format options for a dashboard and handles exporting.
-* @example
-* ExportButton({ data: { title: 'Sales Dashboard' }, elementId: 'dashboard-root', className: 'ml-2' })
-* <JSX.Element />
-* @param {ExportButtonProps} props - Props including dashboard data, target DOM element id and optional className.
-* @returns {React.JSX.Element} Rendered ExportButton component.
-**/
 export function ExportButton({ data, elementId, className }: ExportButtonProps): React.JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState<ExportFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-  * Export the dashboard in the given format while managing exporting state, errors, and filename sanitization.
-  * @example
-  * sync('png')
-  * Promise<void>
-  * @param {{ExportFormat}} {{format}} - The export format to use (e.g. 'png', 'jpg', 'pdf').
-  * @returns {{Promise<void>}} A promise that resolves when the export completes (no value).
-  **/
   const handleExport = async (format: ExportFormat) => {
     try {
       setIsExporting(format);

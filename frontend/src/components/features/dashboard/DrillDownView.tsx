@@ -11,14 +11,6 @@ interface DrillDownViewProps {
   className?: string;
 }
 
-/**
-* Render a modal-style drill-down overlay that shows the current drill path, navigation controls, and content.
-* @example
-* DrillDownView({ className: 'my-modal' })
-* <DrillDownView className="my-modal" />
-* @param {{DrillDownViewProps}} {{props}} - Props object containing optional className to customize wrapper classes.
-* @returns {{React.JSX.Element}} Rendered drill-down overlay element.
-**/
 export function DrillDownView({ className }: DrillDownViewProps): React.JSX.Element {
   const { drillDownState, drillUp, resetDrillDown } = useDrillDown();
 
@@ -52,7 +44,7 @@ export function DrillDownView({ className }: DrillDownViewProps): React.JSX.Elem
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
-                size="sm"
+                size="small"
                 onClick={drillUp}
                 disabled={drillDownState.path.length <= 1}
               >
@@ -65,7 +57,7 @@ export function DrillDownView({ className }: DrillDownViewProps): React.JSX.Elem
                 <p className="text-sm text-slate-600 dark:text-slate-400">{pathString}</p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={resetDrillDown}>
+            <Button variant="ghost" size="small" onClick={resetDrillDown}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -81,10 +73,10 @@ export function DrillDownView({ className }: DrillDownViewProps): React.JSX.Elem
               <span>Path: {pathString}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" onClick={drillUp}>
+              <Button variant="secondary" size="small" onClick={drillUp}>
                 Back
               </Button>
-              <Button variant="secondary" size="sm" onClick={resetDrillDown}>
+              <Button variant="secondary" size="small" onClick={resetDrillDown}>
                 Close
               </Button>
             </div>
@@ -100,14 +92,6 @@ interface DrillDownContentProps {
   filters: Record<string, unknown>;
 }
 
-/**
-* Render a nested drill-down view for an object-like data structure using provided filters.
-* @example
-* DrillDownContent({ data: { user: { name: "Alice", age: 30 }, status: "active" }, filters: { search: "Alice" } })
-* React element rendering nested cards for keys "User" and "Status" with corresponding values.
-* @param {{DrillDownContentProps}} {{props}} - Object containing `data` to render (primitive or nested objects) and optional `filters`.
-* @returns {{React.JSX.Element}} A React element representing the drill-down UI for the provided data.
-**/
 function DrillDownContent({ data, filters }: DrillDownContentProps): React.JSX.Element {
   if (typeof data === 'object' && data !== null) {
     return (

@@ -19,14 +19,6 @@ interface ActivityDistributionChartProps {
   className?: string;
 }
 
-/**
-* Renders a custom tooltip for the activity distribution chart showing the activity color, hours and percentage when active and payload available.
-* @example
-* activityTooltip({ active: true, payload: [{ payload: { color: '#ff0000', hours: 5, percentage: 12.3 }}], label: 'Monday' })
-* JSX.Element
-* @param {{active?: boolean; payload?: Array<{ payload: ActivityData }>; label?: string}} {active, payload, label} - Props object: active indicates tooltip visibility, payload contains chart data (payload[0].payload is ActivityData), label is the tooltip title.
-* @returns {{JSX.Element|null}} JSX tooltip element when active with valid payload, otherwise null.
-**/
 const CustomTooltip = ({
   active,
   payload,
@@ -65,14 +57,6 @@ const CustomTooltip = ({
   return null;
 };
 
-/**
-* Renders an animated SVG rectangle (bar) using framer-motion for a bottom-origin vertical scale-in effect.
-* @example
-* functionName(sample_arg1, sample_arg2)
-* <motion.rect ... />
-* @param {{any}} {{props}} - Component props object; expects at least { fill, payload, index } where index controls animation delay.
-* @returns {{JSX.Element}} Returns an animated <rect> element to be used within an SVG chart.
-**/
 const CustomBar = (props: any) => {
   const { fill, payload, index = 0, ...rest } = props;
   return (
@@ -88,15 +72,6 @@ const CustomBar = (props: any) => {
   );
 };
 
-/**
-* Renders an activity distribution bar chart showing time spent per category with legend and summary stats.
-* @example
-* ActivityDistributionChart([{ category: 'Reading', hours: 12, color: '#4F46E5', percentage: 40 }], 'my-chart')
-* <motion.div>...chart...</motion.div>
-* @param {{Array<{category: string, hours: number, color?: string, percentage?: number}>}} {{data}} - Array of activity objects each containing category, hours, optional color and optional percentage.
-* @param {{string}} {{className}} - Optional additional CSS class name applied to the root container.
-* @returns {{React.JSX.Element}} A React JSX element that renders the activity distribution chart.
-**/
 export function ActivityDistributionChart({
   data,
   className,

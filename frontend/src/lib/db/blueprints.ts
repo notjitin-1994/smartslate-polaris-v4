@@ -180,6 +180,7 @@ export class BlueprintService {
       .from('blueprint_generator')
       .select('*')
       .eq('user_id', userId)
+      .is('deleted_at', null) // Exclude soft-deleted blueprints
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -413,38 +414,17 @@ export class BlueprintService {
    */
   public async updateDynamicAnswers(
     blueprintId: string,
-    dynamicAnswers: Record<string, unknown>,
-    userId?: string
+    dynamicAnswers: Record<string, unknown>
   ): Promise<BlueprintRow> {
-    // Get current user if not provided (for backward compatibility)
-    if (!userId) {
-      try {
-        const {
-          data: { user },
-        } = await this.supabase.auth.getUser();
-        if (user) {
-          userId = user.id;
-        }
-      } catch (error) {
-        // If we can't get the user, continue without user filter (less secure but maintains compatibility)
-        console.warn('Could not get authenticated user for updateDynamicAnswers');
-      }
-    }
-
-    let query = this.supabase
+    const { data, error } = await this.supabase
       .from('blueprint_generator')
       .update({
         dynamic_answers: dynamicAnswers,
         status: 'draft', // Keep as draft until blueprint is generated
       })
-      .eq('id', blueprintId);
-
-    // Only add user_id filter if we have a userId (for security)
-    if (userId) {
-      query = query.eq('user_id', userId);
-    }
-
-    const { data, error } = await query.select().single();
+      .eq('id', blueprintId)
+      .select()
+      .single();
 
     if (error) {
       console.error('Error updating dynamic answers:', {
@@ -678,7 +658,34 @@ export class BlueprintService {
       }
 
       // 4) DRAFT status - normal workflow progression
-      // Check static answers completeness (support both V1 and V2 schemas)
+
+      // IMPORTANT: Check dynamic questions FIRST (before static validation)
+      // If dynamic questions exist, user has already completed static questionnaire
+      const hasDynamicQuestions =
+        Array.isArray(data.dynamic_questions) && (data.dynamic_questions as unknown[]).length > 0;
+
+      if (hasDynamicQuestions) {
+        console.log('[BlueprintService] Dynamic questions found, checking completion...');
+
+        // Check dynamic answers completeness
+        const dynamicComplete = this.areDynamicAnswersComplete(
+          data.dynamic_questions as unknown,
+          (data.dynamic_answers as Record<string, unknown> | null | undefined) || {}
+        );
+
+        if (!dynamicComplete) {
+          console.log(
+            '[BlueprintService] Dynamic questions exist but incomplete, routing to dynamic wizard'
+          );
+          return `/dynamic-wizard/${blueprintId}`;
+        }
+
+        // Dynamic answers complete → generate blueprint
+        console.log('[BlueprintService] All questionnaires complete, routing to generation');
+        return `/generating/${blueprintId}`;
+      }
+
+      // 5) No dynamic questions yet - check static answers completeness
       const staticComplete = this.isStaticComplete(
         data.static_answers as Record<string, unknown> | null | undefined
       );
@@ -688,31 +695,11 @@ export class BlueprintService {
         return `/static-wizard?bid=${blueprintId}`;
       }
 
-      // 5) Check dynamic questions presence
-      const hasDynamicQuestions =
-        Array.isArray(data.dynamic_questions) && (data.dynamic_questions as unknown[]).length > 0;
-
-      if (!hasDynamicQuestions) {
-        console.log(
-          '[BlueprintService] No dynamic questions, routing to loading page to generate them'
-        );
-        return `/loading/${blueprintId}`;
-      }
-
-      // 6) Check dynamic answers completeness
-      const dynamicComplete = this.areDynamicAnswersComplete(
-        data.dynamic_questions as unknown,
-        (data.dynamic_answers as Record<string, unknown> | null | undefined) || {}
+      // 6) Static complete but no dynamic questions - generate them
+      console.log(
+        '[BlueprintService] Static complete, no dynamic questions yet, routing to loading page to generate them'
       );
-
-      if (!dynamicComplete) {
-        console.log('[BlueprintService] Dynamic answers incomplete, routing to dynamic wizard');
-        return `/dynamic-wizard/${blueprintId}`;
-      }
-
-      // 7) All questionnaires complete → generate blueprint
-      console.log('[BlueprintService] All questionnaires complete, routing to generation');
-      return `/generating/${blueprintId}`;
+      return `/loading/${blueprintId}`;
     } catch (err) {
       console.error('[BlueprintService] Exception in getNextRouteForBlueprint:', err);
       // Safe fallback - start from beginning

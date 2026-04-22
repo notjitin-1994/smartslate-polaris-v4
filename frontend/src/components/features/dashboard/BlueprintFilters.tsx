@@ -204,6 +204,7 @@ export function BlueprintFilters({
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+    return undefined;
   }, [variant, isExpanded]);
 
   // Header variant - button with dropdown
@@ -409,14 +410,6 @@ export function BlueprintFilters({
                                   const parentElement = e.currentTarget.parentElement;
                                   if (!parentElement) return;
 
-                                  /**
-                                  * Update the filters.progressRange.min based on the horizontal mouse position within the parent element.
-                                  * @example
-                                  * moveEvent(new MouseEvent('mousemove'))
-                                  * undefined
-                                  * @param {{MouseEvent}} {{moveEvent}} - Mouse event triggered while dragging or moving the progress range slider.
-                                  * @returns {{void}} No return value; updates filter state via updateFilter.
-                                  **/
                                   const handleMouseMove = (moveEvent: MouseEvent) => {
                                     const rect = parentElement.getBoundingClientRect();
                                     if (rect) {
@@ -460,14 +453,6 @@ export function BlueprintFilters({
                                   const parentElement = e.currentTarget.parentElement;
                                   if (!parentElement) return;
 
-                                  /**
-                                  * Update the progressRange.max based on the horizontal mouse position relative to the parent element.
-                                  * @example
-                                  * moveProgress(event)
-                                  * // updates filters.progressRange.max to the rounded, clamped percentage (no return)
-                                  * @param {MouseEvent} moveEvent - Mouse event used to compute the new progress percentage.
-                                  * @returns {void} No return value; updates the filter state via updateFilter.
-                                  **/
                                   const handleMouseMove = (moveEvent: MouseEvent) => {
                                     const rect = parentElement.getBoundingClientRect();
                                     if (rect) {
@@ -810,14 +795,6 @@ export function BlueprintFilters({
                         const parentElement = e.currentTarget.parentElement;
                         if (!parentElement) return;
 
-                        /**
-                        * Update the progressRange filter's min value based on the horizontal mouse position within the parent element.
-                        * @example
-                        * handleProgressRangeMove(event)
-                        * undefined
-                        * @param {{MouseEvent}} {{moveEvent}} - Mouse event used to calculate the horizontal percentage position (uses clientX).
-                        * @returns {{void}} Updates filters.progressRange by setting min to the clamped and rounded percentage; returns nothing.
-                        **/
                         const handleMouseMove = (moveEvent: MouseEvent) => {
                           const rect = parentElement.getBoundingClientRect();
                           if (rect) {
@@ -858,14 +835,6 @@ export function BlueprintFilters({
                         const parentElement = e.currentTarget.parentElement;
                         if (!parentElement) return;
 
-                        /**
-                        * Handle mouse movement to update the progressRange.max based on the mouse X position within a parent element's bounding rectangle, clamping to the configured minimum and 100 and rounding to an integer.
-                        * @example
-                        * moveEvent(mouseEvent)
-                        * undefined
-                        * @param {{MouseEvent}} {{moveEvent}} - Mouse event providing clientX used to compute the new max progress percentage.
-                        * @returns {{void}} No return value; updates the progressRange via updateFilter.
-                        **/
                         const handleMouseMove = (moveEvent: MouseEvent) => {
                           const rect = parentElement.getBoundingClientRect();
                           if (rect) {

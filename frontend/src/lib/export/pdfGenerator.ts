@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
-import { AnyBlueprint } from '@/lib/ollama/schema';
+import { Blueprint } from '@/lib/ollama/schema';
+import { DashboardData } from '@/types/dashboard';
 import { ExportData, ExportOptions, ExportResult, ExportMetadata } from './types';
 import { PDFLayoutManager } from './pdfLayout';
 import { ChartCaptureService } from './chartCapture';
@@ -41,22 +42,12 @@ export class BlueprintPDFGenerator {
 
       // Add timeline if available
       if (data.blueprint.timeline) {
-        if (Array.isArray(data.blueprint.timeline)) {
-          this.addTimelineArraySection(data.blueprint.timeline);
-        } else {
-          this.addTimelineSection(data.blueprint.timeline as Record<string, string>);
-        }
+        this.addTimelineSection(data.blueprint.timeline);
       }
 
       // Add resources section
-      if (data.blueprint.resources) {
-        if (Array.isArray(data.blueprint.resources)) {
-          this.addResourcesArraySection(data.blueprint.resources);
-        } else {
-          this.addResourcesSection(
-            data.blueprint.resources as Array<{ name: string; type: string; url?: string }>
-          );
-        }
+      if (data.blueprint.resources && data.blueprint.resources.length > 0) {
+        this.addResourcesSection(data.blueprint.resources);
       }
 
       // Add dashboard charts if available and requested
@@ -112,7 +103,7 @@ export class BlueprintPDFGenerator {
   /**
    * Add overview section
    */
-  private addOverviewSection(blueprint: AnyBlueprint): void {
+  private addOverviewSection(blueprint: Blueprint): void {
     this.layout.addSectionHeader('Overview', 2);
     this.layout.addTextContent(blueprint.overview);
     this.layout.addSpacing(15);
@@ -121,7 +112,7 @@ export class BlueprintPDFGenerator {
   /**
    * Add learning objectives section
    */
-  private addLearningObjectivesSection(blueprint: AnyBlueprint): void {
+  private addLearningObjectivesSection(blueprint: Blueprint): void {
     this.layout.addSectionHeader('Learning Objectives', 2);
     this.layout.addBulletList(blueprint.learningObjectives);
   }
@@ -129,7 +120,7 @@ export class BlueprintPDFGenerator {
   /**
    * Add modules section
    */
-  private addModulesSection(blueprint: AnyBlueprint): void {
+  private addModulesSection(blueprint: Blueprint): void {
     this.layout.addSectionHeader('Learning Modules', 2);
 
     blueprint.modules.forEach((module, index) => {
@@ -141,31 +132,15 @@ export class BlueprintPDFGenerator {
       this.layout.addTextContent(details.join(' | '));
 
       // Activities
-      if (module.activities) {
-        if (Array.isArray(module.activities)) {
-          this.layout.addTextContent('Activities:', 'body');
-          this.layout.addBulletList(module.activities as string[], 10);
-        } else {
-          this.layout.addTextContent('Activities:', 'body');
-          const activityTexts = (module.activities as any[]).map((a: any) =>
-            typeof a === 'string' ? a : `${a.title || a.type}: ${a.description || a.duration || ''}`
-          );
-          this.layout.addBulletList(activityTexts, 10);
-        }
+      if (module.activities.length > 0) {
+        this.layout.addTextContent('Activities:', 'body');
+        this.layout.addBulletList(module.activities, 10);
       }
 
       // Assessments
-      if (module.assessments) {
-        if (Array.isArray(module.assessments)) {
-          this.layout.addTextContent('Assessments:', 'body');
-          this.layout.addBulletList(module.assessments as string[], 10);
-        } else {
-          this.layout.addTextContent('Assessments:', 'body');
-          const assessmentTexts = (module.assessments as any[]).map((a: any) =>
-            typeof a === 'string' ? a : `${a.description || a.type}: ${a.weight || ''}`
-          );
-          this.layout.addBulletList(assessmentTexts, 10);
-        }
+      if (module.assessments.length > 0) {
+        this.layout.addTextContent('Assessments:', 'body');
+        this.layout.addBulletList(module.assessments, 10);
       }
 
       this.layout.addSpacing(15);
@@ -184,21 +159,6 @@ export class BlueprintPDFGenerator {
   }
 
   /**
-   * Add timeline array section
-   */
-  private addTimelineArraySection(timeline: any[]): void {
-    this.layout.addSectionHeader('Timeline', 2);
-
-    const timelineData = timeline.map((item) => [
-      item.phase || 'Phase',
-      item.duration || 'Duration',
-      item.description || 'Description',
-    ]);
-
-    this.layout.addTable(timelineData, ['Phase', 'Duration', 'Description']);
-  }
-
-  /**
    * Add resources section
    */
   private addResourcesSection(
@@ -213,21 +173,6 @@ export class BlueprintPDFGenerator {
     ]);
 
     this.layout.addTable(resourcesData, ['Name', 'Type', 'URL']);
-  }
-
-  /**
-   * Add resources array section
-   */
-  private addResourcesArraySection(resources: any[]): void {
-    this.layout.addSectionHeader('Resources', 2);
-
-    const resourcesData = resources.map((resource) => [
-      resource.name || 'Resource',
-      resource.type || 'Type',
-      resource.description || 'Description',
-    ]);
-
-    this.layout.addTable(resourcesData, ['Name', 'Type', 'Description']);
   }
 
   /**

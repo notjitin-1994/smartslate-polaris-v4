@@ -1,5 +1,12 @@
-import { AnyBlueprint, isFullBlueprint } from '@/lib/ollama/schema';
-import { ExportData, ExportOptions, ExportResult } from './types';
+// import { AnyBlueprint, isFullBlueprint } from '@/lib/ollama/schema'; // Removed Ollama
+
+// Simple replacements
+type AnyBlueprint = any;
+const isFullBlueprint = (data: any): boolean => {
+  return data && typeof data === 'object' && 'blueprint_json' in data;
+};
+import { DashboardData } from '@/types/dashboard';
+import { ExportData, ExportOptions, ExportResult, ExportMetadata } from './types';
 
 export class JSONGenerator {
   /**

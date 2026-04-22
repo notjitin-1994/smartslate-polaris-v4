@@ -22,14 +22,6 @@ const STATUS_LABELS = {
   not_started: 'Not Started',
 };
 
-/**
-* Render a custom tooltip for the module breakdown chart when active.
-* @example
-* renderTooltip({ active: true, payload: [{ payload: { name: 'Module A', value: 12, percentage: 25.0, color: '#0ea5a4' } }] })
-* <motion.div className="glass-card p-4">...</motion.div>
-* @param {{active?: boolean; payload?: Array<{ payload: { name: string; value: number; percentage: number; color: string } }>}} props - Props object with optional active flag and chart payload array.
-* @returns {{JSX.Element|null}} JSX element for the tooltip when active and payload is present; otherwise null.
-**/
 const CustomTooltip = ({
   active,
   payload,
@@ -66,14 +58,6 @@ const CustomTooltip = ({
   return null;
 };
 
-/**
-* Render a compact legend for chart modules from a payload of label/color entries.
-* @example
-* ModuleBreakdownChart([{ value: 'Module A', color: '#ff0000' }, { value: 'Module B', color: '#00ff00' }])
-* <div className="mt-4 flex flex-wrap justify-center gap-4">...legend items...</div>
-* @param {Array<{value: string, color: string}>} payload - Array of legend entries, each with a display value and a CSS color string.
-* @returns {JSX.Element} A JSX element containing colored indicators and labels for each payload entry.
-*/
 const CustomLegend = ({ payload }: { payload: Array<{ value: string; color: string }> }) => (
   <div className="mt-4 flex flex-wrap justify-center gap-4">
     {payload.map((entry, index) => (
@@ -92,14 +76,6 @@ const CustomLegend = ({ payload }: { payload: Array<{ value: string; color: stri
   </div>
 );
 
-/**
-* Renders a pie chart and summary that breaks down modules by their completion status.
-* @example
-* ModuleBreakdownChart({ data: [{ status: 'completed' }, { status: 'in_progress' }], className: 'w-full' })
-* <React.JSX.Element />
-* @param {{ModuleBreakdownChartProps}} {{props}} - Props object containing `data` (array of module objects with a `status` string) and optional `className` string for container styling.
-* @returns {{React.JSX.Element}} React element that displays the module breakdown visualization.
-**/
 export function ModuleBreakdownChart({
   data,
   className,
@@ -136,14 +112,6 @@ export function ModuleBreakdownChart({
   });
 
   // Custom label function for pie chart
-  /**
-  * Render a centered percentage label for a pie chart slice when the slice percentage is at least 10%.
-  * @example
-  * renderLabel({cx:100, cy:100, midAngle:45, innerRadius:30, outerRadius:60, percentage:25})
-  * <text x={...} y={...} fill="white" textAnchor="start|end" dominantBaseline="central" fontSize="12" fontWeight="bold">25%</text>
-  * @param {{cx:number, cy:number, midAngle:number, innerRadius:number, outerRadius:number, percentage:number}} {{props}} - Destructured properties used to compute label position and value.
-  * @returns {{JSX.Element|null}} Return a positioned SVG text element with the rounded percentage or null if percentage < 10.
-  **/
   const renderCustomizedLabel = ({
     cx,
     cy,

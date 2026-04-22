@@ -1,6 +1,6 @@
 import { AuthProvider } from '@/contexts/AuthContext';
 import { GlobalLayout } from '@/components/layout/GlobalLayout';
-import { ToastProvider } from '@/src/components/ui/Toast';
+import { ToastProvider } from '@/components/ui/toast';
 
 export default function AuthLayout({
   children,

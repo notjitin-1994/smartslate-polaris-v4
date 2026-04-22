@@ -98,14 +98,6 @@ export function BlueprintCard({
   const status = statusConfig[blueprint.status as keyof typeof statusConfig] || statusConfig.draft;
   const StatusIcon = status.icon;
 
-  /**
-  * Format a date string into an en-US localized short date with 24-hour time and short timezone.
-  * @example
-  * formatDateString("2023-11-12T15:30:00Z")
-  * "Nov 12, 2023, 15:30 GMT"
-  * @param {{string}} {{dateString}} - Input date string parsable by the JavaScript Date constructor (e.g., ISO 8601).
-  * @returns {{string}} Formatted localized date and time string.
-  **/
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString('en-US', {
@@ -148,7 +140,7 @@ export function BlueprintCard({
       <motion.div
         className={cn(
           'relative overflow-hidden rounded-2xl transition-all duration-300',
-          'glass-card lg:h-[28rem h-[28rem] border sm:h-[28rem]', // Optimized height for streamlined content
+          'glass-card h-[32rem] border sm:h-[32rem] lg:h-[32rem]', // Optimized height for aesthetic data display
           isSelected && isSelectionMode
             ? 'border-primary bg-primary/5 shadow-primary/20 shadow-lg'
             : isHovered
@@ -212,7 +204,7 @@ export function BlueprintCard({
         {/* Card Content */}
         <div
           className={cn(
-            'relative flex h-full flex-col space-y-4',
+            'relative flex h-full flex-col space-y-5',
             isSelectionMode ? 'p-6 pl-12' : 'p-6'
           )}
         >
@@ -310,7 +302,7 @@ export function BlueprintCard({
             transition={{ delay: index * 0.08 + 0.5, duration: 0.4 }}
           >
             {/* Highlight Container - Increased Height */}
-            <div className="glass border-primary/20 min-h-[140px] rounded-xl border p-5 shadow-lg transition-all duration-300 hover:shadow-xl">
+            <div className="glass border-primary/20 min-h-[160px] rounded-xl border p-5 shadow-lg transition-all duration-300 hover:shadow-xl">
               {/* Executive Summary Icon & Label */}
               <div className="mb-4 flex items-center gap-3">
                 <div className="bg-primary/20 flex h-8 w-8 items-center justify-center rounded-full">
@@ -343,7 +335,7 @@ export function BlueprintCard({
                         content = blueprintData.description;
                       } else {
                         content =
-                          'This comprehensive program transforms participants into AI-literate practitioners through a gamified, story-driven learning experience built around compelling narratives and real-world application development.';
+                          'This is a placeholder executive summary. The full summary will be available as soon as your blueprint is generated with AI-powered insights.';
                       }
 
                       // Truncate to exactly 3 lines of text ending with "..."
@@ -376,8 +368,11 @@ export function BlueprintCard({
                         truncatedContent = content;
                       }
 
-                      // Check if content ends with "..." to show continue reading
+                      // Check if content ends with "..." to show continue reading, or if it's a draft placeholder
                       const needsContinueReading = truncatedContent.endsWith('...');
+                      const isDraftPlaceholder =
+                        content ===
+                        'This is a placeholder executive summary. The full summary will be available as soon as your blueprint is generated with AI-powered insights.';
 
                       return (
                         <p className="leading-relaxed">
@@ -409,38 +404,71 @@ export function BlueprintCard({
                               </svg>
                             </motion.button>
                           )}
+                          {isDraftPlaceholder && blueprint.status === 'draft' && (
+                            <motion.button
+                              className={cn(
+                                'ml-1 inline-flex items-center gap-1',
+                                'text-primary hover:text-primary-dark text-xs font-medium',
+                                'group transition-all duration-200',
+                                'hover:underline hover:underline-offset-2'
+                              )}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => onResume(blueprint.id)}
+                            >
+                              <span>Complete blueprint</span>
+                              <svg
+                                className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 5l7 7-7 7"
+                                />
+                              </svg>
+                            </motion.button>
+                          )}
                         </p>
                       );
                     } catch {
+                      const isDraftPlaceholder = true; // Always show complete button for draft placeholders
+
                       return (
                         <p className="leading-relaxed">
-                          This comprehensive program transforms participants into AI-literate
-                          practitioners through a gamified, story-driven learning experience...
-                          <motion.button
-                            className={cn(
-                              'ml-1 inline-flex items-center gap-1',
-                              'text-primary hover:text-primary-dark text-xs font-medium',
-                              'group transition-all duration-200',
-                              'hover:underline hover:underline-offset-2'
-                            )}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <span>Continue reading</span>
-                            <svg
-                              className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
+                          This is a placeholder executive summary. The full summary will be
+                          available as soon as your blueprint is generated with AI-powered insights.
+                          {isDraftPlaceholder && blueprint.status === 'draft' && (
+                            <motion.button
+                              className={cn(
+                                'ml-1 inline-flex items-center gap-1',
+                                'text-primary hover:text-primary-dark text-xs font-medium',
+                                'group transition-all duration-200',
+                                'hover:underline hover:underline-offset-2'
+                              )}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => onResume(blueprint.id)}
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 5l7 7-7 7"
-                              />
-                            </svg>
-                          </motion.button>
+                              <span>Complete blueprint</span>
+                              <svg
+                                className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 5l7 7-7 7"
+                                />
+                              </svg>
+                            </motion.button>
+                          )}
                         </p>
                       );
                     }
@@ -450,10 +478,79 @@ export function BlueprintCard({
                 {/* Summary Metrics */}
                 <div className="flex items-center justify-between border-t border-white/10 pt-2">
                   <div className="flex items-center gap-2">
-                    <div className="bg-primary h-2 w-2 animate-pulse rounded-full" />
+                    <div
+                      className={cn(
+                        'h-2 w-2 animate-pulse rounded-full',
+                        blueprint.status === 'completed' ? 'bg-primary' : 'bg-warning'
+                      )}
+                    />
                     <span className="text-xs font-medium text-white/60">Scope</span>
                   </div>
-                  <span className="text-primary text-xs font-bold">Comprehensive</span>
+                  {(() => {
+                    // Extract scope information from blueprint data for completed blueprints
+                    if (blueprint.status === 'completed' && blueprint.blueprint_json) {
+                      try {
+                        const blueprintData = blueprint.blueprint_json as any;
+
+                        // Try to find scope information in various sections
+                        let scopeInfo = '';
+
+                        // Check target audience for demographic scope
+                        if (blueprintData.target_audience?.demographics) {
+                          const demographics = blueprintData.target_audience.demographics;
+                          const roles = demographics.roles || [];
+                          const experienceLevels = demographics.experience_levels || [];
+                          const departments = demographics.department_distribution || [];
+
+                          if (roles.length > 0) {
+                            scopeInfo += `${roles.length} roles`;
+                          }
+                          if (experienceLevels.length > 0) {
+                            if (scopeInfo) scopeInfo += ', ';
+                            scopeInfo += `${experienceLevels.length} exp levels`;
+                          }
+                          if (departments.length > 0) {
+                            if (scopeInfo) scopeInfo += ', ';
+                            scopeInfo += `${departments.length} depts`;
+                          }
+                        }
+
+                        // Check content outline for module count
+                        if (blueprintData.content_outline?.modules) {
+                          const moduleCount = blueprintData.content_outline.modules.length;
+                          if (scopeInfo) scopeInfo += ', ';
+                          scopeInfo += `${moduleCount} modules`;
+                        }
+
+                        // Check resources for budget/scope indicators
+                        if (blueprintData.resources?.budget) {
+                          const budget = blueprintData.resources.budget;
+                          if (budget.total && scopeInfo) scopeInfo += ', ';
+                          if (budget.total) {
+                            scopeInfo += `$${budget.total.toLocaleString()} budget`;
+                          }
+                        }
+
+                        // If no specific scope info found, try to infer from available sections
+                        if (!scopeInfo) {
+                          const sections = Object.keys(blueprintData).filter(
+                            (key) => key !== 'metadata' && key !== 'executive_summary'
+                          );
+                          scopeInfo = `${sections.length} sections`;
+                        }
+
+                        return (
+                          <span className="text-primary text-xs font-bold">
+                            {scopeInfo || 'Available'}
+                          </span>
+                        );
+                      } catch {
+                        return <span className="text-warning text-xs font-bold">Unavailable</span>;
+                      }
+                    }
+
+                    return <span className="text-warning text-xs font-bold">Unavailable</span>;
+                  })()}
                 </div>
               </div>
 
@@ -630,14 +727,18 @@ export function BlueprintCard({
             )}
 
             {blueprint.status === 'generating' && (
-              <div className="bg-secondary/10 border-secondary/30 flex flex-1 items-center justify-center gap-2 rounded-lg border px-4 py-2">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                >
-                  <Sparkles className="text-secondary h-4 w-4" />
-                </motion.div>
-                <span className="text-secondary text-sm font-medium">Processing...</span>
+              <div
+                className={cn(
+                  'flex items-center justify-center',
+                  'h-10 w-10 rounded-lg',
+                  'border-secondary/30 bg-secondary/10 border',
+                  'text-secondary',
+                  'transition-all duration-200'
+                )}
+                title="Processing..."
+                aria-label="Blueprint is processing"
+              >
+                <Sparkles className="h-4 w-4" />
               </div>
             )}
           </div>

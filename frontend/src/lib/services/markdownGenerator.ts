@@ -1,4 +1,4 @@
-import { AnyBlueprint, isFullBlueprint } from '@/lib/ollama/schema';
+import { Blueprint, AnyBlueprint, isFullBlueprint } from '@/lib/ollama/schema';
 
 export class MarkdownGeneratorService {
   // Helper function to escape markdown special characters

@@ -23,34 +23,20 @@ const LLM_CONFIG = {
   retries: 2,
 } as const;
 
-// Load system prompt from file (V2 - with personalization)
-function loadSystemPrompt(): string {
-  try {
-    const systemPromptPath = join(
-      process.cwd(),
-      'lib',
-      'prompts',
-      'dynamic-questions-system-v2.txt'
-    );
-    return readFileSync(systemPromptPath, 'utf-8');
-  } catch (error) {
-    logger.error('system_prompt.load.failure', 'Failed to load dynamic-questions-system-v2.txt', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw new Error('Failed to load system prompt file');
-  }
-}
-
 // Load system prompt V3 from file (Template-based - no personalization)
 function loadSystemPromptV3(): string {
   try {
     const systemPromptPath = join(
       process.cwd(),
+      'src',
       'lib',
+      'ai',
       'prompts',
       'dynamic-questions-system-v3.txt'
     );
-    return readFileSync(systemPromptPath, 'utf-8');
+    // Use Buffer for large string loading to optimize Webpack caching
+    const buffer = readFileSync(systemPromptPath);
+    return buffer.toString('utf8');
   } catch (error) {
     logger.error('system_prompt.load.failure', 'Failed to load dynamic-questions-system-v3.txt', {
       error: error instanceof Error ? error.message : String(error),
@@ -59,24 +45,20 @@ function loadSystemPromptV3(): string {
   }
 }
 
-// Load user prompt template from file (V2 - with personalization)
-function loadUserPromptTemplate(): string {
-  try {
-    const userPromptPath = join(process.cwd(), 'lib', 'prompts', 'dynamic-questions-user-v2.txt');
-    return readFileSync(userPromptPath, 'utf-8');
-  } catch (error) {
-    logger.error('user_prompt.load.failure', 'Failed to load dynamic-questions-user-v2.txt', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw new Error('Failed to load user prompt template file');
-  }
-}
-
 // Load user prompt template V3 from file (Template-based - no personalization)
 function loadUserPromptTemplateV3(): string {
   try {
-    const userPromptPath = join(process.cwd(), 'lib', 'prompts', 'dynamic-questions-user-v3.txt');
-    return readFileSync(userPromptPath, 'utf-8');
+    const userPromptPath = join(
+      process.cwd(),
+      'src',
+      'lib',
+      'ai',
+      'prompts',
+      'dynamic-questions-user-v3.txt'
+    );
+    // Use Buffer for large string loading to optimize Webpack caching
+    const buffer = readFileSync(userPromptPath);
+    return buffer.toString('utf8');
   } catch (error) {
     logger.error('user_prompt.load.failure', 'Failed to load dynamic-questions-user-v3.txt', {
       error: error instanceof Error ? error.message : String(error),

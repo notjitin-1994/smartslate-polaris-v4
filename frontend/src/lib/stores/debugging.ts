@@ -1,18 +1,15 @@
 // State debugging tools for development
 export class StateDebugger {
   private static isDevelopment = process.env.NODE_ENV === 'development';
-  public static get isDevMode() {
-    return StateDebugger.isDevelopment;
-  }
   private static logHistory: Array<{
     timestamp: Date;
     store: string;
     action: string;
-    state: unknown;
+    state: any;
   }> = [];
 
   // Log state changes
-  static logStateChange(store: string, action: string, state: unknown): void {
+  static logStateChange(store: string, action: string, state: any): void {
     if (!this.isDevelopment) return;
 
     const logEntry = {
@@ -49,14 +46,12 @@ export class StateDebugger {
   static exportState(stores: Record<string, any>): string {
     const stateData = {
       timestamp: new Date().toISOString(),
-      stores: {} as Record<string, unknown>,
+      stores: {},
       history: this.logHistory,
     };
 
     Object.keys(stores).forEach((storeName) => {
-      (stateData.stores as Record<string, unknown>)[storeName] = this.sanitizeState(
-        stores[storeName].getState()
-      );
+      stateData.stores[storeName] = this.sanitizeState(stores[storeName].getState());
     });
 
     return JSON.stringify(stateData, null, 2);
@@ -230,7 +225,7 @@ export class StateDebugger {
 export const devToolsIntegration = {
   // Connect to Redux DevTools
   connect: (stores: Record<string, any>): void => {
-    if (!StateDebugger.isDevMode || typeof window === 'undefined') return;
+    if (!StateDebugger.isDevelopment || typeof window === 'undefined') return;
 
     const devTools = (window as any).__REDUX_DEVTOOLS_EXTENSION__;
     if (!devTools) return;
@@ -270,7 +265,7 @@ export class TimeTravelDebugger {
 
   // Take snapshot
   static takeSnapshot(store: string, state: any): void {
-    if (!StateDebugger.isDevMode) return;
+    if (!StateDebugger.isDevelopment) return;
 
     this.snapshots.push({
       timestamp: new Date(),

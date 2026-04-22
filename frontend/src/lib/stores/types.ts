@@ -44,7 +44,7 @@ export interface BlueprintData {
   deliveryMethod: string;
   duration: number;
   assessmentType: string;
-  status: 'draft' | 'in_progress' | 'completed' | 'archived';
+  status: 'draft' | 'generating' | 'answering' | 'completed' | 'error' | 'archived';
   progress: number; // 0-100
   createdAt: Date;
   updatedAt: Date;

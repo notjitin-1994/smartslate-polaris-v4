@@ -139,7 +139,7 @@ export class ValidationEngine {
           const regex = safeRegExp(rule.value as string);
           if (!regex) {
             console.warn('Invalid regex pattern in validation rule');
-            return null; // Silently skip invalid patterns
+            break; // Skip invalid patterns
           }
           if (!regex.test(value)) {
             return rule.message || 'Invalid format';
@@ -274,6 +274,8 @@ export class ValidationEngine {
         break;
 
       case 'number':
+      case 'currency':
+      case 'number_spinner':
         if (typeof value === 'number') {
           if ('min' in question && question.min !== undefined && value < question.min) {
             return `Minimum value is ${question.min}`;

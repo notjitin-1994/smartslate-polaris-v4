@@ -7,7 +7,7 @@
  * @see https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
  */
 
-import { validateEnvironmentOrExit } from './lib/utils/environmentValidation';
+import { validateEnvironmentOrExit } from './src/lib/utils/environmentValidation';
 
 /**
  * Register function called once when Next.js initializes

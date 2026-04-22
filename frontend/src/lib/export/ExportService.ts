@@ -1,4 +1,10 @@
-import { AnyBlueprint, isFullBlueprint } from '@/lib/ollama/schema';
+// import { AnyBlueprint, isFullBlueprint } from '@/lib/ollama/schema'; // Removed Ollama
+
+// Simple replacements
+type AnyBlueprint = any;
+const isFullBlueprint = (data: any): boolean => {
+  return data && typeof data === 'object' && 'blueprint_json' in data;
+};
 import { DashboardData } from '@/types/dashboard';
 import {
   ExportData,
@@ -9,6 +15,7 @@ import {
   BatchExportOptions,
   ExportHistoryEntry,
   ExportServiceConfig,
+  ChartExportOptions,
 } from './types';
 
 export class ExportService {
@@ -166,6 +173,7 @@ export class ExportService {
   private async exportToPDF(data: ExportData, options: ExportOptions): Promise<ExportResult> {
     try {
       const { BlueprintPDFGenerator } = await import('./pdfGenerator');
+      // const { AnyBlueprint } = await import('../ollama/schema'); // Removed Ollama
       const { ChartCaptureService } = await import('./chartCapture');
 
       const pdfGenerator = new BlueprintPDFGenerator();
@@ -176,8 +184,8 @@ export class ExportService {
         try {
           const charts = await chartCapture.captureDashboardCharts();
           data.charts = charts;
-        } catch {
-          console.warn('Failed to capture charts, proceeding without them');
+        } catch (error) {
+          console.warn('Failed to capture charts, proceeding without them:', error);
         }
       }
 
@@ -290,7 +298,6 @@ export class ExportService {
       return {
         title,
         description,
-        createdAt: new Date().toISOString(),
         exportedAt: new Date().toISOString(),
         version: '1.0.0',
         ...customMetadata,
@@ -300,7 +307,6 @@ export class ExportService {
     return {
       title: canonical.title,
       description: canonical.overview,
-      createdAt: new Date().toISOString(),
       exportedAt: new Date().toISOString(),
       version: '1.0.0',
       ...customMetadata,
@@ -357,8 +363,7 @@ export class ExportService {
     zipFileName?: string
   ): Promise<ExportResult> {
     try {
-      const JSZipModule = await import('jszip');
-      const JSZip = JSZipModule.default;
+      const { JSZip } = await import('jszip');
       const zip = new JSZip();
 
       // Add each successful export to the ZIP
@@ -443,8 +448,8 @@ export class ExportService {
 
     try {
       localStorage.setItem('export_history', JSON.stringify(this.history));
-    } catch {
-      console.warn('Failed to save export history');
+    } catch (error) {
+      console.warn('Failed to save export history:', error);
     }
   }
 }

@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /* Touch device compatibility fixes - MUST load early for proper cascade */
-@import '../styles/touch-device-fixes.css';
+@import '../src/styles/touch-device-fixes.css';
 
 /* Force 1:1 scale on all devices - prevent any zoom */
 html {

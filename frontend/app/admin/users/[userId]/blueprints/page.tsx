@@ -26,7 +26,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useToast } from '@/src/components/ui/Toast';
+import { useToast } from '@/components/ui/toast';
 
 type BlueprintStatus = 'draft' | 'generating' | 'completed' | 'error';
 

@@ -1,6 +1,12 @@
-import { AnyBlueprint, isFullBlueprint } from '@/lib/ollama/schema';
+// import { AnyBlueprint, isFullBlueprint } from '@/lib/ollama/schema'; // Removed Ollama
+
+// Simple replacements
+type AnyBlueprint = any;
+const isFullBlueprint = (data: any): boolean => {
+  return data && typeof data === 'object' && 'blueprint_json' in data;
+};
 import { DashboardData } from '@/types/dashboard';
-import { ExportData, ExportOptions, ExportMetadata } from './types';
+import { ExportData, ExportOptions, ExportResult, ExportMetadata } from './types';
 
 export class MarkdownGenerator {
   /**
@@ -25,23 +31,11 @@ export class MarkdownGenerator {
 
     // Add timeline if available
     if (blueprint.timeline) {
-      if (Array.isArray(blueprint.timeline)) {
-        markdown += this.generateTimelineArray(blueprint.timeline);
-      } else {
-        markdown += this.generateTimeline(blueprint.timeline as Record<string, string>);
-      }
+      markdown += this.generateTimeline(blueprint.timeline);
     }
 
     // Add resources section
-    if (blueprint.resources) {
-      if (Array.isArray(blueprint.resources)) {
-        markdown += this.generateResourcesArray(blueprint.resources);
-      } else {
-        markdown += this.generateResources(
-          blueprint.resources as Array<{ name: string; type: string; url?: string }>
-        );
-      }
-    }
+    markdown += this.generateResources(blueprint.resources || []);
 
     // Add dashboard analytics if available
     if (options.includeCharts && dashboardData) {
@@ -216,28 +210,6 @@ ${this.escapeMarkdown(canonical.overview)}
   }
 
   /**
-   * Generate timeline array section
-   */
-  private generateTimelineArray(timeline: any[]): string {
-    let markdown = '## Timeline\n\n';
-
-    if (timeline.length === 0) {
-      markdown += '*No timeline information available.*\n\n';
-      return markdown;
-    }
-
-    markdown += '| Phase | Duration | Description |\n';
-    markdown += '|-------|----------|-------------|\n';
-
-    timeline.forEach((item) => {
-      markdown += `| ${this.escapeMarkdown(item.phase)} | ${this.escapeMarkdown(item.duration)} | ${this.escapeMarkdown(item.description || '')} |\n`;
-    });
-
-    markdown += '\n---\n\n';
-    return markdown;
-  }
-
-  /**
    * Generate resources section
    */
   private generateResources(
@@ -256,28 +228,6 @@ ${this.escapeMarkdown(canonical.overview)}
     resources.forEach((resource) => {
       const url = resource.url ? `[${this.escapeMarkdown(resource.url)}](${resource.url})` : 'N/A';
       markdown += `| ${this.escapeMarkdown(resource.name)} | ${this.escapeMarkdown(resource.type)} | ${url} |\n`;
-    });
-
-    markdown += '\n---\n\n';
-    return markdown;
-  }
-
-  /**
-   * Generate resources array section
-   */
-  private generateResourcesArray(resources: any[]): string {
-    let markdown = '## Resources\n\n';
-
-    if (resources.length === 0) {
-      markdown += '*No resources available.*\n\n';
-      return markdown;
-    }
-
-    markdown += '| Name | Type | Description |\n';
-    markdown += '|------|------|-------------|\n';
-
-    resources.forEach((resource) => {
-      markdown += `| ${this.escapeMarkdown(resource.name)} | ${this.escapeMarkdown(resource.type)} | ${this.escapeMarkdown(resource.description || '')} |\n`;
     });
 
     markdown += '\n---\n\n';

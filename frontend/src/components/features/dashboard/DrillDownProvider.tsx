@@ -22,14 +22,6 @@ interface DrillDownProviderProps {
   children: ReactNode;
 }
 
-/**
-* Provides a context provider that manages drill-down state (path, data, filters) and actions for descendant components.
-* @example
-* DrillDownProvider({ children: <Dashboard /> })
-* <DrillDownContext.Provider value={{...}}>...children...</DrillDownContext.Provider>
-* @param {{React.ReactNode}} {{children}} - Child elements to render inside the drill-down provider.
-* @returns {{React.JSX.Element}} A context provider element that supplies drill-down state and actions.
-**/
 export function DrillDownProvider({ children }: DrillDownProviderProps): React.JSX.Element {
   const [drillDownState, setDrillDownState] = useState<DrillDownState | null>(null);
 

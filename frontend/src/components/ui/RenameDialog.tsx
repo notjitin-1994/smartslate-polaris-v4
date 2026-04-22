@@ -15,21 +15,6 @@ interface RenameDialogProps {
   maxLength?: number;
 }
 
-/**
-* Renders a modal dialog that allows the user to rename a blueprint with validation, keyboard shortcuts and async confirmation.
-* @example
-* RenameDialog({ isOpen: true, onClose: () => {}, onConfirm: async (name) => {}, currentName: 'My Blueprint' })
-* <JSX.Element /> or null
-* @param {{boolean}} {{isOpen}} - Whether the dialog is currently open and visible.
-* @param {{() => void}} {{onClose}} - Callback invoked to close the dialog without saving.
-* @param {{(newName: string) => Promise<void>}} {{onConfirm}} - Async callback invoked with the trimmed new name to perform the rename; dialog closes on success and displays an error on failure.
-* @param {{string}} {{currentName}} - The current blueprint name shown as the initial value in the input.
-* @param {{string}} {{title}} - Optional title text for the dialog (defaults to 'Rename Blueprint').
-* @param {{string}} {{description}} - Optional descriptive text shown under the title (defaults to 'Enter a new name for your blueprint').
-* @param {{string}} {{placeholder}} - Optional placeholder text for the input (defaults to 'Blueprint name').
-* @param {{number}} {{maxLength}} - Optional maximum allowed length for the name (defaults to 100).
-* @returns {{React.JSX.Element | null}} The dialog JSX element when open, or null when the dialog is closed.
-**/
 export function RenameDialog({
   isOpen,
   onClose,
@@ -75,13 +60,6 @@ export function RenameDialog({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  /**
-  * Validate and attempt to rename a blueprint using the current newName state; manages loading and error state, calls onConfirm and closes the dialog on success.
-  * @example
-  * await sync()
-  * undefined
-  * @returns {Promise<void>} Resolves when the rename operation completes; on success the dialog is closed, on failure the error state is set.
-  **/
   const handleSubmit = async () => {
     const trimmedName = newName.trim();
 
