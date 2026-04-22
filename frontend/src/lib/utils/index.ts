@@ -2,12 +2,12 @@ export * from './utils';
 export * from './tierDisplay';
 export * from './formatPrice';
 export * from './currencyFormatter';
-export * from './environmentValidation';
 export * from './toast';
 export * from './usageErrorHandler';
-export * from './activityLogger';
 export * from './sessionTracker';
 export * from './subscriptionCTA';
 export * from './safeRegex';
 export * from './sanitizeHtml';
-export * from './rateLimit';
+// Note: activityLogger, environmentValidation, and rateLimit are server-side only 
+// and should be imported directly from their respective files to avoid bundling 
+// issues in client components.
