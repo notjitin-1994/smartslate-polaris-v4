@@ -64,7 +64,7 @@ import { BulkActionsBar } from './BulkActionsBar';
 import { AdvancedFilters } from './AdvancedFilters';
 import { ExportDialog } from './ExportDialog';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useToast } from '../ui/toast';
+import { useToast } from '../../ui/toast';
 
 interface User {
   user_id: string;

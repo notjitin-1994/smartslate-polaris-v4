@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import SharedBlueprintClient from './SharedBlueprintClient';
-import type { BlueprintJSON } from '@/components/features/blueprints/types';
+import type { BlueprintJSON } from '@/components/blueprint/types';
 import type { Database } from '@/types/supabase';
 
 interface PageProps {

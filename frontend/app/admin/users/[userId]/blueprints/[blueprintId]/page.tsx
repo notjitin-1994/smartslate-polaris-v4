@@ -26,8 +26,8 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useToast } from '@/components/ui/toast';
-import { InteractiveBlueprintDashboard } from '@/components/features/blueprints/InteractiveBlueprintDashboard';
-import type { BlueprintJSON } from '@/components/features/blueprints/types';
+import { InteractiveBlueprintDashboard } from '@/components/blueprint/InteractiveBlueprintDashboard';
+import type { BlueprintJSON } from '@/components/blueprint/types';
 import { DynamicQuestionRenderer } from '@/components/demo-dynamicv2/DynamicQuestionRenderer';
 
 type BlueprintStatus = 'draft' | 'generating' | 'completed' | 'error';

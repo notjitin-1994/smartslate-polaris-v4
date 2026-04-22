@@ -83,7 +83,7 @@ export function BudgetResourcesInfographic({
     <div className="space-y-6">
       {/* Budget Section */}
       {budget && (
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Budget Breakdown */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -214,7 +214,7 @@ export function BudgetResourcesInfographic({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {human_resources.map((hr, index) => (
               <div key={index} className="rounded-lg border border-white/10 bg-white/5 p-4">
                 <h5 className="mb-3 font-semibold text-white">{hr.role}</h5>
@@ -252,7 +252,7 @@ export function BudgetResourcesInfographic({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {tools_and_platforms.map((tool, index) => (
               <div
                 key={index}

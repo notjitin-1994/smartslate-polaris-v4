@@ -34,7 +34,6 @@ import {
   Share2,
   Layout,
   FileText,
-  Presentation,
   Palette,
   Type,
   Spacing,
@@ -437,11 +436,10 @@ export function ReportBuilder({
                     <label className={cn(typographyPresets.labelText, 'mb-2 block')}>
                       Layout Style
                     </label>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       {[
                         { id: 'dashboard', label: 'Dashboard', icon: Layout },
                         { id: 'document', label: 'Document', icon: FileText },
-                        { id: 'presentation', label: 'Presentation', icon: Presentation },
                       ].map((layout) => {
                         const Icon = layout.icon;
                         const isSelected = reportConfig.layout === layout.id;

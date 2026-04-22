@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Lock, Mail, Download, Printer, Share2 } from 'lucide-react';
-import { InteractiveBlueprintDashboard } from '@/components/features/blueprints/InteractiveBlueprintDashboard';
+import { InteractiveBlueprintDashboard } from '@/components/blueprint/InteractiveBlueprintDashboard';
 import { Footer } from '@/components/layout/Footer';
 import { motion } from 'framer-motion';
 

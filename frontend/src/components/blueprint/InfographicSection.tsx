@@ -34,7 +34,14 @@ export function InfographicSection({
         <ObjectivesInfographic objectives={data.objectives} chartConfig={data.chartConfig} />
       )}
 
-      {data.demographics && <TargetAudienceInfographic data={data} />}
+      {data.demographics && (
+        <TargetAudienceInfographic
+          data={{
+            demographics: data.demographics,
+            learning_preferences: data.learning_preferences,
+          }}
+        />
+      )}
 
       {data.kpis && (
         <AssessmentStrategyInfographic
@@ -97,7 +104,7 @@ function GenericInfographic({
                 {key.replace(/_/g, ' ')}
               </h4>
               <div className="text-text-secondary text-sm">
-                {typeof value === 'object' ? (
+                {typeof value === 'object' && value !== null ? (
                   <pre className="overflow-auto text-xs">{JSON.stringify(value, null, 2)}</pre>
                 ) : (
                   <span>{String(value)}</span>

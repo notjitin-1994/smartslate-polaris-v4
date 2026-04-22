@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AlertCircle } from 'lucide-react';
 import SharedBlueprintView from './SharedBlueprintView';
-import type { BlueprintJSON } from '@/components/features/blueprints/types';
+import type { BlueprintJSON } from '@/components/blueprint/types';
 
 interface BlueprintData {
   id: string;

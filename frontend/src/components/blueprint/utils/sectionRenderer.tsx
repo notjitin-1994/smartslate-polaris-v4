@@ -13,7 +13,42 @@ export function renderSectionContent(
   objectives: any[],
   modules: any[]
 ): React.ReactNode {
-  const data: any = (blueprint as any)[sectionId] ?? {};
+  const rawData: any = (blueprint as any)[sectionId] ?? {};
+
+  // Safety check: ensure we don't render raw objects as React children
+  // Filter out any questionnaire fields that might have been mixed into blueprint data
+  const filteredData: any = {};
+  const allowedBlueprintFields = [
+    'displayType',
+    'chartConfig',
+    'objectives',
+    'demographics',
+    'learning_preferences',
+    'kpis',
+    'overview',
+    'evaluation_methods',
+    'metrics',
+    'reporting_cadence',
+    'modules',
+    'phases',
+    'risks',
+    'budget',
+    'modalities',
+    'cohort_model',
+    'content',
+    'maintenance_schedule',
+    'scaling_considerations',
+    'executive_summary',
+  ];
+
+  Object.keys(rawData).forEach((key) => {
+    if (allowedBlueprintFields.includes(key) || !key.includes('_')) {
+      // Include valid blueprint fields and non-underscore fields
+      filteredData[key] = rawData[key];
+    }
+  });
+
+  const data: any = filteredData;
   const displayType: string = data.displayType || inferDisplayType(sectionId, data);
 
   switch (displayType) {

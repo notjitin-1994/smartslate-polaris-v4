@@ -21,7 +21,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RenameDialog } from '@/components/ui/RenameDialog';
 import { VisualJSONEditor } from '@/components/modals/VisualJSONEditor';
-import { InteractiveBlueprintDashboard } from '@/components/features/blueprints/InteractiveBlueprintDashboard';
+import { InteractiveBlueprintDashboard } from '@/components/blueprint/InteractiveBlueprintDashboard';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { createBrowserBlueprintService } from '@/lib/db/blueprints.client';
 import { useRouter } from 'next/navigation';

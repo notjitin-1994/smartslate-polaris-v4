@@ -21,8 +21,8 @@ import { Button } from '@/components/ui/button';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { InteractiveBlueprintDashboard } from '@/components/features/blueprints/InteractiveBlueprintDashboard';
-import type { BlueprintJSON } from '@/components/features/blueprints/types';
+import { InteractiveBlueprintDashboard } from '@/components/blueprint/InteractiveBlueprintDashboard';
+import type { BlueprintJSON } from '@/components/blueprint/types';
 
 type BlueprintStatus = 'draft' | 'generating' | 'completed' | 'error';
 

@@ -4,10 +4,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { Plus, Rocket, Presentation } from 'lucide-react';
-import { InteractiveBlueprintDashboard } from '@/components/features/blueprints/InteractiveBlueprintDashboard';
+import { InteractiveBlueprintDashboard } from '@/components/blueprint/InteractiveBlueprintDashboard';
 import { Footer } from '@/components/layout/Footer';
 import { useMobileDetect } from '@/lib/hooks/useMobileDetect';
-import type { BlueprintJSON } from '@/components/features/blueprints/types';
+import type { BlueprintJSON } from '@/components/blueprint/types';
 
 interface SharedBlueprintViewProps {
   blueprint: {

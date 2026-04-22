@@ -34,7 +34,7 @@ export function ObjectivesInfographic({
   objectives,
 }: ObjectivesInfographicProps): React.JSX.Element {
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
       {objectives.map((obj, index) => {
         const baselineValue = extractNumericalValue(String(obj.baseline));
         const targetValue = extractNumericalValue(String(obj.target));
@@ -43,7 +43,7 @@ export function ObjectivesInfographic({
 
         return (
           <motion.div
-            key={obj.id}
+            key={obj.id ? `objective-${obj.id}` : `objective-${index}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}

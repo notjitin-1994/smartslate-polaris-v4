@@ -20,9 +20,9 @@ import {
   Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AreaChartCard } from '@/components/features/admin/analytics/AreaChartCard';
-import { PieChartCard } from '@/components/features/admin/analytics/PieChartCard';
-import { BarChartCard } from '@/components/features/admin/analytics/BarChartCard';
+import { AreaChartCard } from '@/components/admin/analytics/AreaChartCard';
+import { PieChartCard } from '@/components/admin/analytics/PieChartCard';
+import { BarChartCard } from '@/components/admin/analytics/BarChartCard';
 import type { PlatformAnalytics } from '@/types/analytics';
 
 const PERIOD_OPTIONS = [

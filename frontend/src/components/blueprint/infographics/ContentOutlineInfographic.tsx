@@ -85,9 +85,9 @@ export function ContentOutlineInfographic({
   }, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       {/* Header with Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3">
           <motion.div
             initial={{ scale: 0 }}
@@ -122,11 +122,11 @@ export function ContentOutlineInfographic({
         </div>
       </div>
 
-      {/* Progress Overview - Desktop layout on all screen sizes */}
+      {/* Progress Overview - Responsive grid */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-4 gap-4"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
       >
         {modules.slice(0, 4).map((module, index) => (
           <motion.div
@@ -147,7 +147,7 @@ export function ContentOutlineInfographic({
       </motion.div>
 
       {/* Module Cards with Timeline Connection */}
-      <div className="relative space-y-4">
+      <div className="relative space-y-4 overflow-x-hidden">
         {/* Timeline Line */}
         <div className="bg-primary absolute top-8 bottom-8 left-6 w-0.5" />
 
@@ -168,20 +168,20 @@ export function ContentOutlineInfographic({
             </motion.div>
 
             {/* Module Card */}
-            <div className="ml-20">
-              <motion.div
-                whileHover={{ x: 5 }}
-                className="glass-strong overflow-hidden rounded-xl border border-white/10 transition-all"
-              >
+            <div className="mr-2 ml-16 sm:mr-4 sm:ml-20">
+              <motion.div className="glass-strong overflow-hidden rounded-xl border border-white/10 transition-all">
                 {/* Module Header */}
                 <button
                   onClick={() => toggleModule(index)}
                   className="flex w-full items-start justify-between p-6 text-left transition-all hover:bg-white/5"
                 >
-                  <div className="flex-1">
-                    <div className="mb-2 flex items-center gap-3">
-                      <h4 className="flex-1 text-lg font-bold text-white">{module.title}</h4>
-                      <span className="bg-primary/20 text-primary rounded-full px-4 py-1 text-sm font-medium whitespace-nowrap">
+                  <div className="min-w-0 flex-1">
+                    {/* Mobile Layout: Title on top, time banner below */}
+                    <div className="mb-2 flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-center lg:gap-2">
+                      <h4 className="w-full text-lg font-bold break-words text-white lg:min-w-0 lg:flex-1">
+                        {module.title}
+                      </h4>
+                      <span className="bg-primary/20 text-primary w-fit rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap lg:flex-shrink-0">
                         {module.duration}
                       </span>
                     </div>
@@ -219,7 +219,7 @@ export function ContentOutlineInfographic({
                             <p className="text-text-secondary mb-2 text-sm font-semibold">
                               Topics Covered:
                             </p>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-col gap-2 lg:flex-row lg:flex-wrap">
                               {module.topics.map((topic, tIndex) => (
                                 <motion.span
                                   key={tIndex}
