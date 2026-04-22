@@ -8,9 +8,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pin, EyeOff, Eye, ChevronDown, Layers } from 'lucide-react';
-import { AIAssistantSection } from '../features/blueprints/viewer/sidebar/AIAssistantSection';
-import { ReportsSection } from '../features/blueprints/viewer/sidebar/ReportsSection';
-import { AnnotationsSection } from '../features/blueprints/viewer/sidebar/AnnotationsSection';
+import { AIAssistantSection } from '@/components/blueprint/viewer/sidebar/AIAssistantSection';
+import { ReportsSection } from '@/components/blueprint/viewer/sidebar/ReportsSection';
+import { AnnotationsSection } from '@/components/blueprint/viewer/sidebar/AnnotationsSection';
 import { cn } from '@/lib/utils';
 import type { CustomReport, Annotation } from '@/store/blueprintStore';
 
