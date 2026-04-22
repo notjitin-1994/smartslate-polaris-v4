@@ -59,6 +59,7 @@ inputRegistry.registerBatch([
   { type: 'scale', component: ScaleInput },
   { type: 'number', component: NumberInput },
   { type: 'date', component: DateInput },
+  { type: 'calendar_picker', component: DateInput },
   { type: 'email', component: EmailInput },
   { type: 'url', component: UrlInput },
   // Rich visual inputs

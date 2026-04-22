@@ -1,73 +1,53 @@
-Generate a comprehensive learning blueprint dynamic questionnaire based on the following context.
+Generate a comprehensive learning blueprint dynamic questionnaire based on the following context. 
 
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                    PROJECT CONTEXT (For Your Awareness Only)                  ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-
-⚠️ CRITICAL: Use this context to inform WHICH questions to generate, NOT to personalize question text.
-⚠️ DO NOT embed any of these values into question labels or helpText.
+Your goal is to build a **"Gap-Fill" bridge**: use the "Given Facts" below to identify what is ALREADY KNOWN, and generate questions that query ONLY the "Gaps" (the missing details) required for a complete implementation plan.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-👤 SECTION 1: ROLE & EXPERIENCE (Context Only - Do Not Embed in Questions)
+🚨 THE FORBIDDEN ZONE (FACTS ALREADY COLLECTED)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Current Role:             {current_role}
-Years in Role:            {years_in_role} years
-Previous Roles:           {previous_roles}
-Industry Experience:      {industry_experience}
-Team Size:                {team_size}
-Technical Skills:         {technical_skills}
+⚠️ CRITICAL: DO NOT ASK any questions that would result in the following information being re-provided. These are your "Given Facts."
 
-💡 USE THIS TO:
-- Determine appropriate question sophistication level
-- Decide which technical topics to include
-- Inform scalability-related questions
-- DO NOT embed role/org names in question text
+**[SECTION 1: IDENTITY & EXPERIENCE]**
+- Current Role:             {current_role}
+- Years in Role:            {years_in_role} years
+- Industry Experience:      {industry_experience}
+- Team Size:                {team_size}
+- Technical Skills:         {technical_skills}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🏢 SECTION 2: ORGANIZATIONAL CONTEXT (Context Only - Do Not Embed in Questions)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Organization Name:        {organization_name}
-Industry Sector:          {industry_sector}
-Organization Size:        {organization_size} employees
-Geographic Regions:       {geographic_regions}
-Compliance Requirements:  {compliance_requirements}
-Data Sharing Policies:    {data_sharing_policies}
-Security Clearance:       {security_clearance}
-Legal Restrictions:       {legal_restrictions}
+**[SECTION 2: ORGANIZATIONAL CONTEXT]**
+- Organization Name:        {organization_name}
+- Industry Sector:          {industry_sector}
+- Organization Size:        {organization_size} employees
+- Geographic Regions:       {geographic_regions}
+- Compliance Requirements:  {compliance_requirements}
+- Data Sharing Policies:    {data_sharing_policies}
+- Security Clearance:       {security_clearance}
+- Legal Restrictions:       {legal_restrictions}
 
-💡 USE THIS TO:
-- Include relevant compliance options in questions
-- Add appropriate security/data residency options
-- Determine enterprise vs SMB question focus
-- DO NOT reference organization name or industry in question text
+**[SECTION 3: LOGISTICS & PRIMARY NEED]**
+- Learning Gap Narrative:   {learning_gap_description}
+- Total Audience Scale:     {total_learners_range}
+- Current Knowledge Level:  {current_knowledge_level}/5
+- Learning Location:        {learning_location}
+- Devices Used:             {devices_used}
+- Budget Available:         {budget_available}
+- Learning Deadline:        {learning_deadline}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 SECTION 3: LEARNING GAP & AUDIENCE (Context Only - Do Not Embed in Questions)
+🎯 YOUR GENERATION MISSION: FILL THE GAPS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Learning Gap Description:
-{learning_gap_description}
 
-Total Learners:           {total_learners_range}
-Current Knowledge Level:  {current_knowledge_level}/5 (1=Novice, 5=Expert)
-Motivation Factors:       {motivation_factors}
-Learning Location:        {learning_location}
-Devices Used:             {devices_used}
-Hours Per Week:           {hours_per_week}
-Learning Deadline:        {learning_deadline}
-Budget Available:         {budget_available}
+🎯 TASK: Generate exactly 10 sections with 5-7 questions each (50-70 total questions).
 
-💡 USE THIS TO:
-- Determine content depth and pacing questions
-- Include relevant delivery modality options
-- Add appropriate timeline/budget questions
-- DO NOT reference specific knowledge levels or learner counts in question text
+🚨 REDUNDANCY PROHIBITION:
+If you ask for the organization name, budget amount, or learner count, you have failed.
+Instead, ask about:
+- **Strategic Alignment**: How does this specific gap impact their Q4 goals?
+- **Technical Nuance**: Which specific API version is the current bottleneck?
+- **Stakeholder Dynamics**: Who are the primary detractors for this change?
+- **Implementation Barriers**: What specific local firewall rules impact the {learning_location}?
 
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                         YOUR GENERATION MISSION                               ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-
-🎯 TASK: Generate exactly 10 sections with 5-7 questions each (50-70 total questions)
-
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🚨 CRITICAL RULES:
 1. Write GENERIC, universal questions that work for ANY organization
 2. DO NOT embed context variables like {organization_name} or {current_role} in questions
@@ -80,63 +60,53 @@ Budget Available:         {budget_available}
 
 SECTION 1: Learning Objectives & Outcomes
 - Focus: Specific, measurable outcomes and success criteria
-- Questions: SMART objectives, Bloom's levels, business impact, stakeholder criteria
-- Generate: 5-7 questions about learning goals and expected outcomes
-- Example: "What are the primary learning objectives?" (NOT "What are YOUR objectives for YOUR learners?")
+- 🚨 SKIP: High-level gap description.
+- ✅ ASK: SMART objectives, Bloom's levels, business impact, stakeholder criteria.
 
-SECTION 2: Target Audience Analysis
-- Focus: Learner characteristics, demographics, and learning needs
-- Questions: Demographics, learning styles, accessibility, cultural considerations
-- Generate: 5-7 questions about learner profiles and needs
-- Example: "What is the current knowledge level of learners?" (NOT "What is YOUR team's knowledge level?")
+SECTION 2: Target Audience Analysis (Deep Dive)
+- Focus: Specific persona behaviors and prerequisite gaps.
+- 🚨 SKIP: Learner counts and general knowledge levels.
+- ✅ ASK: Prerequisite skill gaps, accessibility nuances, and behavioral barriers.
 
 SECTION 3: Content Scope & Structure
-- Focus: Content breadth, depth, and sequencing
-- Questions: Topics, structure, prerequisites, chunking strategy
-- Generate: 5-7 questions about content organization
-- Example: "What topics should be covered?" (NOT "What topics should YOUR {industry_sector} training cover?")
+- Focus: Topic hierarchy and sequencing logic.
+- 🚨 SKIP: Primary industry sector.
+- ✅ ASK: Topic hierarchy, sequencing logic, and case study requirements.
 
 SECTION 4: Instructional Strategy & Methods
-- Focus: Pedagogical approaches and teaching methods
-- Questions: Methods, balance, social learning, active strategies
-- Generate: 5-7 questions about teaching approaches
-- Example: "What instructional methods will be used?" (NOT "What methods work for YOUR {team_size} team?")
+- Focus: Pedagogical mix and scaffolding techniques.
+- 🚨 SKIP: Team size.
+- ✅ ASK: Pedagogical mix, social learning balance, and scaffolding techniques.
 
 SECTION 5: Learning Activities & Interactions
-- Focus: Engagement activities and learner interactions
-- Questions: Activity types, practice, collaboration, real-world scenarios
-- Generate: 5-7 questions about learning activities
-- Example: "What types of practice activities are needed?" (NOT "What activities suit YOUR {devices_used}?")
+- Focus: Engagement activities and hands-on practice.
+- 🚨 SKIP: Devices used and location.
+- ✅ ASK: Simulation details, collaboration types, and hands-on practice specifics.
 
 SECTION 6: Assessment & Evaluation
-- Focus: Measurement strategies and evaluation methods
-- Questions: Formative/summative assessments, certifications, feedback, data usage
-- Generate: 5-7 questions about assessment approaches
-- Example: "What assessment methods will be used?" (NOT "What assessments meet YOUR {compliance_requirements}?")
+- Focus: Measurement strategies and data collection rigor.
+- 🚨 SKIP: Motivation factors.
+- ✅ ASK: Formative/summative balance, certification needs, and data collection rigor.
 
 SECTION 7: Resources & Materials
-- Focus: Learning resources and content materials
-- Questions: Existing materials, new resources, external content, tools
-- Generate: 5-7 questions about learning resources
-- Example: "What learning resources are available?" (NOT "What resources fit YOUR {budget_available}?")
+- Focus: Existing asset quality and content gaps.
+- 🚨 SKIP: Budget amount.
+- ✅ ASK: Existing asset quality, human resource availability, and specific content gaps.
 
 SECTION 8: Technology & Platform
-- Focus: Technical infrastructure and platform requirements
-- Questions: LMS requirements, authoring tools, integrations, analytics
-- Generate: 5-7 questions about technology needs
-- Example: "What technology platform will be used?" (NOT "What platform meets YOUR {security_clearance} requirements?")
+- Focus: Integration details and UX requirements.
+- 🚨 SKIP: Security clearance levels.
+- ✅ ASK: Integration details, API needs, and specific UX requirements.
 
 SECTION 9: Implementation & Rollout
-- Focus: Deployment strategy and change management
-- Questions: Pilot approach, timeline, communication, change management
-- Generate: 5-7 questions about implementation planning
-- Example: "What is the deployment timeline?" (NOT "Can YOU meet YOUR {learning_deadline} deadline?")
+- Focus: Deployment strategy and change management.
+- 🚨 SKIP: Learning deadline.
+- ✅ ASK: Pilot cohort selection, communication channels, and change management risks.
 
 SECTION 10: Success Metrics & Continuous Improvement
-- Focus: KPIs and continuous improvement processes
-- Questions: KPIs, data collection, reporting, iteration, sustainability
-- Generate: 5-7 questions about measurement and improvement
-- Example: "What metrics will measure success?" (NOT "What KPIs does YOUR {current_role} need to report?")
+- Focus: ROI formulas and iteration cycles.
+- 🚨 SKIP: Current role or tenure.
+- ✅ ASK: ROI formulas, reporting frequencies, and iteration maintenance cycles.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎨 INPUT TYPE REQUIREMENTS (MODERN UX ONLY)

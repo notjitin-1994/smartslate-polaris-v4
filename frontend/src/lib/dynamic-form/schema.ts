@@ -25,6 +25,7 @@ export const inputTypeSchema = z.enum([
   'toggle_switch',
   'currency',
   'number_spinner',
+  'calendar_picker',
 ]);
 
 // Validation rule schema for dynamic validation
@@ -189,6 +190,12 @@ export const dateQuestionSchema = baseQuestionSchema.extend({
   maxDate: z.string().optional(),
 });
 
+export const calendarPickerQuestionSchema = baseQuestionSchema.extend({
+  type: z.literal('calendar_picker'),
+  minDate: z.string().optional(),
+  maxDate: z.string().optional(),
+});
+
 export const emailQuestionSchema = baseQuestionSchema.extend({
   type: z.literal('email'),
 });
@@ -327,6 +334,7 @@ export const questionSchema = z.discriminatedUnion('type', [
   scaleQuestionSchema,
   numberQuestionSchema,
   dateQuestionSchema,
+  calendarPickerQuestionSchema,
   emailQuestionSchema,
   urlQuestionSchema,
   // Rich input types
@@ -424,6 +432,7 @@ export type MultiselectQuestion = z.infer<typeof multiselectQuestionSchema>;
 export type ScaleQuestion = z.infer<typeof scaleQuestionSchema>;
 export type NumberQuestion = z.infer<typeof numberQuestionSchema>;
 export type DateQuestion = z.infer<typeof dateQuestionSchema>;
+export type CalendarPickerQuestion = z.infer<typeof calendarPickerQuestionSchema>;
 export type EmailQuestion = z.infer<typeof emailQuestionSchema>;
 export type UrlQuestion = z.infer<typeof urlQuestionSchema>;
 // Rich input types
@@ -450,8 +459,10 @@ export const isScaleQuestion = (question: Question): question is ScaleQuestion =
   question.type === 'scale';
 export const isNumberQuestion = (question: Question): question is NumberQuestion =>
   question.type === 'number';
-export const isDateQuestion = (question: Question): question is DateQuestion =>
-  question.type === 'date';
+export const isDateQuestion = (question: Question): question is DateQuestion | CalendarPickerQuestion =>
+  question.type === 'date' || question.type === 'calendar_picker';
+export const isCalendarPickerQuestion = (question: Question): question is CalendarPickerQuestion =>
+  question.type === 'calendar_picker';
 export const isEmailQuestion = (question: Question): question is EmailQuestion =>
   question.type === 'email';
 export const isUrlQuestion = (question: Question): question is UrlQuestion =>
