@@ -25,8 +25,8 @@
     "paths": {
       "@/components/*": ["./src/components/*"],
       "@/lib/*": ["./src/lib/*"],
-      "@/hooks/*": ["./src/lib/hooks/*"],
-      "@/contexts/*": ["./src/lib/contexts/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/contexts/*": ["./src/contexts/*"],
       "@/types/*": ["./src/types/*"],
       "@/app/*": ["./app/*"],
       "@/public/*": ["./public/*"],
@@ -36,7 +36,7 @@
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": [
     "node_modules",
-    "../smartslate-polaris/**/*",
+    "../smartslate-polaris-v4/**/*",
     "../smartslate-app/**/*",
     "**/*.test.ts",
     "**/*.test.tsx",
