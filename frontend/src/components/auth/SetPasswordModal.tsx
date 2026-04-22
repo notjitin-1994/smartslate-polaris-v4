@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { LoadingButton } from '@/components/ui/button';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '../ui/toast';
 import { Eye, EyeOff, Lock, CheckCircle2 } from 'lucide-react';
 
 interface SetPasswordModalProps {
