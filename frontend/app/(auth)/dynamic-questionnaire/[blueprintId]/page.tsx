@@ -10,7 +10,7 @@ import { useDeviceDetection } from '@/lib/hooks/useDeviceDetection';
 import { DesktopOnlyModal } from '@/components/modals/DesktopOnlyModal';
 import { DynamicFormRenderer } from '@/components/dynamic-form/DynamicFormRenderer';
 import { FormSchema } from '@/lib/dynamic-form';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import '@/styles/dynamic-questionnaire.css';
 
 interface BlueprintData {

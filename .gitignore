@@ -83,7 +83,6 @@ secrets/
 credentials/
 keys/
 certs/
-security/
 /auth/
 
 # SSH directories
