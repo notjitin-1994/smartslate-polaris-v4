@@ -1,7 +1,7 @@
 /**
  * Next.js Instrumentation Hook
- * v4-cache-bust-01
- */
+ *
+ * This file is automatically called by Next.js when the server starts.
  * It's the perfect place to validate environment variables and initialize logging.
  *
  * @see https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
