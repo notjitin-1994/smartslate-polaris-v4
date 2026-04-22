@@ -52,10 +52,63 @@ const IconShield = () => (
   </svg>
 );
 
-const PERKS: Perk[] = [];
+const PERKS: Perk[] = [
+  {
+    title: 'Guided discovery',
+    description: 'Structured prompts surface what matters. Get clarity faster.',
+    icon: <IconSpark />,
+  },
+  {
+    title: 'Impact-first priorities',
+    description: 'Score by value and effort. Align teams in minutes.',
+    icon: <IconChart />,
+  },
+  {
+    title: 'Shareable public views',
+    description: 'Link a polished view for stakeholders with one click.',
+    icon: <IconShield />,
+  },
+];
 
 export const PolarisPerks = memo(function PolarisPerks() {
-  return null;
+  return (
+    <div className="mt-2 hidden select-none lg:block">
+      <div role="list" className="grid grid-cols-1 gap-2">
+        {PERKS.map((p) => (
+          <div
+            role="listitem"
+            key={p.title}
+            className="group hover:border-primary/60 relative overflow-hidden rounded-lg border border-white/10 bg-white/5 p-2.5 backdrop-blur-xl transition-all duration-300 hover:bg-white/7"
+          >
+            {/* Accent gradient border (Material-esque) */}
+            <span
+              className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-white/5"
+              aria-hidden
+            />
+            <span
+              className="bg-primary/10 pointer-events-none absolute -inset-px rounded-xl opacity-0 transition-opacity group-hover:opacity-100"
+              aria-hidden
+            />
+
+            <div className="flex items-start gap-2.5">
+              <div className="shrink-0 rounded-md border border-white/10 bg-white/5 p-1.5 shadow-inner">
+                {p.icon}
+              </div>
+              <div className="min-w-0">
+                <div className="mb-0.5 text-[13px] font-semibold tracking-tight text-white">
+                  {p.title}
+                </div>
+                <div className="text-[11px] leading-snug text-white/70">{p.description}</div>
+              </div>
+            </div>
+
+            {/* Hover lift */}
+            <style>{`.group:hover{transform:translateY(-2px)}`}</style>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 });
 
 PolarisPerks.displayName = 'PolarisPerks';

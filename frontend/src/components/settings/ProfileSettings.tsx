@@ -1,92 +1,45 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { SettingCard, SettingRow } from './SettingCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, Trash2, Save, User, Loader2 } from 'lucide-react';
+import { Camera, Upload, Trash2, Save, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { useUserProfile } from '@/lib/hooks/useUserProfile';
-import { useToast } from '@/components/ui/toast';
 
 /**
  * ProfileSettings - User profile information management
  * Includes avatar upload, name fields, bio, and social links
  */
 export function ProfileSettings() {
-  const { profile, updateProfile, uploadAvatar, loading: profileLoading } = useUserProfile();
-  const { showSuccess, showError } = useToast();
-
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('user@example.com');
   const [bio, setBio] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
-  // Initialize form with profile data
-  useEffect(() => {
-    if (profile) {
-      setFirstName(profile.first_name || '');
-      setLastName(profile.last_name || '');
-      setEmail(profile.email || '');
-      setBio(profile.bio || '');
-      setAvatarPreview(profile.avatar_url || null);
-    }
-  }, [profile]);
-
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // 1. Show preview immediately
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatarPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
-
-      // 2. Perform actual upload
-      setIsUploading(true);
-      try {
-        await uploadAvatar(file);
-        showSuccess('Avatar Updated', 'Your profile picture has been saved.');
-      } catch (error) {
-        console.error('Avatar upload failed:', error);
-        showError('Upload Failed', 'There was an error uploading your profile picture.');
-        // Revert preview on failure
-        setAvatarPreview(profile?.avatar_url || null);
-      } finally {
-        setIsUploading(false);
-      }
     }
   };
 
-  const handleRemoveAvatar = async () => {
-    try {
-      await updateProfile({ avatar_url: null });
-      setAvatarPreview(null);
-      showSuccess('Avatar Removed', 'Your profile picture has been removed.');
-    } catch (error) {
-      showError('Error', 'Failed to remove profile picture.');
-    }
+  const handleRemoveAvatar = () => {
+    setAvatarPreview(null);
   };
 
   const handleSave = async () => {
     setIsSaving(true);
-    try {
-      await updateProfile({
-        first_name: firstName,
-        last_name: lastName,
-        bio: bio,
-      });
-      showSuccess('Profile Updated', 'Your changes have been saved successfully.');
-    } catch (error) {
-      showError('Update Failed', 'Failed to save profile changes.');
-    } finally {
-      setIsSaving(false);
-    }
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setIsSaving(false);
   };
 
   return (

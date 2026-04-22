@@ -24,7 +24,6 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { toast } from '@/lib/utils/toast';
 
 interface Session {
   id: string;
@@ -170,33 +169,30 @@ export function SecuritySettings() {
   };
 
   const handleRevokeAllSessions = async () => {
+    if (!confirm('Are you sure you want to revoke all other sessions?')) {
+      return;
+    }
+
     setIsRevokingAll(true);
     try {
-      await toast.promise(
-        (async () => {
-          const response = await fetch('/api/account/sessions', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ revokeAll: true }),
-          });
+      const response = await fetch('/api/account/sessions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ revokeAll: true }),
+      });
 
-          const data = await response.json();
+      const data = await response.json();
 
-          if (!response.ok) {
-            throw new Error(data.error || 'Failed to revoke sessions');
-          }
+      if (!response.ok) {
+        alert(data.error || 'Failed to revoke sessions');
+        return;
+      }
 
-          fetchSessions();
-          return data;
-        })(),
-        {
-          loading: 'Revoking sessions...',
-          success: 'All other sessions have been revoked successfully',
-          error: (err) => err.message || 'An unexpected error occurred',
-        }
-      );
+      alert('All other sessions have been revoked successfully');
+      fetchSessions();
     } catch (error) {
       console.error('Failed to revoke sessions:', error);
+      alert('An unexpected error occurred');
     } finally {
       setIsRevokingAll(false);
     }
@@ -208,34 +204,30 @@ export function SecuritySettings() {
       return;
     }
 
+    if (!confirm('This action is PERMANENT and CANNOT be undone. Are you absolutely sure?')) {
+      return;
+    }
+
     setIsDeletingAccount(true);
     setDeleteError('');
 
     try {
-      await toast.promise(
-        (async () => {
-          const response = await fetch('/api/account/delete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ confirmationText: deleteConfirmText }),
-          });
+      const response = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmationText: deleteConfirmText }),
+      });
 
-          const data = await response.json();
+      const data = await response.json();
 
-          if (!response.ok) {
-            setDeleteError(data.error || 'Failed to delete account');
-            throw new Error(data.error || 'Failed to delete account');
-          }
+      if (!response.ok) {
+        setDeleteError(data.error || 'Failed to delete account');
+        setIsDeletingAccount(false);
+        return;
+      }
 
-          router.push('/');
-          return data;
-        })(),
-        {
-          loading: 'Deleting account...',
-          success: 'Your account has been successfully deleted',
-          error: (err) => err.message || 'An unexpected error occurred',
-        }
-      );
+      alert('Your account has been successfully deleted');
+      router.push('/');
     } catch (error) {
       console.error('Failed to delete account:', error);
       setDeleteError('An unexpected error occurred');

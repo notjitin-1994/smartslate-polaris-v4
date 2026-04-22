@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { toast } from '@/lib/utils/toast';
 
 interface User {
   user_id: string;
@@ -65,6 +66,8 @@ const SUBSCRIPTION_TIERS = [
 
 interface FormErrors {
   full_name?: string;
+  blueprint_creation_limit?: string;
+  blueprint_saving_limit?: string;
 }
 
 export function UserEditModal({ user, onClose, onSuccess }: UserEditModalProps) {
@@ -72,14 +75,35 @@ export function UserEditModal({ user, onClose, onSuccess }: UserEditModalProps) 
     full_name: user.full_name || '',
     user_role: user.user_role,
     subscription_tier: user.subscription_tier,
+    blueprint_creation_limit: user.blueprint_creation_limit,
+    blueprint_saving_limit: user.blueprint_saving_limit,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [hasChanges, setHasChanges] = useState(false);
 
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {};
+
+    if (formData.blueprint_creation_limit < user.blueprint_creation_count) {
+      errors.blueprint_creation_limit = `Cannot be less than current usage (${user.blueprint_creation_count})`;
+    }
+
+    if (formData.blueprint_saving_limit < user.blueprint_saving_count) {
+      errors.blueprint_saving_limit = `Cannot be less than current usage (${user.blueprint_saving_count})`;
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
 
     setSaving(true);
     setError(null);
@@ -92,32 +116,16 @@ export function UserEditModal({ user, onClose, onSuccess }: UserEditModalProps) 
       });
 
       if (!response.ok) {
-        // Get response text first to check if it's JSON
-        const text = await response.text();
-        let errorMessage = 'Failed to update user';
-
-        try {
-          // Try to parse as JSON
-          const data = JSON.parse(text);
-          errorMessage = data.error || data.message || errorMessage;
-        } catch (parseError) {
-          // Not JSON - likely HTML error page
-          console.error('Non-JSON response from API:', {
-            status: response.status,
-            statusText: response.statusText,
-            contentType: response.headers.get('content-type'),
-            responsePreview: text.substring(0, 200),
-          });
-          errorMessage = `API error (${response.status}): ${response.statusText}. Check console for details.`;
-        }
-
-        throw new Error(errorMessage);
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update user');
       }
 
+      toast.success('User updated successfully', 'Changes have been saved');
       onSuccess();
     } catch (err) {
-      console.error('User update error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update user');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update user';
+      setError(errorMessage);
+      toast.error('Failed to update user', errorMessage);
     } finally {
       setSaving(false);
     }
@@ -201,7 +209,7 @@ export function UserEditModal({ user, onClose, onSuccess }: UserEditModalProps) 
                     type="text"
                     value={formData.full_name}
                     onChange={(e) => handleChange('full_name', e.target.value)}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-white transition-all focus:border-cyan-500/50 focus:bg-white/10 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none"
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-white transition-all focus:border-[#06B6D4]/50 focus:bg-white/10 focus:ring-2 focus:ring-[#06B6D4]/20 focus:outline-none"
                     placeholder="Enter full name"
                   />
                 </div>
@@ -219,7 +227,7 @@ export function UserEditModal({ user, onClose, onSuccess }: UserEditModalProps) 
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-between border-white/10 bg-white/5 text-white hover:border-cyan-500/50 hover:bg-white/10"
+                        className="w-full justify-between border-white/10 bg-white/5 text-white hover:border-[#06B6D4]/50 hover:bg-white/10"
                       >
                         <div className="flex items-center">
                           {(() => {
@@ -247,7 +255,7 @@ export function UserEditModal({ user, onClose, onSuccess }: UserEditModalProps) 
                             key={role.value}
                             onClick={() => handleChange('user_role', role.value)}
                             className={`flex cursor-pointer items-center text-white hover:bg-white/10 focus:bg-white/10 ${
-                              isSelected ? 'bg-cyan-500/20 text-cyan-400' : ''
+                              isSelected ? 'bg-[#06B6D4]/20 text-[#06B6D4]' : ''
                             }`}
                           >
                             <div className="flex flex-1 items-center">
@@ -257,7 +265,7 @@ export function UserEditModal({ user, onClose, onSuccess }: UserEditModalProps) 
                                 <span className="text-xs text-white/60">{role.description}</span>
                               </div>
                             </div>
-                            {isSelected && <Check className="ml-2 h-4 w-4 text-cyan-400" />}
+                            {isSelected && <Check className="ml-2 h-4 w-4 text-[#06B6D4]" />}
                           </DropdownMenuItem>
                         );
                       })}
@@ -276,7 +284,7 @@ export function UserEditModal({ user, onClose, onSuccess }: UserEditModalProps) 
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full justify-between border-white/10 bg-white/5 text-white hover:border-cyan-500/50 hover:bg-white/10"
+                        className="w-full justify-between border-white/10 bg-white/5 text-white hover:border-[#06B6D4]/50 hover:bg-white/10"
                       >
                         <div className="flex items-center">
                           <span>
@@ -295,23 +303,83 @@ export function UserEditModal({ user, onClose, onSuccess }: UserEditModalProps) 
                             key={tier.value}
                             onClick={() => handleChange('subscription_tier', tier.value)}
                             className={`flex cursor-pointer items-center text-white hover:bg-white/10 focus:bg-white/10 ${
-                              isSelected ? 'bg-cyan-500/20 text-cyan-400' : ''
+                              isSelected ? 'bg-[#06B6D4]/20 text-[#06B6D4]' : ''
                             }`}
                           >
                             <div className="flex flex-1 flex-col">
                               <span className="font-medium">{tier.label}</span>
                               <span className="text-xs text-white/60">{tier.description}</span>
                             </div>
-                            {isSelected && <Check className="ml-2 h-4 w-4 text-cyan-400" />}
+                            {isSelected && <Check className="ml-2 h-4 w-4 text-[#06B6D4]" />}
                           </DropdownMenuItem>
                         );
                       })}
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <p className="mt-2 text-xs text-white/40">
-                    Subscription tier controls usage limits and features. Limits will be
-                    automatically updated based on tier.
+                    Subscription tier controls usage limits and features
                   </p>
+                </div>
+              </div>
+            </GlassCard>
+
+            {/* Usage Limits */}
+            <GlassCard>
+              <h3 className="mb-4 text-sm font-semibold text-white">Usage Limits</h3>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-white/70">
+                    Blueprint Creation Limit
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.blueprint_creation_limit}
+                    onChange={(e) =>
+                      handleChange('blueprint_creation_limit', parseInt(e.target.value) || 0)
+                    }
+                    className={`w-full rounded-lg border px-4 py-2.5 text-white transition-all focus:ring-2 focus:outline-none ${
+                      formErrors.blueprint_creation_limit
+                        ? 'border-red-500/50 bg-red-500/10 focus:border-red-500/50 focus:ring-red-500/20'
+                        : 'border-white/10 bg-white/5 focus:border-[#06B6D4]/50 focus:bg-white/10 focus:ring-[#06B6D4]/20'
+                    }`}
+                    min="0"
+                  />
+                  {formErrors.blueprint_creation_limit ? (
+                    <p className="mt-2 text-xs text-red-400">
+                      {formErrors.blueprint_creation_limit}
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-xs text-white/40">
+                      Current usage: {user.blueprint_creation_count}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-white/70">
+                    Blueprint Saving Limit
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.blueprint_saving_limit}
+                    onChange={(e) =>
+                      handleChange('blueprint_saving_limit', parseInt(e.target.value) || 0)
+                    }
+                    className={`w-full rounded-lg border px-4 py-2.5 text-white transition-all focus:ring-2 focus:outline-none ${
+                      formErrors.blueprint_saving_limit
+                        ? 'border-red-500/50 bg-red-500/10 focus:border-red-500/50 focus:ring-red-500/20'
+                        : 'border-white/10 bg-white/5 focus:border-[#06B6D4]/50 focus:bg-white/10 focus:ring-[#06B6D4]/20'
+                    }`}
+                    min="0"
+                  />
+                  {formErrors.blueprint_saving_limit ? (
+                    <p className="mt-2 text-xs text-red-400">{formErrors.blueprint_saving_limit}</p>
+                  ) : (
+                    <p className="mt-2 text-xs text-white/40">
+                      Current usage: {user.blueprint_saving_count}
+                    </p>
+                  )}
                 </div>
               </div>
             </GlassCard>
@@ -332,8 +400,8 @@ export function UserEditModal({ user, onClose, onSuccess }: UserEditModalProps) 
 
           <Button
             onClick={handleSubmit}
-            disabled={saving || !hasChanges}
-            className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600 disabled:opacity-50"
+            disabled={saving || !hasChanges || Object.keys(formErrors).length > 0}
+            className="bg-gradient-to-r from-[#06B6D4] to-blue-500 text-white hover:from-[#06B6D4]/90 hover:to-blue-600 disabled:opacity-50"
           >
             {saving ? (
               <>

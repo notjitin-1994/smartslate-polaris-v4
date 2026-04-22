@@ -2,10 +2,8 @@
 
 import { useState } from 'react';
 import type React from 'react';
-import { Lock, Eye, EyeOff, Check, X } from 'lucide-react';
 
 type Props = {
-  id?: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -14,11 +12,49 @@ type Props = {
   name?: string;
   onFocus?: () => void;
   onBlur?: () => void;
-  showValidationIcon?: boolean;
 };
 
+function IconEye({ className = '' }: { className?: string }): React.JSX.Element {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function IconEyeOff({ className = '' }: { className?: string }): React.JSX.Element {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M3 3l18 18" />
+      <path d="M10.6 10.6A3 3 0 0 0 12 15a3 3 0 0 0 2.4-1.2" />
+      <path d="M9.9 4.2A10.8 10.8 0 0 1 12 4.1c7 0 10.5 7 10.5 7a19.7 19.7 0 0 1-4.1 4.9" />
+      <path d="M6.1 6.7C3.7 8.5 2 11.1 2 11.1s3.5 7 10.5 7c1.5 0 2.9-.3 4.1-.8" />
+    </svg>
+  );
+}
+
 export function PasswordInput({
-  id = 'password-input',
   label,
   value,
   onChange,
@@ -27,114 +63,44 @@ export function PasswordInput({
   name,
   onFocus,
   onBlur,
-  showValidationIcon = true,
 }: Props): React.JSX.Element {
   const [visible, setVisible] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [touched, setTouched] = useState(false);
-
-  // Password validation logic
-  const checkPasswordCriteria = (pwd: string): boolean => {
-    const criteria = [
-      pwd.length >= 8,
-      /[A-Z]/.test(pwd),
-      /[a-z]/.test(pwd),
-      /\d/.test(pwd),
-      /[^a-zA-Z\d]/.test(pwd),
-    ];
-    return criteria.every((met) => met);
-  };
-
-  const hasValue = value.length > 0;
-  const meetsAllCriteria = checkPasswordCriteria(value);
-  const showValidation = touched && !focused;
-
-  function handleFocus() {
-    setFocused(true);
-    onFocus?.();
-  }
-
-  function handleBlur() {
-    setFocused(false);
-    setTouched(true);
-    onBlur?.();
-  }
 
   return (
-    <div className="space-y-1">
-      {/* Label - Compact */}
-      <label htmlFor={id} className="block text-[11px] font-semibold text-white/60 uppercase tracking-wider">
-        {label}
-      </label>
-
-      {/* Input Container */}
-      <div className="group relative">
-        {/* Glow effect on focus */}
-        <div
-          className={`from-primary/20 to-primary-dark/20 absolute -inset-0.5 rounded-xl bg-gradient-to-r opacity-0 blur transition-opacity duration-300 ${
-            focused ? 'opacity-100' : ''
-          }`}
-          aria-hidden="true"
+    <div className="space-y-2">
+      <label className="block text-sm text-white/70">{label}</label>
+      <div className="group animate-fade-in-up relative">
+        <input
+          className="focus:ring-primary focus:border-primary w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder-white/40 transition outline-none autofill:shadow-[inset_0_0_0px_1000px_rgba(255,255,255,0.05)] focus:ring-2 focus:ring-offset-0 [&:-webkit-autofill]:[-webkit-text-fill-color:white] [&:autofill]:[-webkit-text-fill-color:white]"
+          type={visible ? 'text' : 'password'}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          autoComplete={autoComplete}
+          name={name}
         />
-
-        {/* Input wrapper */}
-        <div className="relative">
-          {/* Lock Icon - Left - Smaller */}
-          <div className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2">
-            <Lock
-              className={`h-4 w-4 transition-colors duration-200 ${
-                focused ? 'text-primary' : 'text-white/40'
-              }`}
-            />
-          </div>
-
-          {/* Input Field - Compact padding */}
-          <input
-            id={id}
-            type={visible ? 'text' : 'password'}
-            autoComplete={autoComplete}
-            name={name}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            placeholder={placeholder}
-            className={`w-full rounded-xl border bg-white/5 py-2.5 pr-20 pl-10 text-sm text-white backdrop-blur-sm transition-all duration-200 placeholder:text-white/30 focus:ring-2 focus:outline-none xl:py-3 ${
-              // Validation colors take priority
-              hasValue && meetsAllCriteria
-                ? 'border-emerald-500/50 !bg-white/10 ring-emerald-500/10'
-                : !hasValue || !meetsAllCriteria
-                  ? 'border-red-500/50 !bg-white/10 ring-red-500/10'
-                  : focused
-                    ? 'border-primary/50 ring-primary/20 bg-white/10'
-                    : 'border-white/10 hover:border-white/20 hover:bg-white/[0.08]'
-            }`}
-          />
-
-          {/* Validation Icon - Middle Right */}
-          {showValidationIcon && hasValue && (
-            <div className="pointer-events-none absolute top-1/2 right-12 -translate-y-1/2">
-              {meetsAllCriteria ? (
-                <Check className="h-4 w-4 text-emerald-400" />
-              ) : (
-                <X className="h-4 w-4 text-red-400" />
-              )}
-            </div>
-          )}
-
-          {/* Toggle Visibility Button - Far Right - Smaller */}
-          <button
-            type="button"
-            tabIndex={-1}
-            aria-label={visible ? 'Hide password' : 'Show password'}
-            aria-pressed={visible}
-            onClick={() => setVisible((v) => !v)}
-            className="focus:ring-primary/50 absolute top-1/2 right-3 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-white/40 transition-all duration-200 hover:bg-white/5 hover:text-white/70 focus:ring-2 focus:outline-none"
-            title={visible ? 'Hide password' : 'Show password'}
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label={visible ? 'Hide password' : 'Show password'}
+          aria-pressed={visible}
+          onClick={() => setVisible((v) => !v)}
+          className="pressable absolute top-1/2 right-3 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-white/60 transition-colors hover:text-white"
+          title={visible ? 'Hide password' : 'Show password'}
+        >
+          <span
+            className={`transition-opacity duration-200 ${visible ? 'opacity-0' : 'opacity-100'}`}
           >
-            {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
+            <IconEye className="h-5 w-5" />
+          </span>
+          <span
+            className={`absolute transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <IconEyeOff className="h-5 w-5" />
+          </span>
+        </button>
       </div>
     </div>
   );

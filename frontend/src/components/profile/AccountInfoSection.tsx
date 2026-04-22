@@ -1,181 +1,149 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Key, CreditCard, Info } from 'lucide-react';
-import Link from 'next/link';
+import { Shield, Mail, Calendar, CreditCard, Key } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/lib/hooks/useUserProfile';
-import { UpdatePasswordModal } from './UpdatePasswordModal';
 
-/**
- * AccountInfoSection - Minimalist account information cards
- * Simplified from 6 cards to 3 essential cards:
- * 1. Authentication & Security
- * 2. Last Login
- * 3. Quick Actions
- */
 export function AccountInfoSection() {
   const { user } = useAuth();
   const { profile, loading } = useUserProfile();
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   if (loading) {
     return (
       <GlassCard className="p-6">
         <div className="animate-pulse space-y-4">
-          <div className="bg-text-disabled/20 h-4 w-32 rounded" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-text-disabled/10 h-24 rounded-lg" />
-            <div className="bg-text-disabled/10 h-24 rounded-lg" />
-            <div className="bg-text-disabled/10 h-24 rounded-lg" />
+          <div className="h-4 w-1/4 rounded bg-neutral-200 dark:bg-neutral-700"></div>
+          <div className="space-y-2">
+            <div className="h-3 rounded bg-neutral-200 dark:bg-neutral-700"></div>
+            <div className="h-3 w-3/4 rounded bg-neutral-200 dark:bg-neutral-700"></div>
           </div>
         </div>
       </GlassCard>
     );
   }
 
-  // Format last login
-  const lastLogin = user?.last_sign_in_at
-    ? new Date(user.last_sign_in_at).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : 'Never';
+  const accountInfo = [
+    {
+      icon: Mail,
+      label: 'Email',
+      value: user?.email || 'Not provided',
+      description: 'Primary account email address',
+    },
+    {
+      icon: Calendar,
+      label: 'Member Since',
+      value: user?.created_at
+        ? new Date(user.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        : 'Unknown',
+      description: 'Account creation date',
+    },
+    {
+      icon: Shield,
+      label: 'Account Type',
+      value: user?.app_metadata?.provider || 'Email',
+      description: 'Authentication provider',
+    },
+    {
+      icon: CreditCard,
+      label: 'Subscription',
+      value: profile?.subscription_tier
+        ? profile.subscription_tier.charAt(0).toUpperCase() + profile.subscription_tier.slice(1)
+        : 'Explorer',
+      description: 'Current subscription tier',
+    },
+    {
+      icon: Key,
+      label: 'Last Login',
+      value: user?.last_sign_in_at
+        ? new Date(user.last_sign_in_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : 'Recent',
+      description: 'Most recent sign-in time',
+    },
+  ];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.3 }}
+      transition={{ duration: 0.5, delay: 0.3 }}
     >
       <GlassCard className="p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h2 className="text-heading text-text-primary font-semibold">Account Details</h2>
-          <p className="text-caption text-text-secondary mt-1">
-            Security and authentication information
-          </p>
+        <div className="mb-6 flex items-center gap-3">
+          <div className="from-primary/20 to-secondary/20 border-primary/30 flex h-10 w-10 items-center justify-center rounded-xl border bg-gradient-to-br">
+            <Key className="text-primary h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-heading text-foreground font-semibold">Account Information</h2>
+            <p className="text-body text-text-secondary">Your account details and settings</p>
+          </div>
         </div>
 
-        {/* Info Cards Grid */}
-        <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Authentication Method */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.4 }}
-            className={cn(
-              'bg-background-surface hover:bg-background-paper group border-primary-accent/20 rounded-lg border p-4',
-              'transition-all duration-200'
-            )}
-          >
-            <div className="flex items-start gap-3">
-              <div className="bg-primary-accent/10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
-                <Shield className="text-primary-accent h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-caption text-text-secondary mb-1 font-medium">Authentication</p>
-                <p className="text-body text-text-primary truncate font-semibold">
-                  {user?.app_metadata?.provider?.charAt(0).toUpperCase() +
-                    user?.app_metadata?.provider?.slice(1) || 'Email'}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Last Login */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.5 }}
-            className={cn(
-              'bg-background-surface hover:bg-background-paper group border-secondary-accent/20 rounded-lg border p-4',
-              'transition-all duration-200'
-            )}
-          >
-            <div className="flex items-start gap-3">
-              <div className="bg-secondary-accent/10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
-                <Info className="text-secondary-accent h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-caption text-text-secondary mb-1 font-medium">Last Login</p>
-                <p className="text-body text-text-primary truncate font-semibold">{lastLogin}</p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Account Status */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.6 }}
-            className={cn(
-              'bg-background-surface hover:bg-background-paper group border-success/20 rounded-lg border p-4',
-              'transition-all duration-200'
-            )}
-          >
-            <div className="flex items-start gap-3">
-              <div className="bg-success/10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg">
-                <Shield className="text-success h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-caption text-text-secondary mb-1 font-medium">Account Status</p>
-                <p className="text-body text-success truncate font-semibold">Active & Secure</p>
-              </div>
-            </div>
-          </motion.div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {accountInfo.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <motion.div
+                key={item.label}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.4 + index * 0.1 }}
+                className="group"
+              >
+                <div className="bg-background/50 hover:bg-background/80 rounded-xl border border-neutral-200/50 p-4 transition-all duration-200 hover:shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-primary/10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
+                      <Icon className="text-primary h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-caption text-text-secondary mb-1 font-medium tracking-wide uppercase">
+                        {item.label}
+                      </p>
+                      <p className="text-body text-foreground truncate font-medium">{item.value}</p>
+                      <p className="text-caption text-text-secondary mt-1">{item.description}</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* Quick Actions */}
+        {/* Additional Account Actions */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.7 }}
-          className="border-background-surface flex flex-wrap gap-3 border-t pt-6"
+          transition={{ duration: 0.3, delay: 0.8 }}
+          className="mt-6 border-t border-neutral-200/50 pt-6"
         >
-          <button
-            onClick={() => setIsPasswordModalOpen(true)}
-            className={cn(
-              'inline-flex items-center gap-2 rounded-lg px-4 py-2',
-              'from-primary-accent to-primary-accent-light bg-gradient-to-r',
-              'text-caption font-medium text-white',
-              'hover:scale-105 hover:shadow-lg',
-              'transition-all duration-200',
-              'focus-visible:ring-primary-accent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
-            )}
-          >
-            <Key className="h-4 w-4" />
-            Update Password
-          </button>
-
-          <Link
-            href="/pricing"
-            className={cn(
-              'inline-flex items-center gap-2 rounded-lg px-4 py-2',
-              'border-primary-accent/30 bg-background-surface border',
-              'text-text-primary text-caption font-medium',
-              'hover:bg-background-paper hover:border-primary-accent/50',
-              'transition-all duration-200',
-              'focus-visible:ring-primary-accent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
-            )}
-          >
-            <CreditCard className="h-4 w-4" />
-            Manage Subscription
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <button className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none">
+              <Key className="h-4 w-4" />
+              Update Password
+            </button>
+            <button className="bg-background text-foreground hover:bg-background/80 focus-visible:ring-primary inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-4 py-2 text-sm font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none">
+              <Shield className="h-4 w-4" />
+              Two-Factor Auth
+            </button>
+            <button className="bg-background text-foreground hover:bg-background/80 focus-visible:ring-primary inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-4 py-2 text-sm font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none">
+              <CreditCard className="h-4 w-4" />
+              Manage Subscription
+            </button>
+          </div>
         </motion.div>
       </GlassCard>
-
-      {/* Password Update Modal */}
-      <UpdatePasswordModal
-        isOpen={isPasswordModalOpen}
-        onClose={() => setIsPasswordModalOpen(false)}
-      />
     </motion.div>
   );
 }

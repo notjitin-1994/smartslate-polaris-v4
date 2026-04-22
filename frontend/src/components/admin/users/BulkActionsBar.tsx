@@ -16,6 +16,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
+import { toast, adminToasts } from '@/lib/utils/toast';
 
 interface BulkActionsBarProps {
   selectedCount: number;
@@ -65,18 +66,45 @@ export function BulkActionsBar({
 
       if (response.ok) {
         const result = await response.json();
-        // Show success notification
-        console.log('Bulk action successful:', result);
+
+        // Show appropriate success toast based on action
+        if (action === 'bulk_delete') {
+          adminToasts.userDeletedWithCount(selectedCount);
+        } else if (action === 'bulk_update_role' && data?.role) {
+          adminToasts.bulkRoleUpdated(selectedCount, data.role);
+        } else if (action === 'bulk_update_tier' && data?.tier) {
+          const tierLabel =
+            SUBSCRIPTION_TIERS.find((t) => t.value === data.tier)?.label || data.tier;
+          adminToasts.bulkTierUpdated(selectedCount, tierLabel);
+        } else {
+          toast.success(
+            'Bulk action completed',
+            `Successfully processed ${selectedCount} user${selectedCount > 1 ? 's' : ''}`
+          );
+        }
+
         onClear();
         await onRefresh();
       } else {
-        const error = await response.json();
-        // Show error notification
-        console.error('Bulk action failed:', error);
+        // Improved error handling: safely parse JSON response
+        let errorMessage = 'An error occurred while processing the bulk action';
+        try {
+          const error = await response.json();
+          errorMessage = error.error || error.message || error.details || errorMessage;
+        } catch (parseError) {
+          // If JSON parsing fails, use status text
+          errorMessage = `Request failed with status ${response.status}: ${response.statusText}`;
+          console.error('[BulkActionsBar] Failed to parse error response:', parseError);
+        }
+        toast.error('Bulk action failed', errorMessage);
+        console.error('[BulkActionsBar] Bulk action failed:', {
+          status: response.status,
+          statusText: response.statusText,
+        });
       }
     } catch (error) {
       console.error('Bulk action error:', error);
-      // Show error notification
+      toast.error('Operation failed', 'An unexpected error occurred. Please try again.');
     } finally {
       setIsProcessing(false);
       setShowConfirmDelete(false);
@@ -98,11 +126,11 @@ export function BulkActionsBar({
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
     >
-      <GlassCard className="border-l-4 border-cyan-500">
+      <GlassCard className="border-l-4 border-[#06B6D4]">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/20">
-              <Check className="h-5 w-5 text-cyan-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#06B6D4]/20">
+              <Check className="h-5 w-5 text-[#06B6D4]" />
             </div>
             <div>
               <p className="text-sm font-semibold text-white">
@@ -234,10 +262,10 @@ export function BulkActionsBar({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mt-4 flex items-center space-x-3 rounded-lg bg-cyan-500/10 p-3"
+            className="mt-4 flex items-center space-x-3 rounded-lg bg-[#06B6D4]/10 p-3"
           >
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
-            <p className="text-sm text-cyan-400">Processing bulk action...</p>
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#06B6D4] border-t-transparent" />
+            <p className="text-sm text-[#06B6D4]">Processing bulk action...</p>
           </motion.div>
         )}
       </GlassCard>

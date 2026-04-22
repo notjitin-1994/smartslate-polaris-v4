@@ -24,7 +24,7 @@ import {
   Clock,
   TrendingUp,
 } from 'lucide-react';
-import MobileNavigationFooter from '@/components/MobileNavigationFooter';
+import MobileNavigationFooter from '@/components/layout/MobileNavigationFooter';
 
 export default function DocumentationPage() {
   return (

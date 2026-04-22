@@ -14,12 +14,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useMediaQuery } from '@/lib/hooks/useMediaQuery';
-import {
-  ResponsiveTableWrapper,
-  ResponsiveTableCard,
-  ResponsiveTableRow,
-} from '@/components/admin/ResponsiveTable';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,8 +57,6 @@ import { UserDetailsModal } from './UserDetailsModal';
 import { BulkActionsBar } from './BulkActionsBar';
 import { AdvancedFilters } from './AdvancedFilters';
 import { ExportDialog } from './ExportDialog';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useToast } from '../../ui/toast';
 
 interface User {
   user_id: string;
@@ -110,7 +102,6 @@ interface FilterConfig {
 
 export function UserManagementTable() {
   const router = useRouter();
-  const { isMobile } = useMediaQuery();
 
   // State management
   const [users, setUsers] = useState<User[]>([]);
@@ -119,7 +110,7 @@ export function UserManagementTable() {
   const [refreshing, setRefreshing] = useState(false);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
-    limit: 10,
+    limit: 20,
     total: 0,
     totalPages: 0,
   });
@@ -128,19 +119,6 @@ export function UserManagementTable() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
-  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
-    isOpen: boolean;
-    userId: string | null;
-    userName: string;
-  }>({
-    isOpen: false,
-    userId: null,
-    userName: '',
-  });
-  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
-
-  // Toast notifications
-  const { showSuccess, showError } = useToast();
 
   // Filter and sort states
   const [showFilters, setShowFilters] = useState(false);
@@ -152,7 +130,7 @@ export function UserManagementTable() {
     search: '',
     role: '',
     tier: '',
-    status: 'active',
+    status: 'all',
     dateRange: null,
     usageRange: null,
   });
@@ -174,22 +152,11 @@ export function UserManagementTable() {
         ...(filters.role && { role: filters.role }),
         ...(filters.tier && { tier: filters.tier }),
         ...(filters.status !== 'all' && { status: filters.status }),
-        ...(filters.dateRange && {
-          dateFrom: filters.dateRange.start,
-          dateTo: filters.dateRange.end,
-        }),
-        ...(filters.usageRange && {
-          usageMin: filters.usageRange.min.toString(),
-          usageMax: filters.usageRange.max.toString(),
-        }),
-        _t: Date.now().toString(), // Cache buster
       });
 
       console.log('[UserManagementTable] Fetching users with params:', Object.fromEntries(params));
 
-      const response = await fetch(`/api/admin/users?${params}`, {
-        cache: 'no-store',
-      });
+      const response = await fetch(`/api/admin/users?${params}`);
       const data = await response.json();
 
       console.log('[UserManagementTable] API response:', {
@@ -260,41 +227,26 @@ export function UserManagementTable() {
     }));
   };
 
-  // Delete handler - open confirm dialog
-  const handleDeleteUser = (user: User) => {
-    setDeleteConfirmDialog({
-      isOpen: true,
-      userId: user.user_id,
-      userName: user.full_name || user.email,
-    });
-  };
-
-  // Confirm delete handler
-  const handleDeleteConfirm = async () => {
-    const userId = deleteConfirmDialog.userId;
-    if (!userId) return;
-
-    setDeletingUserId(userId);
+  // Delete handler
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
 
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete user');
+      if (response.ok) {
+        await fetchUsers();
+        // Show success notification
+      } else {
+        // Show error notification
       }
-
-      const result = await response.json();
-      showSuccess(result.message || 'User deleted successfully');
-      setDeleteConfirmDialog({ isOpen: false, userId: null, userName: '' });
-      await fetchUsers();
     } catch (error) {
       console.error('Failed to delete user:', error);
-      showError(error instanceof Error ? error.message : 'Failed to delete user');
-    } finally {
-      setDeletingUserId(null);
+      // Show error notification
     }
   };
 
@@ -323,62 +275,6 @@ export function UserManagementTable() {
       free: 'outline',
     };
     return variants[tier] || 'outline';
-  };
-
-  // Tier color styling (minimalistic, industry-standard)
-  const getTierColor = (tier: string) => {
-    const colors: Record<string, { bg: string; border: string; text: string }> = {
-      free: {
-        bg: 'rgba(148, 163, 184, 0.1)',
-        border: 'rgba(148, 163, 184, 0.2)',
-        text: 'rgb(203, 213, 225)',
-      },
-      explorer: {
-        bg: 'rgba(148, 163, 184, 0.1)',
-        border: 'rgba(148, 163, 184, 0.2)',
-        text: 'rgb(203, 213, 225)',
-      },
-      navigator: {
-        bg: 'rgba(59, 130, 246, 0.1)',
-        border: 'rgba(59, 130, 246, 0.2)',
-        text: 'rgb(147, 197, 253)',
-      },
-      voyager: {
-        bg: 'rgba(139, 92, 246, 0.1)',
-        border: 'rgba(139, 92, 246, 0.2)',
-        text: 'rgb(196, 181, 253)',
-      },
-      crew_member: {
-        bg: 'rgba(236, 72, 153, 0.1)',
-        border: 'rgba(236, 72, 153, 0.2)',
-        text: 'rgb(249, 168, 212)',
-      },
-      fleet_member: {
-        bg: 'rgba(249, 115, 22, 0.1)',
-        border: 'rgba(249, 115, 22, 0.2)',
-        text: 'rgb(253, 186, 116)',
-      },
-      armada_member: {
-        bg: 'rgba(239, 68, 68, 0.1)',
-        border: 'rgba(239, 68, 68, 0.2)',
-        text: 'rgb(252, 165, 165)',
-      },
-    };
-    return colors[tier] || colors.free;
-  };
-
-  // Format tier name for display
-  const formatTierName = (tier: string): string => {
-    const names: Record<string, string> = {
-      free: 'Free',
-      explorer: 'Explorer',
-      navigator: 'Navigator',
-      voyager: 'Voyager',
-      crew_member: 'Crew',
-      fleet_member: 'Fleet',
-      armada_member: 'Armada',
-    };
-    return names[tier] || tier.replace('_', ' ');
   };
 
   // Get user status indicator
@@ -410,21 +306,13 @@ export function UserManagementTable() {
     }
   };
 
-  // Usage percentage calculations
-  const getCreationUsagePercentage = (user: User) => {
+  // Usage percentage calculation
+  const getUsagePercentage = (user: User) => {
     const creationPercent =
       user.blueprint_creation_limit > 0
         ? (user.blueprint_creation_count / user.blueprint_creation_limit) * 100
         : 0;
     return Math.round(creationPercent);
-  };
-
-  const getSavingUsagePercentage = (user: User) => {
-    const savingPercent =
-      user.blueprint_saving_limit > 0
-        ? (user.blueprint_saving_count / user.blueprint_saving_limit) * 100
-        : 0;
-    return Math.round(savingPercent);
   };
 
   // Sort icon component
@@ -433,9 +321,9 @@ export function UserManagementTable() {
       return <ArrowUpDown className="ml-1 h-3 w-3 text-white/40" />;
     }
     return sortConfig.order === 'asc' ? (
-      <ArrowUp className="ml-1 h-3 w-3 text-[#06B6D4]" />
+      <ArrowUp className="ml-1 h-3 w-3 text-cyan-400" />
     ) : (
-      <ArrowDown className="ml-1 h-3 w-3 text-[#06B6D4]" />
+      <ArrowDown className="ml-1 h-3 w-3 text-cyan-400" />
     );
   };
 
@@ -446,7 +334,7 @@ export function UserManagementTable() {
     return (
       <GlassCard className="p-12">
         <div className="flex flex-col items-center justify-center space-y-4">
-          <RefreshCw className="h-8 w-8 animate-spin text-[#06B6D4]" />
+          <RefreshCw className="h-8 w-8 animate-spin text-cyan-400" />
           <p className="text-white/60">Loading users...</p>
         </div>
       </GlassCard>
@@ -457,22 +345,21 @@ export function UserManagementTable() {
     <div className="space-y-6">
       {/* Header Actions Bar */}
       <GlassCard>
-        <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {/* Search */}
           <div className="relative flex-1">
             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-white/40" />
             <input
               type="text"
-              placeholder={isMobile ? 'Search...' : 'Search users by name, email...'}
-              className="w-full rounded-lg border border-white/10 bg-white/5 py-2.5 pr-10 pl-10 text-sm text-white placeholder-white/40 transition-all focus:border-[#06B6D4]/50 focus:bg-white/10 focus:ring-2 focus:ring-[#06B6D4]/20 focus:outline-none sm:text-base"
+              placeholder="Search users by name, email..."
+              className="w-full rounded-lg border border-white/10 bg-white/5 py-2 pr-10 pl-10 text-white placeholder-white/40 transition-all focus:border-cyan-500/50 focus:bg-white/10 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute top-1/2 right-3 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center text-white/40 hover:text-white/60"
-                aria-label="Clear search"
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-white/40 hover:text-white/60"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -480,32 +367,30 @@ export function UserManagementTable() {
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="small"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="min-h-[44px] border-white/10 bg-white/5 text-white hover:bg-white/10"
+              className="border-white/10 bg-white/5 text-white hover:bg-white/10"
             >
-              <RefreshCw
-                className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''} ${isMobile ? '' : 'mr-2'}`}
-              />
-              {!isMobile && 'Refresh'}
+              <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
             </Button>
 
             <Button
               variant="outline"
               size="small"
               onClick={() => setShowFilters(!showFilters)}
-              className={`min-h-[44px] border-white/10 text-white hover:bg-white/10 ${
-                showFilters ? 'border-[#06B6D4]/50 bg-[#06B6D4]/20' : 'bg-white/5'
+              className={`border-white/10 text-white hover:bg-white/10 ${
+                showFilters ? 'border-cyan-500/50 bg-cyan-500/20' : 'bg-white/5'
               }`}
             >
-              <Filter className={`h-4 w-4 ${isMobile ? '' : 'mr-2'}`} />
-              {!isMobile && 'Filters'}
-              {(filters.role || filters.tier || filters.status !== 'all') && !isMobile && (
-                <Badge className="ml-2 bg-[#06B6D4] text-white" variant="default">
+              <Filter className="mr-2 h-4 w-4" />
+              Filters
+              {(filters.role || filters.tier || filters.status !== 'all') && (
+                <Badge className="ml-2 bg-cyan-500 text-white" variant="default">
                   Active
                 </Badge>
               )}
@@ -515,22 +400,22 @@ export function UserManagementTable() {
               variant="outline"
               size="small"
               onClick={() => setShowExportDialog(true)}
-              className="min-h-[44px] border-white/10 bg-white/5 text-white hover:bg-white/10"
+              className="border-white/10 bg-white/5 text-white hover:bg-white/10"
             >
-              <Download className={`h-4 w-4 ${isMobile ? '' : 'mr-2'}`} />
-              {!isMobile && 'Export'}
+              <Download className="mr-2 h-4 w-4" />
+              Export
             </Button>
 
             <Button
               size="small"
-              className="min-h-[44px] bg-gradient-to-r from-[#06B6D4] to-blue-500 text-white hover:from-[#06B6D4]/90 hover:to-blue-600"
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600"
               onClick={() => {
                 // Handle add user
                 router.push('/admin/users/new');
               }}
             >
-              <UserPlus className={`h-4 w-4 ${isMobile ? '' : 'mr-2'}`} />
-              {!isMobile && 'Add User'}
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add User
             </Button>
           </div>
         </div>
@@ -562,527 +447,248 @@ export function UserManagementTable() {
         )}
       </AnimatePresence>
 
-      {/* Users Table/Cards */}
-      <GlassCard className={isMobile ? 'p-4' : 'overflow-hidden p-0'}>
-        {!isMobile && (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b border-white/10 hover:bg-transparent">
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedUsers.size === users.length && users.length > 0}
-                      onCheckedChange={handleSelectAll}
-                      className="border-white/20"
-                    />
-                  </TableHead>
+      {/* Users Table */}
+      <GlassCard className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-white/10 hover:bg-transparent">
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedUsers.size === users.length && users.length > 0}
+                    onCheckedChange={handleSelectAll}
+                    className="border-white/20"
+                  />
+                </TableHead>
 
-                  <TableHead
-                    className="cursor-pointer text-white/80 select-none"
-                    onClick={() => handleSort('full_name')}
-                  >
-                    <div className="flex items-center">
-                      User
-                      <SortIcon field="full_name" />
-                    </div>
-                  </TableHead>
-
-                  <TableHead
-                    className="cursor-pointer text-white/80 select-none"
-                    onClick={() => handleSort('email')}
-                  >
-                    <div className="flex items-center">
-                      Email
-                      <SortIcon field="email" />
-                    </div>
-                  </TableHead>
-
-                  <TableHead className="text-white/80">Status</TableHead>
-
-                  <TableHead
-                    className="cursor-pointer text-white/80 select-none"
-                    onClick={() => handleSort('user_role')}
-                  >
-                    <div className="flex items-center">
-                      Role
-                      <SortIcon field="user_role" />
-                    </div>
-                  </TableHead>
-
-                  <TableHead
-                    className="cursor-pointer text-white/80 select-none"
-                    onClick={() => handleSort('subscription_tier')}
-                  >
-                    <div className="flex items-center">
-                      Tier
-                      <SortIcon field="subscription_tier" />
-                    </div>
-                  </TableHead>
-
-                  <TableHead className="text-white/80">Usage</TableHead>
-
-                  <TableHead
-                    className="cursor-pointer text-white/80 select-none"
-                    onClick={() => handleSort('created_at')}
-                  >
-                    <div className="flex items-center">
-                      Joined
-                      <SortIcon field="created_at" />
-                    </div>
-                  </TableHead>
-
-                  <TableHead className="text-white/80">Last Active</TableHead>
-
-                  <TableHead className="w-12"></TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {users.map((user, index) => {
-                  const status = getUserStatus(user);
-                  const creationUsagePercent = getCreationUsagePercentage(user);
-                  const savingUsagePercent = getSavingUsagePercentage(user);
-                  const StatusIcon = status.icon;
-
-                  return (
-                    <motion.tr
-                      key={user.user_id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2, delay: index * 0.02 }}
-                      className="group border-b border-white/5 transition-colors hover:bg-white/5"
-                    >
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedUsers.has(user.user_id)}
-                          onCheckedChange={(checked: boolean) =>
-                            handleSelectUser(user.user_id, checked)
-                          }
-                          className="border-white/20"
-                        />
-                      </TableCell>
-
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#06B6D4]/20 to-blue-500/20 text-sm font-semibold text-[#06B6D4]">
-                            {(user.full_name || user.email || 'A')[0].toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="font-medium text-white">
-                              {user.full_name || 'Anonymous User'}
-                            </div>
-                            <div className="text-xs text-white/40">
-                              ID: {user.user_id.slice(0, 8)}...
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-
-                      <TableCell>
-                        <div className="flex items-center text-white/60">
-                          <Mail className="mr-2 h-4 w-4 text-white/40" />
-                          {user.email}
-                        </div>
-                      </TableCell>
-
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <div className={`h-2 w-2 rounded-full ${status.color}`} />
-                          <span className="text-sm text-white/70">{status.label}</span>
-                        </div>
-                      </TableCell>
-
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          {user.user_role === 'admin' ? (
-                            <div className="inline-flex items-center rounded-md border border-amber-500/20 bg-amber-500/10 px-2.5 py-1">
-                              <Crown className="mr-1.5 h-3 w-3 text-amber-400" />
-                              <span className="text-xs font-medium text-amber-300">Admin</span>
-                            </div>
-                          ) : user.user_role === 'developer' ? (
-                            <div className="inline-flex items-center rounded-md border border-purple-500/20 bg-purple-500/10 px-2.5 py-1">
-                              <Shield className="mr-1.5 h-3 w-3 text-purple-400" />
-                              <span className="text-xs font-medium text-purple-300">Developer</span>
-                            </div>
-                          ) : (
-                            <div className="inline-flex items-center rounded-md border border-slate-500/20 bg-slate-500/10 px-2.5 py-1">
-                              <span className="text-xs font-medium text-slate-300">User</span>
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-
-                      <TableCell>
-                        <div
-                          className="inline-flex items-center rounded-md border px-2.5 py-1"
-                          style={{
-                            backgroundColor: getTierColor(user.subscription_tier).bg,
-                            borderColor: getTierColor(user.subscription_tier).border,
-                          }}
-                        >
-                          <span
-                            className="text-xs font-medium"
-                            style={{ color: getTierColor(user.subscription_tier).text }}
-                          >
-                            {formatTierName(user.subscription_tier)}
-                          </span>
-                        </div>
-                      </TableCell>
-
-                      <TableCell>
-                        {user.user_role === 'developer' ? (
-                          <div className="flex items-center space-x-2">
-                            <div className="rounded-md border border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-pink-500/20 px-3 py-1.5">
-                              <span className="text-xs font-semibold text-purple-300">
-                                ∞ Unlimited
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            {/* Blueprint Generations (Creation) */}
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-white/50">Gen:</span>
-                                <span className="text-white/60">
-                                  {user.blueprint_creation_count} / {user.blueprint_creation_limit}
-                                </span>
-                                <span className="text-white/40">{creationUsagePercent}%</span>
-                              </div>
-                              <div className="h-1 w-32 overflow-hidden rounded-full bg-white/10">
-                                <div
-                                  className={`h-full transition-all ${
-                                    creationUsagePercent >= 90
-                                      ? 'bg-red-500'
-                                      : creationUsagePercent >= 70
-                                        ? 'bg-yellow-500'
-                                        : 'bg-green-500'
-                                  }`}
-                                  style={{ width: `${Math.min(creationUsagePercent, 100)}%` }}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Saved Blueprints (Saving) */}
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-white/50">Saved:</span>
-                                <span className="text-white/60">
-                                  {user.blueprint_saving_count} / {user.blueprint_saving_limit}
-                                </span>
-                                <span className="text-white/40">{savingUsagePercent}%</span>
-                              </div>
-                              <div className="h-1 w-32 overflow-hidden rounded-full bg-white/10">
-                                <div
-                                  className={`h-full transition-all ${
-                                    savingUsagePercent >= 90
-                                      ? 'bg-red-500'
-                                      : savingUsagePercent >= 70
-                                        ? 'bg-yellow-500'
-                                        : 'bg-green-500'
-                                  }`}
-                                  style={{ width: `${Math.min(savingUsagePercent, 100)}%` }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </TableCell>
-
-                      <TableCell className="text-sm text-white/60">
-                        {new Date(user.created_at).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </TableCell>
-
-                      <TableCell className="text-sm text-white/60">
-                        {user.last_sign_in_at
-                          ? new Date(user.last_sign_in_at).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                            })
-                          : 'Never'}
-                      </TableCell>
-
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="small"
-                              className="opacity-0 transition-opacity group-hover:opacity-100"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-
-                            <DropdownMenuItem onClick={() => setViewingUser(user)}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              View Details
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem onClick={() => setEditingUser(user)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit User
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                              onClick={() => router.push(`/admin/users/${user.user_id}/activity`)}
-                            >
-                              <Activity className="mr-2 h-4 w-4" />
-                              Activity Log
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                              onClick={() => router.push(`/admin/users/${user.user_id}/blueprints`)}
-                            >
-                              <FileText className="mr-2 h-4 w-4" />
-                              View Blueprints
-                            </DropdownMenuItem>
-
-                            <DropdownMenuSeparator />
-
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteUser(user)}
-                              className="text-red-400 focus:bg-red-500/10 focus:text-red-400"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete User
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </motion.tr>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-
-        {/* Mobile Card View */}
-        {isMobile && (
-          <div className="space-y-3">
-            {users.map((user, index) => {
-              const status = getUserStatus(user);
-              const creationUsagePercent = getCreationUsagePercentage(user);
-              const savingUsagePercent = getSavingUsagePercentage(user);
-              const StatusIcon = status.icon;
-
-              return (
-                <motion.div
-                  key={user.user_id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.02 }}
-                  className="space-y-3 rounded-lg border border-white/10 bg-white/5 p-4"
+                <TableHead
+                  className="cursor-pointer text-white/80 select-none"
+                  onClick={() => handleSort('full_name')}
                 >
-                  {/* Header with checkbox and actions */}
-                  <div className="flex items-center justify-between">
-                    <Checkbox
-                      checked={selectedUsers.has(user.user_id)}
-                      onCheckedChange={(checked: boolean) =>
-                        handleSelectUser(user.user_id, checked)
-                      }
-                      className="border-white/20"
-                    />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="small" className="min-h-[44px] min-w-[44px]">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setViewingUser(user)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setEditingUser(user)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit User
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => router.push(`/admin/users/${user.user_id}/activity`)}
-                        >
-                          <Activity className="mr-2 h-4 w-4" />
-                          Activity Log
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => router.push(`/admin/users/${user.user_id}/blueprints`)}
-                        >
-                          <FileText className="mr-2 h-4 w-4" />
-                          View Blueprints
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteUser(user)}
-                          className="text-red-400 focus:bg-red-500/10 focus:text-red-400"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete User
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <div className="flex items-center">
+                    User
+                    <SortIcon field="full_name" />
                   </div>
+                </TableHead>
 
-                  {/* User Info */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#06B6D4]/20 to-blue-500/20 text-base font-semibold text-[#06B6D4]">
-                      {(user.full_name || user.email || 'A')[0].toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-medium text-white">
-                        {user.full_name || 'Anonymous User'}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-white/60">
-                        <Mail className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">{user.email}</span>
-                      </div>
-                    </div>
+                <TableHead
+                  className="cursor-pointer text-white/80 select-none"
+                  onClick={() => handleSort('email')}
+                >
+                  <div className="flex items-center">
+                    Email
+                    <SortIcon field="email" />
                   </div>
+                </TableHead>
 
-                  {/* Status and Role Row */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <div className="mb-1 text-xs text-white/40">Status</div>
-                      <div className="flex items-center gap-2">
+                <TableHead className="text-white/80">Status</TableHead>
+
+                <TableHead
+                  className="cursor-pointer text-white/80 select-none"
+                  onClick={() => handleSort('user_role')}
+                >
+                  <div className="flex items-center">
+                    Role
+                    <SortIcon field="user_role" />
+                  </div>
+                </TableHead>
+
+                <TableHead
+                  className="cursor-pointer text-white/80 select-none"
+                  onClick={() => handleSort('subscription_tier')}
+                >
+                  <div className="flex items-center">
+                    Tier
+                    <SortIcon field="subscription_tier" />
+                  </div>
+                </TableHead>
+
+                <TableHead className="text-white/80">Usage</TableHead>
+
+                <TableHead
+                  className="cursor-pointer text-white/80 select-none"
+                  onClick={() => handleSort('created_at')}
+                >
+                  <div className="flex items-center">
+                    Joined
+                    <SortIcon field="created_at" />
+                  </div>
+                </TableHead>
+
+                <TableHead className="text-white/80">Last Active</TableHead>
+
+                <TableHead className="w-12"></TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {users.map((user, index) => {
+                const status = getUserStatus(user);
+                const usagePercent = getUsagePercentage(user);
+                const StatusIcon = status.icon;
+
+                return (
+                  <motion.tr
+                    key={user.user_id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: index * 0.02 }}
+                    className="group border-b border-white/5 transition-colors hover:bg-white/5"
+                  >
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedUsers.has(user.user_id)}
+                        onCheckedChange={(checked: boolean) =>
+                          handleSelectUser(user.user_id, checked)
+                        }
+                        className="border-white/20"
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-sm font-semibold text-cyan-400">
+                          {(user.full_name || user.email || 'A')[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="font-medium text-white">
+                            {user.full_name || 'Anonymous User'}
+                          </div>
+                          <div className="text-xs text-white/40">
+                            ID: {user.user_id.slice(0, 8)}...
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="flex items-center text-white/60">
+                        <Mail className="mr-2 h-4 w-4 text-white/40" />
+                        {user.email}
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
                         <div className={`h-2 w-2 rounded-full ${status.color}`} />
-                        <span className="text-xs text-white/70">{status.label}</span>
+                        <span className="text-sm text-white/70">{status.label}</span>
                       </div>
-                    </div>
-                    <div>
-                      <div className="mb-1 text-xs text-white/40">Role</div>
-                      {user.user_role === 'admin' ? (
-                        <div className="inline-flex items-center rounded-md border border-amber-500/20 bg-amber-500/10 px-2 py-0.5">
-                          <Crown className="mr-1 h-3 w-3 text-amber-400" />
-                          <span className="text-xs font-medium text-amber-300">Admin</span>
-                        </div>
-                      ) : user.user_role === 'developer' ? (
-                        <div className="inline-flex items-center rounded-md border border-purple-500/20 bg-purple-500/10 px-2 py-0.5">
-                          <Shield className="mr-1 h-3 w-3 text-purple-400" />
-                          <span className="text-xs font-medium text-purple-300">Developer</span>
-                        </div>
-                      ) : (
-                        <div className="inline-flex items-center rounded-md border border-slate-500/20 bg-slate-500/10 px-2 py-0.5">
-                          <span className="text-xs font-medium text-slate-300">User</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    </TableCell>
 
-                  {/* Tier */}
-                  <div>
-                    <div className="mb-1 text-xs text-white/40">Subscription Tier</div>
-                    <div
-                      className="inline-flex items-center rounded-md border px-2 py-1"
-                      style={{
-                        backgroundColor: getTierColor(user.subscription_tier).bg,
-                        borderColor: getTierColor(user.subscription_tier).border,
-                      }}
-                    >
-                      <span
-                        className="text-xs font-medium"
-                        style={{ color: getTierColor(user.subscription_tier).text }}
+                    <TableCell>
+                      <Badge variant={getRoleBadgeVariant(user.user_role)} className="capitalize">
+                        {user.user_role === 'developer' && <Shield className="mr-1 h-3 w-3" />}
+                        {user.user_role === 'admin' && <Crown className="mr-1 h-3 w-3" />}
+                        {user.user_role.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell>
+                      <Badge
+                        variant={getTierBadgeVariant(user.subscription_tier)}
+                        className="capitalize"
                       >
-                        {formatTierName(user.subscription_tier)}
-                      </span>
-                    </div>
-                  </div>
+                        {user.subscription_tier.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
 
-                  {/* Usage */}
-                  <div>
-                    <div className="mb-2 text-xs text-white/40">Usage</div>
-                    {user.user_role === 'developer' ? (
-                      <div className="rounded-md border border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-pink-500/20 px-3 py-2 text-center">
-                        <span className="text-sm font-semibold text-purple-300">∞ Unlimited</span>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {/* Blueprint Generations */}
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-white/50">Generations:</span>
-                            <span className="text-white/60">
-                              {user.blueprint_creation_count} / {user.blueprint_creation_limit}
-                            </span>
-                            <span className="text-white/40">{creationUsagePercent}%</span>
-                          </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                            <div
-                              className={`h-full transition-all ${
-                                creationUsagePercent >= 90
-                                  ? 'bg-red-500'
-                                  : creationUsagePercent >= 70
-                                    ? 'bg-yellow-500'
-                                    : 'bg-green-500'
-                              }`}
-                              style={{ width: `${Math.min(creationUsagePercent, 100)}%` }}
-                            />
-                          </div>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-white/60">
+                            {user.blueprint_creation_count} / {user.blueprint_creation_limit}
+                          </span>
+                          <span className="text-white/40">{usagePercent}%</span>
                         </div>
-
-                        {/* Saved Blueprints */}
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-white/50">Saved:</span>
-                            <span className="text-white/60">
-                              {user.blueprint_saving_count} / {user.blueprint_saving_limit}
-                            </span>
-                            <span className="text-white/40">{savingUsagePercent}%</span>
-                          </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                            <div
-                              className={`h-full transition-all ${
-                                savingUsagePercent >= 90
-                                  ? 'bg-red-500'
-                                  : savingUsagePercent >= 70
-                                    ? 'bg-yellow-500'
-                                    : 'bg-green-500'
-                              }`}
-                              style={{ width: `${Math.min(savingUsagePercent, 100)}%` }}
-                            />
-                          </div>
+                        <div className="h-1.5 w-32 overflow-hidden rounded-full bg-white/10">
+                          <div
+                            className={`h-full transition-all ${
+                              usagePercent >= 90
+                                ? 'bg-red-500'
+                                : usagePercent >= 70
+                                  ? 'bg-yellow-500'
+                                  : 'bg-green-500'
+                            }`}
+                            style={{ width: `${Math.min(usagePercent, 100)}%` }}
+                          />
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </TableCell>
 
-                  {/* Dates */}
-                  <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-2">
-                    <div>
-                      <div className="mb-1 text-xs text-white/40">Joined</div>
-                      <div className="text-xs text-white/60">
-                        {new Date(user.created_at).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="mb-1 text-xs text-white/40">Last Active</div>
-                      <div className="text-xs text-white/60">
-                        {user.last_sign_in_at
-                          ? new Date(user.last_sign_in_at).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                            })
-                          : 'Never'}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
+                    <TableCell className="text-sm text-white/60">
+                      {new Date(user.created_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </TableCell>
+
+                    <TableCell className="text-sm text-white/60">
+                      {user.last_sign_in_at
+                        ? new Date(user.last_sign_in_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                          })
+                        : 'Never'}
+                    </TableCell>
+
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="small"
+                            className="opacity-0 transition-opacity group-hover:opacity-100"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuItem onClick={() => setViewingUser(user)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Details
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem onClick={() => setEditingUser(user)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit User
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            onClick={() => router.push(`/admin/users/${user.user_id}/activity`)}
+                          >
+                            <Activity className="mr-2 h-4 w-4" />
+                            Activity Log
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            onClick={() => router.push(`/admin/users/${user.user_id}/blueprints`)}
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            View Blueprints
+                          </DropdownMenuItem>
+
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteUser(user.user_id)}
+                            className="text-red-400 focus:bg-red-500/10 focus:text-red-400"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete User
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </motion.tr>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
 
         {/* Empty State */}
         {users.length === 0 && !loading && (
@@ -1103,26 +709,26 @@ export function UserManagementTable() {
       {/* Pagination */}
       {pagination.totalPages > 1 && (
         <GlassCard>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-center text-xs text-white/60 sm:text-left sm:text-sm">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-white/60">
               Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
               {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}{' '}
               users
             </div>
 
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="small"
                 disabled={pagination.page === 1}
                 onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
-                className="min-h-[44px] border-white/10 bg-white/5 text-white hover:bg-white/10 disabled:opacity-50"
+                className="border-white/10 bg-white/5 text-white hover:bg-white/10 disabled:opacity-50"
               >
-                {isMobile ? 'Prev' : 'Previous'}
+                Previous
               </Button>
 
               <div className="flex items-center gap-1">
-                {[...Array(Math.min(pagination.totalPages, isMobile ? 3 : 5))].map((_, i) => {
+                {[...Array(Math.min(pagination.totalPages, 5))].map((_, i) => {
                   const pageNum = i + 1;
                   return (
                     <Button
@@ -1130,11 +736,11 @@ export function UserManagementTable() {
                       variant={pagination.page === pageNum ? 'primary' : 'outline'}
                       size="small"
                       onClick={() => setPagination((prev) => ({ ...prev, page: pageNum }))}
-                      className={`min-h-[44px] min-w-[44px] ${
+                      className={
                         pagination.page === pageNum
-                          ? 'bg-[#06B6D4] text-white'
+                          ? 'bg-cyan-500 text-white'
                           : 'border-white/10 bg-white/5 text-white hover:bg-white/10'
-                      }`}
+                      }
                     >
                       {pageNum}
                     </Button>
@@ -1147,7 +753,7 @@ export function UserManagementTable() {
                 size="small"
                 disabled={pagination.page === pagination.totalPages}
                 onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
-                className="min-h-[44px] border-white/10 bg-white/5 text-white hover:bg-white/10 disabled:opacity-50"
+                className="border-white/10 bg-white/5 text-white hover:bg-white/10 disabled:opacity-50"
               >
                 Next
               </Button>
@@ -1186,17 +792,6 @@ export function UserManagementTable() {
           onClose={() => setShowExportDialog(false)}
         />
       )}
-
-      <ConfirmDialog
-        isOpen={deleteConfirmDialog.isOpen}
-        onClose={() => setDeleteConfirmDialog({ isOpen: false, userId: null, userName: '' })}
-        onConfirm={handleDeleteConfirm}
-        title="Delete User"
-        message={`Are you sure you want to delete "${deleteConfirmDialog.userName}"? This action will soft delete the user and they can be restored later if needed.`}
-        confirmText="Delete User"
-        variant="danger"
-        isLoading={deletingUserId === deleteConfirmDialog.userId}
-      />
     </div>
   );
 }

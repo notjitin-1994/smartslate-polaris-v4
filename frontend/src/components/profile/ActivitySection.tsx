@@ -1,285 +1,222 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Activity, FileText, Clock, UserCircle, ArrowRight } from 'lucide-react';
+import { Activity, TrendingUp, Clock, Star, FileText, Eye } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { cn } from '@/lib/utils';
+import { useUserProfile } from '@/lib/hooks/useUserProfile';
 
-interface RecentActivity {
-  id: string;
-  action_type: string;
-  resource_type: string;
-  resource_id: string;
-  metadata: Record<string, unknown>;
-  created_at: string;
-  actor_id: string;
-  actor_full_name: string | null;
-  actor_avatar_url: string | null;
-}
-
-interface RecentActivityResponse {
-  activities: RecentActivity[];
-  pagination: {
-    total: number;
-    limit: number;
-    offset: number;
-    has_more: boolean;
-  };
-}
-
-/**
- * ActivitySection - Streamlined activity feed (last 3-4 activities)
- * Simplified from 4-stat grid to minimalist timeline
- * Features:
- * - Simple timeline design
- * - Activity type icons with color coding
- * - Relative timestamps
- * - "View All" link
- */
 export function ActivitySection() {
-  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch recent activity (only 3-4 items)
-  useEffect(() => {
-    let mounted = true;
-    const fetchActivityData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const recentResponse = await fetch('/api/user/activity/recent?limit=3&offset=0');
-        
-        if (!recentResponse.ok) {
-          const errorData = await recentResponse.json().catch(() => ({}));
-          console.error('[ActivitySection] API error:', {
-            status: recentResponse.status,
-            error: errorData.error,
-            details: errorData.details
-          });
-          throw new Error(errorData.error || 'Failed to fetch recent activity');
-        }
-        
-        const recentData: RecentActivityResponse = await recentResponse.json();
-        if (mounted) {
-          setRecentActivities(recentData.activities || []);
-        }
-      } catch (err) {
-        console.error('[ActivitySection] Error fetching activity data:', err);
-        if (mounted) {
-          // Set error but also ensure activities is an empty array
-          setError(err instanceof Error ? err.message : 'Failed to load activity data');
-          setRecentActivities([]);
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchActivityData();
-    return () => { mounted = false; };
-  }, []);
-
-  // Helper function to format relative time
-  const formatRelativeTime = (timestamp: string): string => {
-    const now = new Date();
-    const past = new Date(timestamp);
-    const diffMs = now.getTime() - past.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    const diffWeeks = Math.floor(diffMs / 604800000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffWeeks < 4) return `${diffWeeks}w ago`;
-    return past.toLocaleDateString();
-  };
-
-  // Helper function to get activity display text
-  const getActivityDisplay = (activity: RecentActivity) => {
-    const actionTypeMap: Record<string, string> = {
-      blueprint_created: 'Created blueprint',
-      blueprint_updated: 'Updated blueprint',
-      blueprint_deleted: 'Deleted blueprint',
-      blueprint_exported: 'Exported blueprint',
-      profile_updated: 'Updated profile',
-      user_login: 'Logged in',
-      user_logout: 'Logged out',
-      user_deleted: 'Requested deletion',
-      user_updated: 'Updated account',
-    };
-
-    const action = actionTypeMap[activity.action_type] || activity.action_type;
-    const target = activity.metadata?.title as string | undefined;
-
-    return { action, target };
-  };
-
-  // Helper function to get activity type for styling
-  const getActivityType = (
-    actionType: string
-  ): { type: string; icon: React.ComponentType<{ className?: string }>; color: string } => {
-    if (actionType.includes('blueprint')) {
-      return {
-        type: 'blueprint',
-        icon: FileText,
-        color: 'text-primary-accent bg-primary-accent/10 border-primary-accent/20',
-      };
-    }
-    if (actionType.includes('profile') || actionType.includes('user_updated')) {
-      return {
-        type: 'profile',
-        icon: UserCircle,
-        color: 'text-secondary-accent bg-secondary-accent/10 border-secondary-accent/20',
-      };
-    }
-    if (actionType.includes('login') || actionType.includes('logout')) {
-      return {
-        type: 'session',
-        icon: Clock,
-        color: 'text-success bg-success/10 border-success/20',
-      };
-    }
-    return {
-      type: 'other',
-      icon: Activity,
-      color: 'text-warning bg-warning/10 border-warning/20',
-    };
-  };
+  const { profile, loading } = useUserProfile();
 
   if (loading) {
     return (
       <GlassCard className="p-6">
         <div className="animate-pulse space-y-4">
-          <div className="bg-text-disabled/20 h-4 w-32 rounded" />
-          <div className="space-y-3">
-            <div className="bg-text-disabled/10 h-16 rounded-lg" />
-            <div className="bg-text-disabled/10 h-16 rounded-lg" />
-            <div className="bg-text-disabled/10 h-16 rounded-lg" />
+          <div className="h-4 w-1/4 rounded bg-neutral-200 dark:bg-neutral-700"></div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="h-20 rounded bg-neutral-200 dark:bg-neutral-700"></div>
+            <div className="h-20 rounded bg-neutral-200 dark:bg-neutral-700"></div>
           </div>
         </div>
       </GlassCard>
     );
   }
 
-  if (error) {
-    return (
-      <GlassCard className="p-6">
-        <div className="text-center">
-          <Activity className="text-error mx-auto h-12 w-12" />
-          <h3 className="text-error mt-2 text-sm font-semibold">Failed to load activity</h3>
-          <p className="text-text-secondary mt-1 text-sm">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-primary-accent hover:bg-primary-accent-dark mt-4 rounded-lg px-4 py-2 text-sm text-white"
-          >
-            Retry
-          </button>
-        </div>
-      </GlassCard>
-    );
-  }
+  // Mock activity data - in a real app, this would come from the backend
+  const activityStats = [
+    {
+      icon: FileText,
+      label: 'Blueprints Created',
+      value: profile?.blueprints_created || 0,
+      description: 'Total learning blueprints generated',
+      trend: '+12%',
+      trendUp: true,
+    },
+    {
+      icon: Star,
+      label: 'Favorite Starmaps',
+      value: profile?.favorite_starmaps || 0,
+      description: 'Saved for quick access',
+      trend: '+3',
+      trendUp: true,
+    },
+    {
+      icon: Clock,
+      label: 'Hours Learning',
+      value: profile?.learning_hours || 0,
+      description: 'Time spent in learning activities',
+      trend: '+8h',
+      trendUp: true,
+    },
+    {
+      icon: Eye,
+      label: 'Content Viewed',
+      value: profile?.content_viewed || 0,
+      description: 'Articles and resources accessed',
+      trend: '+15',
+      trendUp: true,
+    },
+  ];
+
+  const recentActivity = [
+    {
+      action: 'Created new learning blueprint',
+      target: 'React Performance Optimization',
+      time: '2 hours ago',
+      type: 'blueprint',
+    },
+    {
+      action: 'Completed module',
+      target: 'Advanced TypeScript Patterns',
+      time: '1 day ago',
+      type: 'learning',
+    },
+    {
+      action: 'Updated profile information',
+      target: 'Personal details and preferences',
+      time: '3 days ago',
+      type: 'profile',
+    },
+    {
+      action: 'Shared starmap',
+      target: 'JavaScript Fundamentals Guide',
+      time: '1 week ago',
+      type: 'share',
+    },
+  ];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.4 }}
+      transition={{ duration: 0.5, delay: 0.4 }}
     >
       <GlassCard className="p-6">
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="from-primary/20 to-secondary/20 border-primary/30 flex h-10 w-10 items-center justify-center rounded-xl border bg-gradient-to-br">
+            <Activity className="text-primary h-5 w-5" />
+          </div>
           <div>
-            <h2 className="text-heading text-text-primary font-semibold">Recent Activity</h2>
-            <p className="text-caption text-text-secondary mt-1">Your latest actions</p>
+            <h2 className="text-heading text-foreground font-semibold">Activity Overview</h2>
+            <p className="text-body text-text-secondary">Your learning journey and achievements</p>
           </div>
         </div>
 
-        {/* Activity Timeline */}
-        <div className="space-y-3">
-          {recentActivities.length === 0 ? (
-            <div className="py-12 text-center">
-              <Activity className="text-text-disabled mx-auto h-12 w-12" />
-              <p className="text-text-secondary mt-3 text-sm font-medium">No recent activity</p>
-              <p className="text-text-disabled mt-1 text-xs">
-                Start creating blueprints to see activity here
-              </p>
-            </div>
-          ) : (
-            recentActivities.map((activity, index) => {
-              const { action, target } = getActivityDisplay(activity);
-              const { icon: Icon, color } = getActivityType(activity.action_type);
-
-              return (
-                <motion.div
-                  key={activity.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
-                  className={cn(
-                    'bg-background-surface hover:bg-background-paper group flex items-center gap-4 rounded-lg border p-4',
-                    'transition-all duration-200',
-                    color.split(' ')[2] // border color
-                  )}
-                >
-                  {/* Icon */}
-                  <div
-                    className={cn(
-                      'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border',
-                      color
+        {/* Activity Stats Grid */}
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {activityStats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
+                className="group"
+              >
+                <div className="bg-background/50 hover:bg-background/80 rounded-xl border border-neutral-200/50 p-4 transition-all duration-200 hover:shadow-sm">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-lg">
+                      <Icon className="text-primary h-4 w-4" />
+                    </div>
+                    {stat.trend && (
+                      <div
+                        className={`text-caption flex items-center gap-1 ${
+                          stat.trendUp ? 'text-green-600' : 'text-red-600'
+                        }`}
+                      >
+                        <TrendingUp className={`h-3 w-3 ${!stat.trendUp ? 'rotate-180' : ''}`} />
+                        <span>{stat.trend}</span>
+                      </div>
                     )}
-                  >
-                    <Icon className="h-5 w-5" />
                   </div>
-
-                  {/* Content */}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-body text-text-primary font-medium">
-                      {action}
-                      {target && (
-                        <span className="text-text-secondary font-normal"> • {target}</span>
-                      )}
+                  <div className="space-y-1">
+                    <p className="text-foreground text-2xl font-bold">
+                      {stat.value.toLocaleString()}
                     </p>
-                    <p className="text-caption text-text-secondary">
-                      {formatRelativeTime(activity.created_at)}
-                    </p>
+                    <p className="text-caption text-text-secondary font-medium">{stat.label}</p>
+                    <p className="text-caption text-text-secondary">{stat.description}</p>
                   </div>
-                </motion.div>
-              );
-            })
-          )}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* View All Link */}
-        {recentActivities.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.8 }}
-            className="border-background-surface mt-6 border-t pt-6"
-          >
-            <button
-              className={cn(
-                'group flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2',
-                'border-primary-accent/30 bg-primary-accent/5 border',
-                'text-primary-accent text-caption font-medium',
-                'hover:bg-primary-accent/10 hover:border-primary-accent/50',
-                'transition-all duration-200',
-                'focus-visible:ring-primary-accent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
-              )}
-            >
-              View All Activity
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </button>
-          </motion.div>
-        )}
+        {/* Recent Activity */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.9 }}
+          className="space-y-4"
+        >
+          <h3 className="text-heading text-foreground font-semibold">Recent Activity</h3>
+
+          <div className="space-y-3">
+            {recentActivity.map((activity, index) => (
+              <motion.div
+                key={`${activity.action}-${index}`}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 1 + index * 0.1 }}
+                className="bg-background/30 hover:bg-background/50 flex items-center gap-4 rounded-lg border border-neutral-200/50 p-3 transition-colors duration-200"
+              >
+                <div
+                  className={`h-2 w-2 rounded-full ${
+                    activity.type === 'blueprint'
+                      ? 'bg-blue-500'
+                      : activity.type === 'learning'
+                        ? 'bg-green-500'
+                        : activity.type === 'profile'
+                          ? 'bg-purple-500'
+                          : 'bg-orange-500'
+                  }`}
+                />
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-body text-foreground">
+                    <span className="font-medium">{activity.action}</span>
+                    {activity.target && (
+                      <span className="text-text-secondary"> • {activity.target}</span>
+                    )}
+                  </p>
+                  <p className="text-caption text-text-secondary">{activity.time}</p>
+                </div>
+
+                <div
+                  className={`flex h-6 w-6 items-center justify-center rounded-full ${
+                    activity.type === 'blueprint'
+                      ? 'bg-blue-100 text-blue-600'
+                      : activity.type === 'learning'
+                        ? 'bg-green-100 text-green-600'
+                        : activity.type === 'profile'
+                          ? 'bg-purple-100 text-purple-600'
+                          : 'bg-orange-100 text-orange-600'
+                  }`}
+                >
+                  {activity.type === 'blueprint' && <FileText className="h-3 w-3" />}
+                  {activity.type === 'learning' && <Star className="h-3 w-3" />}
+                  {activity.type === 'profile' && <Activity className="h-3 w-3" />}
+                  {activity.type === 'share' && <Eye className="h-3 w-3" />}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* View All Activity Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 1.4 }}
+          className="mt-6 border-t border-neutral-200/50 pt-6"
+        >
+          <button className="border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 focus-visible:ring-primary inline-flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none">
+            <Activity className="h-4 w-4" />
+            View All Activity
+          </button>
+        </motion.div>
       </GlassCard>
     </motion.div>
   );

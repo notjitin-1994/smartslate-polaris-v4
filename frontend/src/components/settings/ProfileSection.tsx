@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useUserProfile } from '@/lib/hooks/useUserProfile';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/lib/utils/toast';
 
 const profileSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
@@ -93,25 +92,22 @@ export function ProfileSection() {
 
     // Validate file type and size
     if (!file.type.startsWith('image/')) {
-      toast.error('Invalid file type', 'Please select an image file');
+      alert('Please select an image file');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
       // 5MB limit
-      toast.error('File too large', 'File size must be less than 5MB');
+      alert('File size must be less than 5MB');
       return;
     }
 
     setIsUploading(true);
     try {
-      await toast.promise(uploadAvatar(file), {
-        loading: 'Uploading avatar...',
-        success: 'Avatar uploaded successfully!',
-        error: 'Failed to upload avatar',
-      });
+      await uploadAvatar(file);
     } catch (error) {
       console.error('Failed to upload avatar:', error);
+      alert('Failed to upload avatar. Please try again.');
     } finally {
       setIsUploading(false);
       // Clear the input

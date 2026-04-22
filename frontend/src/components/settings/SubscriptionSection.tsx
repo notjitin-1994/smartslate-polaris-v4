@@ -19,7 +19,6 @@ import { Button } from '@/components/ui/button';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useUserProfile } from '@/lib/hooks/useUserProfile';
 import { getTierDisplayName, getTierDisplayNameShort, getTierInfo } from '@/lib/utils/tierDisplay';
-import { toast } from '@/lib/utils/toast';
 
 // Subscription tier definitions based on the PRD tiers
 const subscriptionTiers = {
@@ -96,25 +95,29 @@ export function SubscriptionSection() {
       // TODO: Implement actual upgrade logic
       await new Promise((resolve) => setTimeout(resolve, 1500));
       console.log('Upgrade to:', targetTier);
-      toast.info('Coming Soon', 'Subscription upgrade feature will be available soon!');
+      alert('Subscription upgrade feature coming soon!');
     } catch (error) {
       console.error('Failed to upgrade subscription:', error);
-      toast.error('Upgrade Failed', 'Failed to upgrade subscription. Please try again.');
+      alert('Failed to upgrade subscription. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCancelSubscription = async () => {
+    if (!confirm('Are you sure you want to cancel your subscription?')) {
+      return;
+    }
+
     setIsLoading(true);
     try {
       // TODO: Implement actual cancellation logic
       await new Promise((resolve) => setTimeout(resolve, 1000));
       console.log('Cancelling subscription');
-      toast.info('Coming Soon', 'Subscription cancellation feature will be available soon!');
+      alert('Subscription cancellation feature coming soon!');
     } catch (error) {
       console.error('Failed to cancel subscription:', error);
-      toast.error('Cancellation Failed', 'Failed to cancel subscription. Please try again.');
+      alert('Failed to cancel subscription. Please try again.');
     } finally {
       setIsLoading(false);
     }

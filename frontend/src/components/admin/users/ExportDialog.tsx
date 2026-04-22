@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Download, FileText, FileSpreadsheet, File, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { Checkbox } from '@/components/ui/checkbox';
+import { toast, adminToasts } from '@/lib/utils/toast';
 
 interface FilterConfig {
   search: string;
@@ -60,64 +59,39 @@ const EXPORT_FORMATS = [
   },
 ];
 
-const EXPORT_FIELDS = [
-  { key: 'email', label: 'Email', defaultChecked: true },
-  { key: 'full_name', label: 'Full Name', defaultChecked: true },
-  { key: 'user_role', label: 'Role', defaultChecked: true },
-  { key: 'subscription_tier', label: 'Tier', defaultChecked: true },
-  { key: 'blueprint_creation_count', label: 'Blueprints Created', defaultChecked: true },
-  { key: 'blueprint_saving_count', label: 'Blueprints Saved', defaultChecked: true },
-  { key: 'created_at', label: 'Join Date', defaultChecked: true },
-  { key: 'last_sign_in_at', label: 'Last Sign In', defaultChecked: true },
-  { key: 'user_id', label: 'User ID', defaultChecked: false },
-  { key: 'updated_at', label: 'Last Updated', defaultChecked: false },
-];
-
 export function ExportDialog({ filters, sortConfig, onClose }: ExportDialogProps) {
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('csv');
-  const [selectedFields, setSelectedFields] = useState<Set<string>>(
-    new Set(EXPORT_FIELDS.filter((f) => f.defaultChecked).map((f) => f.key))
-  );
   const [isExporting, setIsExporting] = useState(false);
   const [exportComplete, setExportComplete] = useState(false);
-
-  const toggleField = (fieldKey: string) => {
-    const newSelected = new Set(selectedFields);
-    if (newSelected.has(fieldKey)) {
-      newSelected.delete(fieldKey);
-    } else {
-      newSelected.add(fieldKey);
-    }
-    setSelectedFields(newSelected);
-  };
-
-  const selectAllFields = () => {
-    setSelectedFields(new Set(EXPORT_FIELDS.map((f) => f.key)));
-  };
-
-  const deselectAllFields = () => {
-    setSelectedFields(new Set());
-  };
 
   const handleExport = async () => {
     setIsExporting(true);
 
     try {
-      const params = new URLSearchParams({
-        format: selectedFormat,
-        fields: Array.from(selectedFields).join(','),
-        sortBy: sortConfig.field,
-        sortOrder: sortConfig.order,
-        ...(filters.search && { search: filters.search }),
-        ...(filters.role && { role: filters.role }),
-        ...(filters.tier && { tier: filters.tier }),
-        ...(filters.status !== 'all' && { status: filters.status }),
+      // Use POST endpoint with all filters and sorting
+      const response = await fetch('/api/admin/users/export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          format: selectedFormat,
+          filters: {
+            ...(filters.search && { search: filters.search }),
+            ...(filters.role && { role: filters.role }),
+            ...(filters.tier && { tier: filters.tier }),
+            ...(filters.status !== 'all' && { status: filters.status }),
+            ...(filters.dateRange && { dateRange: filters.dateRange }),
+            ...(filters.usageRange && { usageRange: filters.usageRange }),
+          },
+          sortBy: sortConfig.field,
+          sortOrder: sortConfig.order,
+        }),
       });
 
-      const response = await fetch(`/api/admin/users/export?${params}`);
-
       if (!response.ok) {
-        throw new Error('Export failed');
+        const errorData = await response.json().catch(() => ({ error: 'Export failed' }));
+        throw new Error(errorData.error || 'Export failed');
       }
 
       // Get the filename from the response headers
@@ -137,13 +111,16 @@ export function ExportDialog({ filters, sortConfig, onClose }: ExportDialogProps
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
+      adminToasts.exportComplete(selectedFormat);
       setExportComplete(true);
       setTimeout(() => {
         onClose();
       }, 1500);
     } catch (error) {
       console.error('Export failed:', error);
-      // Show error notification
+      const errorMessage = error instanceof Error ? error.message : 'Export failed';
+      adminToasts.exportFailed(selectedFormat);
+      toast.error('Export failed', errorMessage);
     } finally {
       setIsExporting(false);
     }
@@ -160,8 +137,8 @@ export function ExportDialog({ filters, sortConfig, onClose }: ExportDialogProps
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 p-6">
           <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/20">
-              <Download className="h-5 w-5 text-cyan-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#06B6D4]/20">
+              <Download className="h-5 w-5 text-[#06B6D4]" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">Export Users</h2>
@@ -196,7 +173,7 @@ export function ExportDialog({ filters, sortConfig, onClose }: ExportDialogProps
                       onClick={() => setSelectedFormat(format.value)}
                       className={`flex items-start space-x-3 rounded-lg border p-4 text-left transition-all ${
                         isSelected
-                          ? 'border-cyan-500 bg-cyan-500/10'
+                          ? 'border-[#06B6D4] bg-[#06B6D4]/10'
                           : 'border-white/10 bg-white/5 hover:bg-white/10'
                       }`}
                     >
@@ -206,7 +183,7 @@ export function ExportDialog({ filters, sortConfig, onClose }: ExportDialogProps
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <p className="font-semibold text-white">{format.label}</p>
-                          {isSelected && <Check className="h-5 w-5 text-cyan-400" />}
+                          {isSelected && <Check className="h-5 w-5 text-[#06B6D4]" />}
                         </div>
                         <p className="mt-1 text-xs text-white/60">{format.description}</p>
                       </div>
@@ -216,55 +193,16 @@ export function ExportDialog({ filters, sortConfig, onClose }: ExportDialogProps
               </div>
             </div>
 
-            {/* Field Selection */}
-            <div>
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white">Fields to Include</h3>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={selectAllFields}
-                    className="text-xs text-cyan-400 hover:text-cyan-300"
-                  >
-                    Select All
-                  </button>
-                  <span className="text-white/40">|</span>
-                  <button
-                    onClick={deselectAllFields}
-                    className="text-xs text-cyan-400 hover:text-cyan-300"
-                  >
-                    Deselect All
-                  </button>
-                </div>
-              </div>
-
-              <GlassCard>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {EXPORT_FIELDS.map((field) => (
-                    <label
-                      key={field.key}
-                      className="flex cursor-pointer items-center space-x-3 rounded-lg p-2 transition-colors hover:bg-white/5"
-                    >
-                      <Checkbox
-                        checked={selectedFields.has(field.key)}
-                        onCheckedChange={() => toggleField(field.key)}
-                        className="border-white/20"
-                      />
-                      <span className="text-sm text-white">{field.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </GlassCard>
-
-              <p className="mt-2 text-xs text-white/40">
-                {selectedFields.size} field{selectedFields.size !== 1 ? 's' : ''} selected
-              </p>
-            </div>
-
             {/* Active Filters Info */}
-            {(filters.search || filters.role || filters.tier || filters.status !== 'all') && (
-              <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 p-4">
-                <p className="text-sm font-medium text-cyan-400">Active Filters</p>
-                <p className="mt-1 text-xs text-cyan-300/80">
+            {(filters.search ||
+              filters.role ||
+              filters.tier ||
+              filters.status !== 'all' ||
+              filters.dateRange ||
+              filters.usageRange) && (
+              <div className="rounded-lg border border-[#06B6D4]/30 bg-[#06B6D4]/10 p-4">
+                <p className="text-sm font-medium text-[#06B6D4]">Active Filters</p>
+                <p className="mt-1 text-xs text-[#06B6D4]/80">
                   Export will include only users matching your current filter criteria
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -288,6 +226,17 @@ export function ExportDialog({ filters, sortConfig, onClose }: ExportDialogProps
                       Status: {filters.status}
                     </span>
                   )}
+                  {filters.dateRange && (
+                    <span className="rounded bg-white/10 px-2 py-1 text-xs text-white">
+                      Date: {new Date(filters.dateRange.start).toLocaleDateString()} -{' '}
+                      {new Date(filters.dateRange.end).toLocaleDateString()}
+                    </span>
+                  )}
+                  {filters.usageRange && (
+                    <span className="rounded bg-white/10 px-2 py-1 text-xs text-white">
+                      Usage: {filters.usageRange.min}% - {filters.usageRange.max}%
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -307,8 +256,8 @@ export function ExportDialog({ filters, sortConfig, onClose }: ExportDialogProps
 
           <Button
             onClick={handleExport}
-            disabled={isExporting || selectedFields.size === 0 || exportComplete}
-            className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600 disabled:opacity-50"
+            disabled={isExporting || exportComplete}
+            className="bg-gradient-to-r from-[#06B6D4] to-blue-500 text-white hover:from-[#06B6D4]/90 hover:to-blue-600 disabled:opacity-50"
           >
             {isExporting ? (
               <>

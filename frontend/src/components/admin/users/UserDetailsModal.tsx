@@ -168,7 +168,7 @@ export function UserDetailsModal({ user, onClose, onEdit }: UserDetailsModalProp
   const getActivityColor = (type: ActivityEvent['type']) => {
     switch (type) {
       case 'login':
-        return 'text-cyan-400 bg-cyan-500/10';
+        return 'text-[#06B6D4] bg-[#06B6D4]/10';
       case 'blueprint_created':
         return 'text-purple-400 bg-purple-500/10';
       case 'blueprint_saved':
@@ -193,7 +193,7 @@ export function UserDetailsModal({ user, onClose, onEdit }: UserDetailsModalProp
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#020C1B]/95 p-6 backdrop-blur-sm">
           <div className="flex items-center space-x-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-2xl font-bold text-cyan-400">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#06B6D4]/20 to-blue-500/20 text-2xl font-bold text-[#06B6D4]">
               {(user.full_name || user.email || 'A')[0].toUpperCase()}
             </div>
             <div>
@@ -244,8 +244,8 @@ export function UserDetailsModal({ user, onClose, onEdit }: UserDetailsModalProp
                 <h3 className="mb-4 text-lg font-semibold text-white">Basic Information</h3>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="flex items-start space-x-3">
-                    <div className="rounded-lg bg-cyan-500/10 p-2">
-                      <Mail className="h-5 w-5 text-cyan-400" />
+                    <div className="rounded-lg bg-[#06B6D4]/10 p-2">
+                      <Mail className="h-5 w-5 text-[#06B6D4]" />
                     </div>
                     <div>
                       <p className="text-xs text-white/60">Email</p>
@@ -304,8 +304,8 @@ export function UserDetailsModal({ user, onClose, onEdit }: UserDetailsModalProp
                 <h3 className="mb-4 text-lg font-semibold text-white">Role & Subscription</h3>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="flex items-start space-x-3">
-                    <div className="rounded-lg bg-cyan-500/10 p-2">
-                      <Shield className="h-5 w-5 text-cyan-400" />
+                    <div className="rounded-lg bg-[#06B6D4]/10 p-2">
+                      <Shield className="h-5 w-5 text-[#06B6D4]" />
                     </div>
                     <div className="flex-1">
                       <p className="text-xs text-white/60">User Role</p>
@@ -370,7 +370,7 @@ export function UserDetailsModal({ user, onClose, onEdit }: UserDetailsModalProp
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-white/10">
                       <div
-                        className="h-full bg-cyan-500 transition-all"
+                        className="h-full bg-[#06B6D4] transition-all"
                         style={{
                           width: `${Math.min(
                             (user.blueprint_saving_count / user.blueprint_saving_limit) * 100,
@@ -391,7 +391,7 @@ export function UserDetailsModal({ user, onClose, onEdit }: UserDetailsModalProp
 
                 {loadingActivity ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#06B6D4] border-t-transparent" />
                   </div>
                 ) : activityLogs.length > 0 ? (
                   <div className="relative space-y-4">
@@ -458,7 +458,7 @@ export function UserDetailsModal({ user, onClose, onEdit }: UserDetailsModalProp
                           {user.usage_metadata?.total_sessions || 0}
                         </p>
                       </div>
-                      <Activity className="h-8 w-8 text-cyan-400/60" />
+                      <Activity className="h-8 w-8 text-[#06B6D4]/60" />
                     </div>
                   </div>
 
