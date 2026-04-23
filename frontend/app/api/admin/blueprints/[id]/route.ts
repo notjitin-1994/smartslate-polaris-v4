@@ -5,7 +5,7 @@ import { logActivity } from '@/lib/utils/activityLogger';
 
 /**
  * Admin API: Get Blueprint by ID
- * GET /api/admin/blueprints/[id]
+ * GET /api/admin/starmaps/[id]
  *
  * Allows admins to view any blueprint regardless of ownership
  */
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 /**
  * Admin API: Delete Blueprint by ID
- * DELETE /api/admin/blueprints/[id]
+ * DELETE /api/admin/starmaps/[id]
  *
  * Allows admins to delete any blueprint regardless of ownership
  */

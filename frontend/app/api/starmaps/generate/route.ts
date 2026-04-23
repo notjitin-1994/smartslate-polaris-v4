@@ -38,7 +38,7 @@ export interface GenerateBlueprintAPIResponse {
 }
 
 /**
- * POST /api/blueprints/generate
+ * POST /api/starmaps/generate
  * Generate a learning blueprint from completed questionnaires
  */
 export async function POST(req: NextRequest): Promise<NextResponse<GenerateBlueprintAPIResponse>> {

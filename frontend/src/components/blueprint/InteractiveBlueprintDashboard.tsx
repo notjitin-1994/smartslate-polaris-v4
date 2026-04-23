@@ -384,7 +384,7 @@ export function InteractiveBlueprintDashboard({
         icon: Wand2, // Use magic wand icon for additional sections
         gradient: 'bg-primary/20',
         iconColor: 'text-primary',
-        description: 'Additional data from learning design creation',
+        description: 'Additional data from starmap creation',
       });
     }
   }
@@ -473,7 +473,7 @@ export function InteractiveBlueprintDashboard({
     try {
       console.log('Saving changes for section:', selectedSectionId, editedJSON);
 
-      const response = await fetch('/api/blueprints/update-section', {
+      const response = await fetch('/api/starmaps/update-section', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1192,3 +1192,4 @@ const ExpandableSection = React.forwardRef<
 );
 
 ExpandableSection.displayName = 'ExpandableSection';
+

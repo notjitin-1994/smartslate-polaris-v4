@@ -13,7 +13,7 @@ const logger = createServiceLogger('api');
 export const dynamic = 'force-dynamic';
 
 /**
- * DELETE /api/blueprints/[id]
+ * DELETE /api/starmaps/[id]
  * Soft delete a blueprint
  */
 export async function DELETE(
@@ -24,12 +24,12 @@ export async function DELETE(
     // Await params (Next.js 15 requirement)
     const { id: blueprintId } = await params;
 
-    console.log('[DELETE /api/blueprints/[id]] Request received for blueprint:', blueprintId);
+    console.log('[DELETE /api/starmaps/[id]] Request received for blueprint:', blueprintId);
 
     // Authenticate user
     const { session } = await getServerSession();
     if (!session?.user?.id) {
-      console.error('[DELETE /api/blueprints/[id]] Unauthorized - no session');
+      console.error('[DELETE /api/starmaps/[id]] Unauthorized - no session');
       logger.warn('blueprints.delete.unauthorized', 'Unauthorized delete attempt', {
         timestamp: new Date().toISOString(),
       });
@@ -39,7 +39,7 @@ export async function DELETE(
 
     const userId = session.user.id;
 
-    console.log('[DELETE /api/blueprints/[id]] User authenticated:', userId);
+    console.log('[DELETE /api/starmaps/[id]] User authenticated:', userId);
 
     logger.info('blueprints.delete.request', 'Delete request received', {
       userId,
@@ -48,7 +48,7 @@ export async function DELETE(
 
     const supabase = await getSupabaseServerClient();
 
-    console.log('[DELETE /api/blueprints/[id]] Calling soft_delete_blueprint RPC with:', {
+    console.log('[DELETE /api/starmaps/[id]] Calling soft_delete_blueprint RPC with:', {
       p_blueprint_id: blueprintId,
       p_user_id: userId,
     });
@@ -59,10 +59,10 @@ export async function DELETE(
       p_user_id: userId,
     });
 
-    console.log('[DELETE /api/blueprints/[id]] RPC response:', { data, error });
+    console.log('[DELETE /api/starmaps/[id]] RPC response:', { data, error });
 
     if (error) {
-      console.error('[DELETE /api/blueprints/[id]] RPC error:', error);
+      console.error('[DELETE /api/starmaps/[id]] RPC error:', error);
       logger.error('blueprints.delete.rpc_error', 'RPC function error', {
         userId,
         blueprintId,
@@ -122,7 +122,7 @@ export async function DELETE(
 }
 
 /**
- * POST /api/blueprints/[id]?action=restore
+ * POST /api/starmaps/[id]?action=restore
  * Restore a soft-deleted blueprint
  */
 export async function POST(

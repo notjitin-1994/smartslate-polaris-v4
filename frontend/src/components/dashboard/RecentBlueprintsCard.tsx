@@ -144,7 +144,7 @@ export function RecentBlueprintsCard() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Link href={`/blueprint/${blueprint.id}`}>
+              <Link href={`/starmaps/${blueprint.id}`}>
                 <div className="group hover:border-primary/50 bg-paper hover:bg-primary/5 cursor-pointer rounded-xl border border-neutral-200 p-4 transition-all duration-200">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -182,3 +182,4 @@ export function RecentBlueprintsCard() {
     </GlassCard>
   );
 }
+

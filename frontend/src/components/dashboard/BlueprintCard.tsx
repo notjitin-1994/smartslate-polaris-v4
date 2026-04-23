@@ -260,13 +260,13 @@ export function BlueprintCard({
                           },
                         },
                       }}
-                      title={blueprint.title || `Blueprint #${blueprint.id.slice(0, 8)}`}
+                      title={blueprint.title || `Starmap #${blueprint.id.slice(0, 8)}`}
                     >
                       <span className="block w-full truncate group-hover/title:hidden">
-                        {blueprint.title || `Blueprint #${blueprint.id.slice(0, 8)}`}
+                        {blueprint.title || `Starmap #${blueprint.id.slice(0, 8)}`}
                       </span>
                       <span className="hidden w-full leading-tight break-words group-hover/title:block">
-                        {blueprint.title || `Blueprint #${blueprint.id.slice(0, 8)}`}
+                        {blueprint.title || `Starmap #${blueprint.id.slice(0, 8)}`}
                       </span>
                     </motion.h3>
                   </div>
@@ -701,8 +701,8 @@ export function BlueprintCard({
               onClick={() => onDelete(blueprint.id)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              title="Delete blueprint"
-              aria-label="Delete blueprint"
+              title="Delete starmap"
+              aria-label="Delete starmap"
             >
               <Trash2 className="h-4.5 w-4.5 sm:h-4 sm:w-4" />
             </motion.button>
@@ -724,8 +724,8 @@ export function BlueprintCard({
                 disabled={isResuming}
                 whileHover={!isResuming ? { scale: 1.05 } : {}}
                 whileTap={!isResuming ? { scale: 0.95 } : {}}
-                title={isResuming ? 'Loading...' : 'Resume blueprint'}
-                aria-label={isResuming ? 'Loading blueprint' : 'Resume blueprint'}
+                title={isResuming ? 'Loading...' : 'Resume starmap'}
+                aria-label={isResuming ? 'Loading starmap' : 'Resume starmap'}
               >
                 {isResuming ? (
                   <motion.div
@@ -748,7 +748,7 @@ export function BlueprintCard({
             {blueprint.status === 'completed' && blueprint.blueprint_markdown && (
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Link
-                  href={`/blueprint/${blueprint.id}`}
+                  href={`/starmaps/${blueprint.id}`}
                   className={cn(
                     'flex items-center justify-center',
                     'h-11 w-11 rounded-lg sm:h-10 sm:w-10',
@@ -756,8 +756,8 @@ export function BlueprintCard({
                     'text-indigo-400 hover:border-indigo-400 hover:bg-indigo-500 hover:text-white',
                     'transition-all duration-200'
                   )}
-                  title="View Blueprint"
-                  aria-label="View Blueprint"
+                  title="View Starmap"
+                  aria-label="View Starmap"
                 >
                   <Eye className="h-4.5 w-4.5 sm:h-4 sm:w-4" />
                 </Link>
@@ -774,7 +774,7 @@ export function BlueprintCard({
                   'transition-all duration-200'
                 )}
                 title="Processing..."
-                aria-label="Blueprint is processing"
+                aria-label="Starmap is processing"
               >
                 <Sparkles className="h-4.5 w-4.5 sm:h-4 sm:w-4" />
               </div>

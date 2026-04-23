@@ -244,7 +244,7 @@ export default function UserBlueprintsPage() {
     setDeletingIds((prev) => new Set(prev).add(blueprintId));
 
     try {
-      const response = await fetch(`/api/admin/blueprints/${blueprintId}`, {
+      const response = await fetch(`/api/admin/starmaps/${blueprintId}`, {
         method: 'DELETE',
       });
 
@@ -558,7 +558,7 @@ export default function UserBlueprintsPage() {
                             size="icon"
                             className="text-cyan-400/60 hover:text-cyan-400"
                             onClick={() =>
-                              router.push(`/admin/users/${userId}/blueprints/${blueprint.id}`)
+                              router.push(`/admin/users/${userId}/starmaps/${blueprint.id}`)
                             }
                             title="View Blueprint Details"
                           >

@@ -404,7 +404,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     };
 
     // Save final answers - do NOT update status yet
-    // Status will be updated by /api/blueprints/generate after successful generation
+    // Status will be updated by /api/starmaps/generate after successful generation
     dbLogger.info('database.save.start', 'Saving final dynamic answers', {
       blueprintId,
       userId: user.id,
@@ -417,7 +417,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       .update({
         dynamic_answers: finalAnswers,
         // Note: Do NOT set status='completed' here - blueprint hasn't been generated yet!
-        // The /api/blueprints/generate endpoint will set status='completed' after generation
+        // The /api/starmaps/generate endpoint will set status='completed' after generation
         updated_at: new Date().toISOString(),
       })
       .eq('id', blueprintId)
@@ -453,7 +453,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     });
 
     // Blueprint generation is triggered by the /generating/:blueprintId page
-    // which calls /api/blueprints/generate after user is redirected
+    // which calls /api/starmaps/generate after user is redirected
     logger.info(
       'blueprint.generation.ready',
       'Dynamic answers saved, ready for blueprint generation',

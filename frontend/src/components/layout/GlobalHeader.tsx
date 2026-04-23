@@ -173,7 +173,7 @@ export function GlobalHeader(props: GlobalHeaderProps = {}) {
           subtitle: 'System administration and monitoring',
         };
       default:
-        if (pathname?.startsWith('/blueprint/')) {
+        if (pathname?.startsWith('/starmaps/')) {
           return {
             title: 'Blueprint Viewer',
             subtitle: 'Explore your learning blueprint',
@@ -433,3 +433,4 @@ export function GlobalHeader(props: GlobalHeaderProps = {}) {
     </>
   );
 }
+

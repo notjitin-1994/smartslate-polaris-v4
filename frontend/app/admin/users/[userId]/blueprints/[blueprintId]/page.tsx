@@ -763,7 +763,7 @@ export default function BlueprintDetailsPage() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/admin/users/${userId}/blueprints/${blueprintId}`);
+        const response = await fetch(`/api/admin/users/${userId}/starmaps/${blueprintId}`);
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
@@ -831,7 +831,7 @@ export default function BlueprintDetailsPage() {
     try {
       setRegeneratingBlueprint(true);
 
-      const response = await fetch('/api/blueprints/generate', {
+      const response = await fetch('/api/starmaps/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -895,7 +895,7 @@ export default function BlueprintDetailsPage() {
       setSavingDynamicAnswers(true);
 
       const response = await fetch(
-        `/api/admin/users/${userId}/blueprints/${blueprintId}/dynamic-answers`,
+        `/api/admin/users/${userId}/starmaps/${blueprintId}/dynamic-answers`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -935,7 +935,7 @@ export default function BlueprintDetailsPage() {
     try {
       setGeneratingShare(true);
 
-      const response = await fetch('/api/blueprints/share/generate', {
+      const response = await fetch('/api/starmaps/share/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ blueprintId: blueprint.id }),

@@ -547,7 +547,7 @@ export const loadTestConfigs = {
     concurrency: 20,
     duration: 300, // 5 minutes
     rampUp: 60, // 1 minute ramp-up
-    endpoint: '/api/blueprints/generate',
+    endpoint: '/api/starmaps/generate',
     method: 'POST' as const,
     body: {
       blueprintId: 'test-blueprint-id',

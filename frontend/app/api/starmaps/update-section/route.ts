@@ -13,17 +13,17 @@ const logger = createServiceLogger('api');
 export const dynamic = 'force-dynamic';
 
 /**
- * PATCH /api/blueprints/update-section
+ * PATCH /api/starmaps/update-section
  * Update a specific section of a blueprint
  */
 export async function PATCH(req: NextRequest): Promise<NextResponse> {
   try {
-    console.log('[PATCH /api/blueprints/update-section] Request received');
+    console.log('[PATCH /api/starmaps/update-section] Request received');
 
     // Authenticate user
     const { session } = await getServerSession();
     if (!session?.user?.id) {
-      console.error('[PATCH /api/blueprints/update-section] Unauthorized - no session');
+      console.error('[PATCH /api/starmaps/update-section] Unauthorized - no session');
       logger.warn('blueprints.update_section.unauthorized', 'Unauthorized update attempt', {
         timestamp: new Date().toISOString(),
       });
@@ -55,7 +55,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    console.log('[PATCH /api/blueprints/update-section] Request params:', {
+    console.log('[PATCH /api/starmaps/update-section] Request params:', {
       userId,
       blueprintId,
       sectionId,
@@ -160,7 +160,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
       .single();
 
     if (updateError) {
-      console.error('[PATCH /api/blueprints/update-section] Update error:', updateError);
+      console.error('[PATCH /api/starmaps/update-section] Update error:', updateError);
       logger.error('blueprints.update_section.update_error', 'Database update error', {
         userId,
         blueprintId,
@@ -239,7 +239,7 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
       sectionId,
     });
   } catch (error) {
-    console.error('[PATCH /api/blueprints/update-section] Unexpected error:', error);
+    console.error('[PATCH /api/starmaps/update-section] Unexpected error:', error);
     logger.error('blueprints.update_section.unexpected_error', 'Unexpected error during update', {
       error: (error as Error).message,
     });

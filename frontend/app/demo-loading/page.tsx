@@ -534,11 +534,11 @@ function DemoContent(): React.JSX.Element {
                   <span className="font-semibold">API:</span>{' '}
                   {activeDemo === 'dynamic-questions'
                     ? '/api/dynamic-questions'
-                    : '/api/blueprints/generate'}
+                    : '/api/starmaps/generate'}
                 </div>
                 <div>
                   <span className="font-semibold">Redirect:</span>{' '}
-                  {activeDemo === 'dynamic-questions' ? '/dynamic-wizard/[id]' : '/blueprint/[id]'}
+                  {activeDemo === 'dynamic-questions' ? '/dynamic-wizard/[id]' : '/starmaps/[id]'}
                 </div>
               </div>
             </div>
@@ -552,3 +552,4 @@ function DemoContent(): React.JSX.Element {
 export default function DemoLoadingPage(): React.JSX.Element {
   return <DemoContent />;
 }
+

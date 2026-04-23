@@ -235,7 +235,7 @@ export default function BlueprintPage({ params }: PageProps): React.JSX.Element 
     try {
       console.log('Saving Executive Summary changes:', editedJSON);
 
-      const response = await fetch('/api/blueprints/update-section', {
+      const response = await fetch('/api/starmaps/update-section', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

@@ -41,7 +41,7 @@ export default function SharedBlueprintClient({
         setLoading(true);
         console.log('[Share Client] Fetching blueprint for token:', token);
 
-        const response = await fetch(`/api/blueprints/share/${token}`);
+        const response = await fetch(`/api/starmaps/share/${token}`);
 
         if (!response.ok) {
           console.error('[Share Client] Failed to fetch:', response.status);

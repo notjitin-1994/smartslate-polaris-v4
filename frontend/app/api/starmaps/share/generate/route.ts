@@ -3,7 +3,7 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { getClientForUser } from '@/lib/auth/adminUtils';
 
 /**
- * POST /api/blueprints/share/generate
+ * POST /api/starmaps/share/generate
  *
  * Generates or retrieves a share token for a blueprint.
  * Requires authentication - blueprint owner or admin can generate share links.

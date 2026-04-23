@@ -20,9 +20,9 @@ export function RenameDialog({
   onClose,
   onConfirm,
   currentName,
-  title = 'Rename Blueprint',
-  description = 'Enter a new name for your blueprint',
-  placeholder = 'Blueprint name',
+  title = 'Rename Starmap',
+  description = 'Enter a new name for your starmap',
+  placeholder = 'Starmap name',
   maxLength = 100,
 }: RenameDialogProps): React.JSX.Element | null {
   const [newName, setNewName] = useState(currentName);
@@ -65,7 +65,7 @@ export function RenameDialog({
 
     // Validation
     if (!trimmedName) {
-      setError('Blueprint name cannot be empty');
+      setError('Starmap name cannot be empty');
       return;
     }
 
@@ -75,7 +75,7 @@ export function RenameDialog({
     }
 
     if (trimmedName.length > maxLength) {
-      setError(`Blueprint name cannot exceed ${maxLength} characters`);
+      setError(`Starmap name cannot exceed ${maxLength} characters`);
       return;
     }
 
@@ -89,7 +89,7 @@ export function RenameDialog({
       onClose();
     } catch (err) {
       console.error('RenameDialog: Error in onConfirm:', err);
-      setError(err instanceof Error ? err.message : 'Failed to rename blueprint');
+      setError(err instanceof Error ? err.message : 'Failed to rename starmap');
     } finally {
       setIsLoading(false);
     }
@@ -146,14 +146,14 @@ export function RenameDialog({
             {/* Input */}
             <div>
               <label
-                htmlFor="blueprint-name"
+                htmlFor="starmap-name"
                 className="mb-2 block text-sm font-medium text-white/90"
               >
-                Blueprint Name
+                Starmap Name
               </label>
               <input
                 ref={inputRef}
-                id="blueprint-name"
+                id="starmap-name"
                 type="text"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}

@@ -68,10 +68,10 @@ export function useStoreComposition() {
         const blueprint = blueprints.find((bp) => bp.id === blueprintId);
         if (blueprint) {
           blueprintStore.setCurrentBlueprint(blueprint);
-          uiStore.setCurrentPage(`/blueprints/${blueprintId}`);
+          uiStore.setCurrentPage(`/starmaps/${blueprintId}`);
           uiStore.addBreadcrumb({
             label: blueprint.title || 'Blueprint',
-            href: `/blueprints/${blueprintId}`,
+            href: `/starmaps/${blueprintId}`,
           });
         }
       },

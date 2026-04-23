@@ -222,7 +222,7 @@ export default function CountsDebugPage() {
               {blueprintFixResult.blueprint?.newStatus === 'completed' && (
                 <Button
                   onClick={() =>
-                    (window.location.href = `/blueprint/${blueprintFixResult.blueprint?.id}`)
+                    (window.location.href = `/starmaps/${blueprintFixResult.blueprint?.id}`)
                   }
                   className="w-full"
                 >
@@ -422,3 +422,4 @@ export default function CountsDebugPage() {
     </ProtectedRoute>
   );
 }
+

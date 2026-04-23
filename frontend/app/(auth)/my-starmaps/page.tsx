@@ -319,7 +319,7 @@ function DashboardContent() {
       const deletePromises = blueprintIdsToDelete.map(async (id) => {
         console.log(`[handleConfirmDelete] Deleting blueprint ${id}`);
 
-        const response = await fetch(`/api/blueprints/${id}`, {
+        const response = await fetch(`/api/starmaps/${id}`, {
           method: 'DELETE',
         });
 
@@ -525,7 +525,7 @@ function DashboardContent() {
                   {/* Title and Usage - Stack on mobile, inline on tablet+ */}
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <h2 className="font-heading text-xl font-bold text-white sm:text-2xl">
-                      Your Blueprints
+                      Your Starmaps
                     </h2>
                     <div className="sm:hidden">
                       <BlueprintUsageDisplay />
@@ -619,7 +619,7 @@ function DashboardContent() {
                                 ? 'Creating…'
                                 : isAtCreationLimit
                                   ? 'Limit Reached'
-                                  : 'New Blueprint'}
+                                  : 'New Starmap'}
                             </span>
                             <span className="sm:hidden">
                               {creating ? 'Creating…' : isAtCreationLimit ? 'Limit' : 'New'}
@@ -653,10 +653,10 @@ function DashboardContent() {
                       <FileText className="h-8 w-8 text-white/60" />
                     </div>
                     <h3 className="font-heading mb-3 text-lg font-bold text-white">
-                      No blueprints yet
+                      No starmaps yet
                     </h3>
                     <p className="mx-auto mb-8 max-w-md text-sm text-[rgb(176,197,198)]">
-                      Get started by creating your first personalized learning blueprint with our
+                      Get started by creating your first personalized learning starmap with our
                       intelligent wizard.
                     </p>
                     <Button
@@ -678,7 +678,7 @@ function DashboardContent() {
                           ? 'Creating…'
                           : isAtCreationLimit
                             ? 'Limit Reached - Upgrade'
-                            : 'Create Your First Blueprint'}
+                            : 'Create Your First Starmap'}
                       </span>
                     </Button>
                   </div>
@@ -823,10 +823,10 @@ function DashboardContent() {
             onClose={() => setRenamingBlueprint(null)}
             onConfirm={handleRenameBlueprint}
             currentName={
-              renamingBlueprint?.title || `Blueprint #${renamingBlueprint?.id.slice(0, 8)}`
+              renamingBlueprint?.title || `Starmap #${renamingBlueprint?.id.slice(0, 8)}`
             }
-            title="Rename Blueprint"
-            description="Enter a new name for your blueprint"
+            title="Rename Starmap"
+            description="Enter a new name for your starmap"
             placeholder="Starmap for Professional Development and Career Growth Path"
             maxLength={80}
           />
@@ -839,7 +839,7 @@ function DashboardContent() {
             title="Confirm Deletion"
             description="This action cannot be undone."
             variant="destructive"
-            itemName="blueprint"
+            itemName="starmap"
             itemCount={deletionDialog.type === 'bulk' ? selectedBlueprints.size : 1}
           />
 
@@ -847,7 +847,7 @@ function DashboardContent() {
           <DesktopOnlyModal
             open={showDesktopOnlyModal}
             onOpenChange={setShowDesktopOnlyModal}
-            featureName="Blueprint/Starmap Creation"
+            featureName="Starmap Creation"
           />
 
           {/* Upgrade Prompt Modal */}

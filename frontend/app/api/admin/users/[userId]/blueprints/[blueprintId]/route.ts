@@ -4,7 +4,7 @@ import { getSupabaseAdminClient } from '@/lib/supabase/admin';
 
 /**
  * Admin API: Get a specific blueprint for a user
- * GET /api/admin/users/[userId]/blueprints/[blueprintId]
+ * GET /api/admin/users/[userId]/starmaps/[blueprintId]
  */
 export async function GET(
   request: NextRequest,

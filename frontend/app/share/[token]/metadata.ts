@@ -11,7 +11,7 @@ export async function generateSharePageMetadata({ params }: PageProps): Promise<
   try {
     // Fetch blueprint data for metadata
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}/api/blueprints/share/${token}`,
+      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}/api/starmaps/share/${token}`,
       {
         cache: 'no-store', // Ensure fresh data for metadata
       }

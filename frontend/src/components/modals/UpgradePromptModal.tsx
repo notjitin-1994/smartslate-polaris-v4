@@ -55,7 +55,7 @@ const tierData: Record<
     generations: 5,
     saved: 5,
     icon: Sparkles,
-    features: ['5 blueprints/month', '5 saved starmaps', 'Basic export formats', 'Email support'],
+    features: ['5 starmaps/month', '5 saved starmaps', 'Basic export formats', 'Email support'],
   },
   navigator: {
     generations: 25,
@@ -63,7 +63,7 @@ const tierData: Record<
     icon: Rocket,
     popular: true,
     features: [
-      '25 blueprints/month',
+      '25 starmaps/month',
       '25 saved starmaps',
       'Advanced export formats',
       'Priority support',
@@ -75,7 +75,7 @@ const tierData: Record<
     saved: 50,
     icon: Star,
     features: [
-      '50 blueprints/month',
+      '50 starmaps/month',
       '50 saved starmaps',
       'All export formats',
       'Priority chat support',
@@ -88,7 +88,7 @@ const tierData: Record<
     saved: 10,
     icon: Crown,
     features: [
-      '10 blueprints/month',
+      '10 starmaps/month',
       '10 saved starmaps',
       'Team collaboration',
       'Shared workspace',
@@ -106,7 +106,7 @@ export function UpgradePromptModal({
   limitCount = 0,
 }: UpgradePromptModalProps) {
   const normalizedTier = (currentTier || 'free').toLowerCase();
-  const limitTypeLabel = limitType === 'creation' ? 'blueprints' : 'saved starmaps';
+  const limitTypeLabel = limitType === 'creation' ? 'starmaps' : 'saved starmaps';
 
   // Determine if user is individual or team based on current tier
   const isTeamUser = TEAM_TIERS.includes(normalizedTier);
@@ -288,7 +288,7 @@ export function UpgradePromptModal({
                     {/* Key Stats */}
                     <div className="mb-4 rounded-lg bg-white/5 p-3 backdrop-blur-sm">
                       <div className="mb-2 flex items-center justify-between text-sm">
-                        <span className="text-text-secondary">Blueprints</span>
+                        <span className="text-text-secondary">Starmaps</span>
                         <span className="text-foreground font-semibold">{tier.generations}/mo</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">

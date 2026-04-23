@@ -133,10 +133,10 @@ export function BlueprintSidebarContent({
   };
 
   return (
-    <nav className="flex h-full min-h-0 flex-col overflow-hidden" aria-label="Blueprint navigation">
+    <nav className="flex h-full min-h-0 flex-col overflow-hidden" aria-label="Starmap navigation">
       {/* Header */}
       <div className="flex-shrink-0 border-b border-white/5 px-4 py-3">
-        <h3 className="text-foreground text-sm font-semibold">Blueprint Tools</h3>
+        <h3 className="text-foreground text-sm font-semibold">Starmap Tools</h3>
       </div>
 
       {/* Scrollable Content */}
@@ -239,3 +239,4 @@ export function BlueprintSidebarContent({
     </nav>
   );
 }
+

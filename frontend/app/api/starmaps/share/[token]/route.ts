@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
 /**
- * GET /api/blueprints/share/[token]
+ * GET /api/starmaps/share/[token]
  *
  * Public endpoint to fetch a blueprint by its share token.
  * No authentication required - uses anon key with RLS policy.

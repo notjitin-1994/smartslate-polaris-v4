@@ -4,7 +4,7 @@ import { getSupabaseAdminClient } from '@/lib/supabase/admin';
 
 /**
  * Admin API: Update dynamic answers for a blueprint
- * PATCH /api/admin/users/[userId]/blueprints/[blueprintId]/dynamic-answers
+ * PATCH /api/admin/users/[userId]/starmaps/[blueprintId]/dynamic-answers
  */
 export async function PATCH(
   request: NextRequest,

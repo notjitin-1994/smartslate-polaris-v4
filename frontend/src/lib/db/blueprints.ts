@@ -637,7 +637,7 @@ export class BlueprintService {
 
         if (hasContent) {
           console.log('[BlueprintService] Blueprint completed, routing to viewer');
-          return `/blueprint/${blueprintId}`;
+          return `/starmaps/${blueprintId}`;
         } else {
           // Status is completed but no content - data integrity issue
           console.error(

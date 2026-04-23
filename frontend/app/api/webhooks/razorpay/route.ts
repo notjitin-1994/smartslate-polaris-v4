@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdminClient } from '@/lib/supabase/server';
 
 // Webhook signature verification
 function verifyWebhookSignature(body: string, signature: string | null, secret: string): boolean {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Handle payment captured event
     if (event === 'payment.captured') {
-      const supabase = await createClient();
+      const supabase = getSupabaseAdminClient();
 
       const orderId = entity.order_id;
       const paymentId = entity.id;
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
 
     // Handle payment failed event
     if (event === 'payment.failed') {
-      const supabase = await createClient();
+      const supabase = getSupabaseAdminClient();
       const orderId = entity.order_id;
       const paymentId = entity.id;
 
@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
     }
 
     // For other events, just log them
-    const supabase = await createClient();
+    const supabase = getSupabaseAdminClient();
     await supabase.from('razorpay_webhook_events').insert({
       event_id: `${event}_${Date.now()}`,
       event_type: event,

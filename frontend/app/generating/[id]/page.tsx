@@ -99,11 +99,11 @@ function GeneratingContent({ id }: { id: string }): React.JSX.Element {
         try {
           logger.info('blueprint.generation.ui.making_request', 'Making API request', {
             blueprintId: id,
-            endpoint: '/api/blueprints/generate',
+            endpoint: '/api/starmaps/generate',
             method: 'POST',
           });
 
-          response = await fetch('/api/blueprints/generate', {
+          response = await fetch('/api/starmaps/generate', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -212,7 +212,7 @@ function GeneratingContent({ id }: { id: string }): React.JSX.Element {
 
         // Redirect to blueprint viewer
         setTimeout(() => {
-          router.push(`/blueprint/${id}`);
+          router.push(`/starmaps/${id}`);
         }, 1500);
       } catch (error) {
         completed = true;
@@ -412,7 +412,7 @@ function GeneratingContent({ id }: { id: string }): React.JSX.Element {
                     className="mt-6"
                   >
                     <button
-                      onClick={() => router.push(`/blueprint/${id}`)}
+                      onClick={() => router.push(`/starmaps/${id}`)}
                       className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary/50 flex items-center gap-2 mx-auto rounded-xl px-8 py-4 text-base font-bold shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 active:scale-95 focus-visible:ring-2"
                     >
                       <Rocket className="h-5 w-5" />
