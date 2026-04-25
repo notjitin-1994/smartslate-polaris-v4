@@ -10,6 +10,7 @@ import { UserAvatar } from './UserAvatar';
 import { IconSidebarToggle } from './icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/contexts/SidebarContext';
+import { useResponsive } from '@/lib/design-system/hooks/useResponsive';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -27,6 +28,7 @@ export const AppLayout = memo(function AppLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { sidebarCollapsed } = useSidebar();
+  const { isDesktop } = useResponsive();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -47,11 +49,11 @@ export const AppLayout = memo(function AppLayout({
   // Width calculation that avoids hydration mismatch
   const sidebarWidth = !isMounted 
     ? 288 
-    : (sidebarCollapsed ? 64 : (window.innerWidth >= 1024 ? 320 : 288));
+    : (sidebarCollapsed ? 64 : (isDesktop ? 320 : 288));
 
   return (
     <div
-      className={`h-screen w-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 ${className}`}
+      className={`h-[100dvh] w-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 ${className}`}
     >
       <div className="flex h-full">
         {/* Desktop Sidebar */}
@@ -99,6 +101,14 @@ export const AppLayout = memo(function AppLayout({
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.x > 100 || info.velocity.x > 500) {
+                  setMobileMenuOpen(false);
+                }
+              }}
             >
               {/* Mobile Menu Header */}
               <div className="flex items-center justify-between border-b border-neutral-300 px-1 py-2">

@@ -245,7 +245,7 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
         width: sidebarCollapsed ? 64 : 288,
         transition: { type: 'spring', stiffness: 300, damping: 35 }
       }}
-      className="fixed top-0 left-0 z-[999] hidden h-screen flex-col overflow-hidden transition-all duration-300 ease-out border-r border-white/5 bg-surface/80 backdrop-blur-xl md:flex"
+      className="fixed top-0 left-0 z-[999] hidden h-[100dvh] flex-col overflow-hidden transition-all duration-300 ease-out border-r border-white/5 bg-surface/80 backdrop-blur-xl md:flex"
       aria-label="Main navigation"
       role="navigation"
     >
