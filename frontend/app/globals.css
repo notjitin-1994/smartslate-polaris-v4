@@ -1583,15 +1583,6 @@ button:focus-visible {
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* CRITICAL: Completely disable backdrop-filter on iOS - it causes severe hanging */
-  .glass,
-  .glass-strong,
-  .glass-card {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    background-color: rgba(0, 0, 0, 0.7) !important;
-  }
-
   /* Disable expensive CSS properties on iOS */
   * {
     -webkit-transform: translate3d(0, 0, 0);
@@ -1607,34 +1598,16 @@ button:focus-visible {
   }
 }
 
-/* iPad-specific optimizations - AGGRESSIVE */
+/* iPad-specific optimizations */
 @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2) {
-  /* CRITICAL: Completely disable backdrop-filter on iPad */
-  .glass,
-  .glass-strong,
-  .glass-card {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    background-color: rgba(0, 0, 0, 0.7) !important;
-  }
-
-  /* Disable all animations and transitions on iPad */
-  *,
-  *::before,
-  *::after {
-    transition: none !important;
-    animation: none !important;
+  /* Ensure smooth scrolling on iPad */
+  * {
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Optimize framer-motion animations */
   [data-framer-component-type] {
     will-change: auto !important;
-  }
-
-  /* Disable expensive hover effects */
-  *:hover {
-    transform: none !important;
-    scale: 1 !important;
   }
 }
 
