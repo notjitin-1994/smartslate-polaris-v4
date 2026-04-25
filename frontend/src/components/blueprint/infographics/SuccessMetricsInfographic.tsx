@@ -121,7 +121,7 @@ export function SuccessMetricsInfographic({
       )}
 
       {/* Modern Metrics Grid - Brand Glass Cards */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 lg:gap-8">
         {metrics.map((metric, index) => {
           const isExpanded = expandedDetails.has(index);
           return (

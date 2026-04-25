@@ -42,7 +42,7 @@ export function AssessmentStrategyInfographic({
           <h3 className="text-heading text-foreground font-semibold">Key Performance Indicators</h3>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           {kpis.map((kpi, index) => (
             <motion.div
               key={kpi.metric}

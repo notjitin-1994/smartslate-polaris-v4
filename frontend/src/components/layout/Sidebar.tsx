@@ -145,10 +145,10 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
     return (
       <nav className="space-y-6">
         {/* Quick Access Section */}
-        <div className="space-y-1.5 text-left">
+        <div className="space-y-1.5 text-left px-3">
           <button
             onClick={() => setQuickAccessExpanded(!quickAccessExpanded)}
-            className="w-full flex items-center justify-between px-3 py-1 text-primary hover:text-foreground transition-colors group"
+            className="w-full flex items-center justify-between py-1 text-primary hover:text-foreground transition-colors group"
           >
             <span className="!text-[10px] font-bold tracking-[0.2em] uppercase text-left">
               Quick Access

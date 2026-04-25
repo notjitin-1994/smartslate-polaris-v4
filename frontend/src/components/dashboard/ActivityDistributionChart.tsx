@@ -103,7 +103,7 @@ export function ActivityDistributionChart({
         </div>
       </div>
 
-      <div className="relative">
+      <div className="relative h-80">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={sortedData}

@@ -679,7 +679,7 @@ export function InteractiveBlueprintDashboard({
       style={{ overflowAnchor: 'none' }}
     >
       {/* High-level Summary Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 xl:gap-6">
         <MetricCard
           icon={Clock}
           label="Total Duration"
@@ -1184,7 +1184,7 @@ const ExpandableSection = React.forwardRef<
               className="overflow-hidden"
               style={{ overflowAnchor: 'none' }}
             >
-              <div className="border-t border-white/10 p-4 sm:p-6">{children}</div>
+              <div className="border-t border-white/10 p-4 sm:p-6 min-h-[200px]">{children}</div>
             </motion.div>
           )}
         </AnimatePresence>

@@ -152,7 +152,7 @@ export function TargetAudienceInfographic({
             <div>
               <div className="mt-8">
                 <h4 className="text-text-secondary mb-4 text-sm font-medium">Distribution</h4>
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                   {/* Pie Chart */}
                   <div className="glass-strong rounded-xl border border-white/10 p-6">
                     <div className="relative h-64 w-full">
@@ -319,7 +319,7 @@ export function TargetAudienceInfographic({
             {/* Pie Chart for Learning Preferences */}
             <div className="mt-8">
               <h4 className="text-text-secondary mb-4 text-sm font-medium">Learning Preferences</h4>
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                 {/* Pie Chart */}
                 <div className="glass-strong rounded-xl border border-white/10 p-6">
                   <div className="relative h-64 w-full">
