@@ -169,7 +169,7 @@ export default function TestDataPage(): React.JSX.Element {
                   </button>
 
                   <button
-                    onClick={() => router.push('/dashboard')}
+                    onClick={() => router.push('/')}
                     className="bg-background/50 hover:bg-background/70 text-foreground w-full rounded-lg border border-white/10 px-4 py-3 text-left transition-colors"
                   >
                     <div className="font-medium">📊 Dashboard</div>

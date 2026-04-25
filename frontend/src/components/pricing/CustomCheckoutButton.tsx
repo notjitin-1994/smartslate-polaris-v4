@@ -68,7 +68,7 @@ export function CustomCheckoutButton({
 
       // Redirect to dashboard or provided redirect URL
       setTimeout(() => {
-        window.location.href = result.redirectUrl || '/dashboard';
+        window.location.href = result.redirectUrl || '/';
       }, 1000);
     } catch (error) {
       console.error('Payment failed:', error);

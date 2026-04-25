@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
         },
         features: tierConfig.features,
       },
-      redirectUrl: '/dashboard?subscription=activated',
+      redirectUrl: '/?subscription=activated',
     });
   } catch (error) {
     console.error('Subscription activation error:', error);

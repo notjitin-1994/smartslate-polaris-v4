@@ -91,7 +91,7 @@ export function StandardHeader({
   title,
   subtitle,
   backHref,
-  backLabel = 'Back to Dashboard',
+  backLabel = 'Back to Home',
   backButtonStyle = 'default',
   titleActions,
   rightActions,

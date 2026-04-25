@@ -748,9 +748,9 @@ function PricingPageContent() {
               // Close modal after successful payment
               setSelectedTeamPlan(null);
 
-              // Redirect to dashboard
+              // Redirect to home root
               setTimeout(() => {
-                window.location.href = result.redirectUrl || '/dashboard';
+                window.location.href = result.redirectUrl || '/';
               }, 1000);
             } catch (error) {
               console.error('Payment failed:', error);

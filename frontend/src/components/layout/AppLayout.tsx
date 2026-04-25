@@ -120,7 +120,9 @@ export const AppLayout = memo(function AppLayout({
                 >
                   <span className="text-lg">×</span>
                 </button>
-                <Brand />
+                <div className="h-7 w-[140px] flex items-center justify-end">
+                  <Brand />
+                </div>
               </div>
 
               {/* Mobile Navigation */}

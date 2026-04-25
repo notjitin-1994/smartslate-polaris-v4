@@ -13,7 +13,6 @@ const PUBLIC_PATHS = new Set([
   '/demo-loading',
   '/pricing',
   '/my-starmaps',
-  '/dashboard',
   '/subscription',
   '/share', // Public share pages - no auth required
   '/landing', // Landing page - public access

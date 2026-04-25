@@ -15,7 +15,7 @@ interface SaveProgressButtonProps {
 export function SaveProgressButton({
   className,
   showConfirmation = true,
-  redirectTo = '/dashboard',
+  redirectTo = '/',
 }: SaveProgressButtonProps) {
   const { saveProgress, isAutosaving, blueprintId } = useQuestionnaire();
   const router = useRouter();

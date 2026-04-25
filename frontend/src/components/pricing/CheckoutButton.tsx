@@ -358,7 +358,7 @@ export function CheckoutButton({
 
               // Redirect to dashboard after successful verification
               setTimeout(() => {
-                router.push('/dashboard');
+                router.push('/');
               }, 2000);
             } else if (
               verificationResult.status === 'failed' ||

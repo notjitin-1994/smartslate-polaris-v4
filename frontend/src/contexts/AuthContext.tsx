@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
       if (newSession && typeof window !== 'undefined') {
         const currentPath = window.location.pathname;
         if (currentPath === '/login' || currentPath === '/signup') {
-          router.push('/dashboard');
+          router.push('/');
         }
       }
     });

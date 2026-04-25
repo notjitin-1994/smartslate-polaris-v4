@@ -116,7 +116,7 @@ export function ProfileHeader({ user, profile }: ProfileHeaderProps) {
         transition={{ duration: 0.3 }}
       >
         <Link
-          href="/dashboard"
+          href="/"
           className={cn(
             'mb-6 inline-flex items-center gap-2',
             'text-text-secondary hover:text-primary-accent',

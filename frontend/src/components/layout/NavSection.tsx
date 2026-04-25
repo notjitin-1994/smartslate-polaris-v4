@@ -63,9 +63,12 @@ export const NavSection = memo(function NavSection({
                     e.preventDefault();
                     onItemClick?.(item);
                   }}
-                  className="group text-text-secondary hover:text-foreground hover:bg-foreground/5 focus-visible:ring-secondary/50 flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-1 active:scale-[0.98]"
+                  className="group text-text-secondary hover:text-foreground hover:bg-foreground/5 focus-visible:ring-secondary/50 flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-1 active:scale-[0.98]"
                 >
-                  <span className="flex-1 truncate text-left">{label}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="h-1 w-1 rounded-full bg-primary/40 group-hover:bg-primary transition-colors flex-shrink-0" />
+                    <span className="truncate text-left">{label}</span>
+                  </div>
                   {tagText && (
                     <span
                       className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase transition-all duration-200 ${

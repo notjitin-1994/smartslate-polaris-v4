@@ -509,7 +509,7 @@ export async function processPayment(
         amount: orderData.order.amount,
         currency: orderData.order.currency,
       },
-      redirectUrl: '/dashboard', // Default redirect after successful payment
+      redirectUrl: '/', // Default redirect after successful payment
     };
   } catch (error) {
     console.error('Payment processing failed:', error);
@@ -649,7 +649,7 @@ export async function openRazorpayCheckout(
                 amount: orderData.order.amount,
                 currency: orderData.order.currency,
               },
-              redirectUrl: '/dashboard',
+              redirectUrl: '/',
             });
           } catch (error) {
             // Remove backdrop on error

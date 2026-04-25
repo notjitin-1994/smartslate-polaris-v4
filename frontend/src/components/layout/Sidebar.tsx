@@ -15,6 +15,7 @@ import {
   IconSettings,
   IconMap,
   IconChevronRight,
+  IconClose,
 } from './icons';
 import { useBlueprintSidebar } from '@/contexts/BlueprintSidebarContext';
 import { useSidebar } from '@/contexts/SidebarContext';
@@ -22,6 +23,7 @@ import { BlueprintSidebarContent } from './BlueprintSidebarContent';
 import { SettingsSidebarContent } from './SettingsSidebarContent';
 import { DocumentationSidebarContent } from './DocumentationSidebarContent';
 import { useUserProfile } from '@/lib/hooks/useUserProfile';
+import { useResponsive } from '@/lib/design-system/hooks/useResponsive';
 
 interface SidebarProps {
   user: User | null;
@@ -32,6 +34,7 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { sidebarCollapsed, setSidebarCollapsed } = useSidebar();
+  const { isTablet, isMobile } = useResponsive();
   const [isMounted, setIsMounted] = useState(false);
   const [quickAccessExpanded, setQuickAccessExpanded] = useState(true);
   const [solaraSuiteExpanded, setSolaraSuiteExpanded] = useState(false);
@@ -128,7 +131,7 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
       return (
         <BlueprintSidebarContent 
           {...blueprintData} 
-          blueprintId={blueprintData.id || blueprintId || ''} 
+          blueprintId={blueprintData.id || ''} 
         />
       );
     }
@@ -142,7 +145,7 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
     return (
       <nav className="space-y-6">
         {/* Quick Access Section */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 text-left">
           <button
             onClick={() => setQuickAccessExpanded(!quickAccessExpanded)}
             className="w-full flex items-center justify-between px-3 py-1 text-primary hover:text-foreground transition-colors group"
@@ -194,7 +197,7 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
         </div>
 
         {/* Solara Suite Section */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 text-left">
           <button
             onClick={() => setSolaraSuiteExpanded(!solaraSuiteExpanded)}
             className="w-full flex items-center justify-between px-3 py-1 text-primary hover:text-foreground transition-colors group"
@@ -267,18 +270,32 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
           </motion.div>
         )}
         
-        <button
-          type="button"
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className={`text-text-secondary hover:text-foreground hover:bg-foreground/5 flex h-11 w-11 items-center justify-center rounded-lg transition-all ${
-            sidebarCollapsed ? 'p-1.5' : 'p-2'
-          }`}
-          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          <IconSidebarToggle
-            className={`h-5 w-5 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`}
-          />
-        </button>
+        <div className="flex items-center gap-1">
+          {/* Close button for Tablet/Mobile touch - only visible when not collapsed */}
+          {!sidebarCollapsed && (isTablet || isMobile) && (
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed(true)}
+              className="text-text-secondary hover:text-foreground hover:bg-foreground/5 flex h-11 w-11 items-center justify-center rounded-lg transition-all"
+              title="Close sidebar"
+            >
+              <IconClose className="h-5 w-5" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className={`text-text-secondary hover:text-foreground hover:bg-foreground/5 flex h-11 w-11 items-center justify-center rounded-lg transition-all ${
+              sidebarCollapsed ? 'p-1.5' : 'p-2'
+            }`}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <IconSidebarToggle
+              className={`h-5 w-5 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Navigation Content Area */}

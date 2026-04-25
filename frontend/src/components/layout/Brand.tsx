@@ -15,11 +15,11 @@ export const Brand = memo(function Brand() {
       />
 
       {/* Logo */}
-      <div className="relative h-7">
+      <div className="relative h-7 w-[140px] flex-shrink-0">
         <img
           src="/logo.png"
           alt="Smartslate"
-          className="relative h-7 w-auto object-contain drop-shadow-sm transition-all duration-300 select-none group-hover:scale-[1.02] group-hover:drop-shadow-md"
+          className="h-7 w-auto object-contain object-left drop-shadow-sm transition-all duration-300 select-none group-hover:scale-[1.02] group-hover:drop-shadow-md"
           draggable="false"
         />
       </div>
