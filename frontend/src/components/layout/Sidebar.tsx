@@ -145,16 +145,16 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
     return (
       <nav className="space-y-6">
         {/* Quick Access Section */}
-        <div className="space-y-1.5 text-left px-3">
+        <div className="space-y-1 text-left px-4">
           <button
             onClick={() => setQuickAccessExpanded(!quickAccessExpanded)}
-            className="w-full flex items-center justify-between py-1 text-primary hover:text-foreground transition-colors group"
+            className="w-full flex items-center justify-between py-2 text-primary hover:text-foreground transition-colors group"
           >
-            <span className="!text-[10px] font-bold tracking-[0.2em] uppercase text-left">
+            <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-left flex-1">
               Quick Access
             </span>
             <IconChevronRight 
-              className={`h-3 w-3 transition-transform duration-300 ${quickAccessExpanded ? 'rotate-90' : ''}`} 
+              className={`h-3 w-3 shrink-0 transition-transform duration-300 ${quickAccessExpanded ? 'rotate-90' : ''}`} 
             />
           </button>
           <AnimatePresence initial={false}>
@@ -197,16 +197,16 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
         </div>
 
         {/* Solara Suite Section */}
-        <div className="space-y-1.5 text-left">
+        <div className="space-y-1 text-left px-4">
           <button
             onClick={() => setSolaraSuiteExpanded(!solaraSuiteExpanded)}
-            className="w-full flex items-center justify-between px-3 py-1 text-primary hover:text-foreground transition-colors group"
+            className="w-full flex items-center justify-between py-2 text-primary hover:text-foreground transition-colors group"
           >
-            <span className="!text-[10px] font-bold tracking-[0.2em] uppercase text-left">
+            <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-left flex-1">
               Solara Suite
             </span>
             <IconChevronRight 
-              className={`h-3 w-3 transition-transform duration-300 ${solaraSuiteExpanded ? 'rotate-90' : ''}`} 
+              className={`h-3 w-3 shrink-0 transition-transform duration-300 ${solaraSuiteExpanded ? 'rotate-90' : ''}`} 
             />
           </button>
           <AnimatePresence initial={false}>

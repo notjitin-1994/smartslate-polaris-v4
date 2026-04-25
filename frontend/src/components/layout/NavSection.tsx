@@ -30,11 +30,11 @@ export const NavSection = memo(function NavSection({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="group text-text-disabled hover:text-foreground hover:bg-foreground/5 active:bg-foreground/10 focus-visible:ring-secondary/50 flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-bold tracking-wider uppercase transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-1"
+        className="group text-text-disabled hover:text-foreground hover:bg-foreground/5 active:bg-foreground/10 focus-visible:ring-secondary/50 flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-bold tracking-wider uppercase transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-1 text-left"
         aria-expanded={open}
         aria-controls={`section-${title.replace(/\s+/g, '-')}`}
       >
-        <span>{title}</span>
+        <span className="flex-1 text-left">{title}</span>
         <svg
           className={`h-3.5 w-3.5 transition-transform duration-300 ${open ? 'rotate-90' : ''}`}
           fill="none"
