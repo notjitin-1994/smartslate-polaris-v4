@@ -26,6 +26,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { createBrowserBlueprintService } from '@/lib/db/blueprints.client';
 import { useRouter } from 'next/navigation';
 import { useMobileDetect } from '@/lib/hooks/useMobileDetect';
+import { useResponsive } from '@/lib/design-system/hooks/useResponsive';
 import { PresentationMode } from '@/components/presentation/PresentationMode';
 import blueprintToSlides from '@/lib/presentation/blueprintToSlides';
 import type { Presentation } from '@/types/presentation';

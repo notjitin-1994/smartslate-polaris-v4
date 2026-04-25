@@ -130,6 +130,40 @@
 }
 
 /* ========================================
+   GLOBAL TOUCH-SAFE HOVER & TARGETS
+   ======================================== */
+
+@media (hover: none) and (pointer: coarse) {
+  /* Increase default touch targets for interactive elements */
+  button, 
+  a, 
+  [role="button"],
+  [role="menuitem"],
+  [role="option"],
+  .touch-target-sm {
+    min-height: 44px !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  /* Prevent stuck hover states in dropdowns and common items */
+  [role="menuitem"]:hover,
+  [role="option"]:hover,
+  .hover\:bg-cyan-500\/20:hover {
+    background-color: transparent !important;
+  }
+
+  /* Use active state for touch feedback instead of stuck hover */
+  [role="menuitem"]:active,
+  [role="option"]:active,
+  button:active,
+  .pressable:active {
+    background-color: rgba(167, 218, 219, 0.2) !important;
+    transform: scale(0.97) !important;
+  }
+}
+
+/* ========================================
    ANIMATION OPTIMIZATION FOR TOUCH
    ======================================== */
 

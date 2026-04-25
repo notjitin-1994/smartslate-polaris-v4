@@ -36,6 +36,7 @@ import { InstructionalStrategyInfographic } from './infographics/InstructionalSt
 import { SustainabilityPlanInfographic } from './infographics/SustainabilityPlanInfographic';
 import { AdditionalDataInfographic } from './infographics/AdditionalDataInfographic';
 import type { BlueprintJSON } from './types';
+import { useRouter } from 'next/navigation';
 import CountUp from 'react-countup';
 import { useMobileDetect } from '@/lib/hooks/useMobileDetect';
 
@@ -127,6 +128,7 @@ export function InteractiveBlueprintDashboard({
   blueprintId,
   isPublicView = false,
 }: InteractiveBlueprintDashboardProps): React.JSX.Element {
+  const router = useRouter();
   const ref = React.useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const [mounted, setMounted] = useState(false);
@@ -495,7 +497,7 @@ export function InteractiveBlueprintDashboard({
 
       // Instead of full page reload, trigger a soft refresh using router
       // This preserves scroll position and provides better UX
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       console.error('Error saving section changes:', error);
 

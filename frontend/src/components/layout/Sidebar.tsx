@@ -270,8 +270,8 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
         <button
           type="button"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className={`text-text-secondary hover:text-foreground hover:bg-foreground/5 p-2 rounded-lg transition-all ${
-            sidebarCollapsed ? 'h-8 w-8' : 'h-9 w-9'
+          className={`text-text-secondary hover:text-foreground hover:bg-foreground/5 flex h-11 w-11 items-center justify-center rounded-lg transition-all ${
+            sidebarCollapsed ? 'p-1.5' : 'p-2'
           }`}
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
