@@ -11,18 +11,18 @@ import { TrackedGeminiClient } from '@/lib/claude/clientWithCostTracking';
 
 const logger = createServiceLogger('dynamic-questions');
 
-// LLM Configuration - Gemini primary with OpenRouter fallback
+// LLM Configuration - OpenRouter primary with Gemini fallback
 const LLM_CONFIG = {
-  claude: {
-    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_GENERATIVE_AI_API_KEY || '',
-    model: 'gemini-2.5-pro',
-    maxTokens: 32000,
-    temperature: 0.3,
-  },
   openrouter: {
     apiKey: process.env.OPENROUTER_API_KEY || '',
     model: 'tencent/hy3-preview:free',
     baseUrl: 'https://openrouter.ai/api/v1',
+    maxTokens: 32000,
+    temperature: 0.3,
+  },
+  claude: {
+    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_GENERATIVE_AI_API_KEY || '',
+    model: 'gemini-2.5-pro',
     maxTokens: 32000,
     temperature: 0.3,
   },
@@ -794,7 +794,7 @@ export async function generateDynamicQuestionsV2(
 
   logger.info(
     'dynamic_questions.generation.start',
-    'Starting V2 question generation with Gemini → Perplexity fallback',
+    'Starting V2 question generation with OpenRouter (Primary) → Gemini fallback',
     {
       blueprintId,
     }
@@ -822,12 +822,72 @@ export async function generateDynamicQuestionsV2(
     let responseContent: string | null = null;
     let usedProvider: 'claude' | 'openrouter' | null = null;
 
-    // Try Gemini first (primary provider)
-    if (LLM_CONFIG.claude.apiKey) {
-      console.log('\n🤖 PRIMARY PROVIDER: Gemini');
+    // Try OpenRouter first (Primary provider to avoid Gemini quota issues)
+    if (LLM_CONFIG.openrouter.apiKey) {
+      console.log('\n🤖 PRIMARY PROVIDER: OpenRouter (Tencent Hy3)');
+      console.log('→ Model:', LLM_CONFIG.openrouter.model);
+      console.log('→ Max Tokens:', LLM_CONFIG.openrouter.maxTokens);
+      console.log('→ Temperature:', LLM_CONFIG.openrouter.temperature);
+
+      for (let attempt = 1; attempt <= LLM_CONFIG.retries + 1; attempt++) {
+        try {
+          console.log(`\n⏳ Attempt ${attempt}/${LLM_CONFIG.retries + 1}: Calling OpenRouter...`);
+
+          logger.info(
+            'dynamic_questions.openrouter.request',
+            `Calling OpenRouter (attempt ${attempt})`,
+            {
+              blueprintId,
+              attemptNumber: attempt,
+              model: LLM_CONFIG.openrouter.model,
+            }
+          );
+
+          responseContent = await callOpenRouter(systemPrompt, userPrompt);
+          usedProvider = 'openrouter';
+
+          console.log('✅ OpenRouter succeeded on attempt', attempt);
+
+          logger.info('dynamic_questions.openrouter.success', 'OpenRouter generation successful', {
+            blueprintId,
+            attemptNumber: attempt,
+          });
+
+          break; // Success, exit retry loop
+        } catch (error) {
+          console.error(
+            `❌ Attempt ${attempt} failed:`,
+            error instanceof Error ? error.message : String(error)
+          );
+
+          logger.warn('dynamic_questions.openrouter.error', `OpenRouter attempt ${attempt} failed`, {
+            blueprintId,
+            error: error instanceof Error ? error.message : String(error),
+            attemptNumber: attempt,
+          });
+
+          if (attempt < LLM_CONFIG.retries + 1) {
+            const delay = Math.pow(2, attempt - 1) * 1000;
+            logger.debug('dynamic_questions.openrouter.retry', `Retrying OpenRouter after delay`, {
+              blueprintId,
+              delay,
+            });
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          }
+        }
+      }
+    }
+
+    // Fallback to Gemini if OpenRouter failed or unavailable
+    if (!responseContent && LLM_CONFIG.claude.apiKey) {
+      console.log('\n🔄 FALLBACK PROVIDER: Gemini (2.5 Pro)');
       console.log('→ Model:', LLM_CONFIG.claude.model);
       console.log('→ Max Tokens:', LLM_CONFIG.claude.maxTokens);
       console.log('→ Temperature:', LLM_CONFIG.claude.temperature);
+
+      logger.info('dynamic_questions.claude.fallback', 'Falling back to Gemini', {
+        blueprintId,
+      });
 
       for (let attempt = 1; attempt <= LLM_CONFIG.retries + 1; attempt++) {
         try {
@@ -858,78 +918,8 @@ export async function generateDynamicQuestionsV2(
           break; // Success, exit retry loop
         } catch (error) {
           console.error(
-            `❌ Attempt ${attempt} failed:`,
-            error instanceof Error ? error.message : String(error)
-          );
-
-          logger.warn('dynamic_questions.claude.error', `Gemini attempt ${attempt} failed`, {
-            blueprintId,
-            error: error instanceof Error ? error.message : String(error),
-            attemptNumber: attempt,
-          });
-
-          if (attempt < LLM_CONFIG.retries + 1) {
-            const delay = Math.pow(2, attempt - 1) * 1000; // Exponential backoff
-            console.log(`⏳ Retrying in ${delay}ms...`);
-            logger.debug('dynamic_questions.claude.retry', `Retrying Gemini after delay`, {
-              blueprintId,
-              delay,
-            });
-            await new Promise((resolve) => setTimeout(resolve, delay));
-          }
-        }
-      }
-    } else {
-      console.log('\n⚠️  Gemini API key not configured, skipping to fallback');
-      logger.warn(
-        'dynamic_questions.claude.skipped',
-        'Gemini API key not configured, skipping to Perplexity',
-        {
-          blueprintId,
-        }
-      );
-    }
-
-    // Fallback to Perplexity if Gemini failed or unavailable
-    if (!responseContent && LLM_CONFIG.perplexity.apiKey) {
-      console.log('\n🔄 FALLBACK PROVIDER: Perplexity');
-      console.log('→ Model:', LLM_CONFIG.perplexity.model);
-      console.log('→ Max Tokens:', LLM_CONFIG.perplexity.maxTokens);
-      console.log('→ Temperature:', LLM_CONFIG.perplexity.temperature);
-
-      logger.info('dynamic_questions.perplexity.fallback', 'Falling back to Perplexity', {
-        blueprintId,
-      });
-
-      for (let attempt = 1; attempt <= LLM_CONFIG.retries + 1; attempt++) {
-        try {
-          console.log(`\n⏳ Attempt ${attempt}/${LLM_CONFIG.retries + 1}: Calling Perplexity...`);
-
-          logger.info(
-            'dynamic_questions.perplexity.request',
-            `Calling Perplexity (attempt ${attempt})`,
-            {
-              blueprintId,
-              attemptNumber: attempt,
-              model: LLM_CONFIG.perplexity.model,
-            }
-          );
-
-          responseContent = await callPerplexity(systemPrompt, userPrompt);
-          usedProvider = 'perplexity';
-
-          console.log('✅ Perplexity succeeded on attempt', attempt);
-
-          logger.info('dynamic_questions.perplexity.success', 'Perplexity generation successful', {
-            blueprintId,
-            attemptNumber: attempt,
-          });
-
-          break; // Success, exit retry loop
-        } catch (error) {
-          logger.error(
-            'dynamic_questions.perplexity.error',
-            `Perplexity attempt ${attempt} failed`,
+            'dynamic_questions.claude.error',
+            `Gemini attempt ${attempt} failed`,
             {
               blueprintId,
               error: error instanceof Error ? error.message : String(error),
@@ -939,24 +929,20 @@ export async function generateDynamicQuestionsV2(
 
           if (attempt < LLM_CONFIG.retries + 1) {
             const delay = Math.pow(2, attempt - 1) * 1000;
-            logger.debug('dynamic_questions.perplexity.retry', `Retrying Perplexity after delay`, {
-              blueprintId,
-              delay,
-            });
             await new Promise((resolve) => setTimeout(resolve, delay));
           }
         }
       }
     } else if (!responseContent) {
-      logger.error('dynamic_questions.perplexity.skipped', 'Perplexity API key not configured', {
+      logger.error('dynamic_questions.openrouter.skipped', 'OpenRouter API key not configured', {
         blueprintId,
       });
     }
 
     if (!responseContent) {
       console.error('\n❌ ALL PROVIDERS FAILED');
+      console.error('- OpenRouter: Failed or not configured');
       console.error('- Gemini: Failed or not configured');
-      console.error('- Perplexity: Failed or not configured');
       console.log('========================================\n');
       throw new Error('All generation providers failed. Please check API keys and try again.');
     }
