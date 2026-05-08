@@ -193,7 +193,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     console.log('✓ Status updated');
 
     console.log('\n🤖 Calling generateDynamicQuestionsV2...');
-    console.log('→ Will attempt OpenRouter first, then Gemini fallback');
+    console.log('→ Will attempt Gemini first, then OpenRouter fallback');
     console.log('→ Using personalized prompts from static answers');
 
     // Generate dynamic questions using V2 service (returns sections directly, not wrapped in success)

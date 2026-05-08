@@ -38,8 +38,8 @@ export function getLLMConfig(): LLMConfig {
   // During build time or when API key is not available, return a safe default config
   if (!apiKey && !openrouterApiKey) {
     return {
-      primaryModel: 'gemini-2.5-pro',
-      fallbackModel: 'gemini-2.5-pro',
+      primaryModel: 'gemini-3-flash-latest',
+      fallbackModel: 'gemini-3-flash-latest',
       openrouterModel: 'google/gemma-4-31b-it:free',
       apiKey: '',
       openrouterApiKey: '',
@@ -59,8 +59,8 @@ export function getLLMConfig(): LLMConfig {
   const version = (process.env.ANTHROPIC_VERSION || '2023-06-01').trim();
 
   return {
-    primaryModel: 'gemini-2.5-pro',
-    fallbackModel: 'gemini-2.5-pro',
+    primaryModel: 'gemini-3-flash-latest',
+    fallbackModel: 'gemini-3-flash-latest',
     openrouterModel: 'google/gemma-4-31b-it:free',
     apiKey,
     openrouterApiKey,

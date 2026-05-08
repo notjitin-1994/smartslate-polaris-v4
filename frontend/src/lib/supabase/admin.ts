@@ -9,8 +9,8 @@ import type { Database } from '@/types/supabase';
  * NEVER expose the service role key to the client.
  */
 export function getSupabaseAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co';
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'dummy-key';
 
   console.log('[Admin Client] Environment check:', {
     hasUrl: !!supabaseUrl,

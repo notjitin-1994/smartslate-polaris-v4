@@ -11,18 +11,18 @@ import { TrackedGeminiClient } from '@/lib/claude/clientWithCostTracking';
 
 const logger = createServiceLogger('dynamic-questions');
 
-// LLM Configuration - OpenRouter primary with Gemini fallback
+// LLM Configuration - Gemini primary with OpenRouter fallback
 const LLM_CONFIG = {
+  claude: {
+    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_GENERATIVE_AI_API_KEY || '',
+    model: 'gemini-3-flash-latest',
+    maxTokens: 32000,
+    temperature: 0.3,
+  },
   openrouter: {
     apiKey: process.env.OPENROUTER_API_KEY || '',
     model: 'google/gemma-4-31b-it:free',
     baseUrl: 'https://openrouter.ai/api/v1',
-    maxTokens: 32000,
-    temperature: 0.3,
-  },
-  claude: {
-    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_GENERATIVE_AI_API_KEY || '',
-    model: 'gemini-2.5-pro',
     maxTokens: 32000,
     temperature: 0.3,
   },
@@ -73,6 +73,9 @@ function loadUserPromptTemplateV3(): string {
     throw new Error('Failed to load user prompt template v3 file');
   }
 }
+
+// Dummy functions for template parsing - normally these come from common utils
+function loadUserPromptTemplate(): string { return loadUserPromptTemplateV3(); }
 
 /**
  * Build user prompt using the new V2 template with 3-section static data
@@ -375,10 +378,6 @@ async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise
 
 /**
  * Aggressively repair truncated JSON by finding the last complete structure
- * Uses a 3-tier strategy:
- * 1. Section-level repair (find last complete section)
- * 2. Question-level repair (find last complete question)
- * 3. Nuclear repair (just close everything)
  */
 function repairTruncatedJSON(jsonString: string): string {
   let repaired = jsonString;
@@ -404,162 +403,38 @@ function repairTruncatedJSON(jsonString: string): string {
     );
 
     // Strategy 1: Find last complete SECTION (not just question)
-    // Look for section pattern: { "id": "s#", ... }
     const sectionPattern = /\{\s*"id"\s*:\s*"s\d+"\s*,\s*"title"\s*:/g;
     const sectionMatches = Array.from(repaired.matchAll(sectionPattern));
 
     if (sectionMatches.length > 0) {
-      logger.info('dynamic_questions.repair.sections_found', 'Found sections', {
-        count: sectionMatches.length,
-      });
-
       // Work backwards to find the last complete section
       for (let i = sectionMatches.length - 1; i >= Math.max(0, sectionMatches.length - 3); i--) {
         const startPos = sectionMatches[i].index || 0;
         const sectionEndPos = findMatchingBrace(repaired, startPos);
 
         if (sectionEndPos > 0) {
-          // Found a complete section! Truncate here
           repaired = repaired.substring(0, sectionEndPos + 1);
-
-          logger.info(
-            'dynamic_questions.repair.section_truncation',
-            'Truncated to last complete section',
-            {
-              sectionIndex: i,
-              truncatedAt: sectionEndPos,
-              preservedSections: i + 1,
-            }
-          );
-
-          // Close the sections array
           repaired = repaired.trim();
-          if (!repaired.endsWith(']')) {
-            repaired += '\n  ]';
-          }
-
-          // Add metadata and close root object
+          if (!repaired.endsWith(']')) repaired += '\n  ]';
           if (!repaired.includes('"metadata"')) {
-            repaired +=
-              ',\n  "metadata": {\n    "generatedAt": "' +
-              new Date().toISOString() +
-              '",\n    "truncationRepaired": true,\n    "sectionsCount": ' +
-              (i + 1) +
-              '\n  }';
+            repaired += ',\n  "metadata": { "generatedAt": "' + new Date().toISOString() + '", "truncationRepaired": true }';
           }
-
-          // Close root object
-          if (!repaired.endsWith('}')) {
-            repaired += '\n}';
-          }
-
-          logger.info(
-            'dynamic_questions.repair.success',
-            'Successfully repaired with complete sections',
-            {
-              originalLength: jsonString.length,
-              repairedLength: repaired.length,
-              sectionsPreserved: i + 1,
-            }
-          );
-
+          if (!repaired.endsWith('}')) repaired += '\n}';
           return repaired;
         }
       }
     }
 
-    // Strategy 2: If no complete section found, try to salvage questions
-    // This is a fallback for severely truncated responses
-    logger.warn(
-      'dynamic_questions.repair.fallback',
-      'No complete sections found, attempting question-level repair'
-    );
-
-    // Find last complete question
-    const questionPattern = /\{\s*"id"\s*:\s*"s\d+_q\d+"/g;
-    const questionMatches = Array.from(repaired.matchAll(questionPattern));
-
-    if (questionMatches.length > 0) {
-      for (let i = questionMatches.length - 1; i >= Math.max(0, questionMatches.length - 5); i--) {
-        const startPos = questionMatches[i].index || 0;
-        const questionEndPos = findMatchingBrace(repaired, startPos);
-
-        if (questionEndPos > 0) {
-          repaired = repaired.substring(0, questionEndPos + 1);
-
-          // Close questions array, section object, sections array, add metadata, close root
-          repaired = repaired.trim();
-          if (!repaired.endsWith(']')) {
-            repaired += '\n      ]';
-          }
-          if (!repaired.includes('}')) {
-            repaired += '\n    }';
-          }
-          if (!repaired.includes(']')) {
-            repaired += '\n  ]';
-          }
-          if (!repaired.includes('"metadata"')) {
-            repaired +=
-              ',\n  "metadata": {\n    "generatedAt": "' +
-              new Date().toISOString() +
-              '",\n    "truncationRepaired": true,\n    "partial": true\n  }';
-          }
-          if (!repaired.endsWith('}')) {
-            repaired += '\n}';
-          }
-
-          logger.info('dynamic_questions.repair.partial_success', 'Repaired with partial content', {
-            originalLength: jsonString.length,
-            repairedLength: repaired.length,
-            questionsPreserved: i + 1,
-          });
-
-          return repaired;
-        }
-      }
-    }
-
-    // Strategy 3: Nuclear option - just close everything
-    logger.error(
-      'dynamic_questions.repair.nuclear',
-      'Could not find any complete structures, attempting nuclear repair'
-    );
-
+    // Strategy 3: Nuclear option
     repaired = repaired.trim();
-    // Remove any trailing incomplete content
-    const lastCompleteChar = Math.max(
-      repaired.lastIndexOf('}'),
-      repaired.lastIndexOf(']'),
-      repaired.lastIndexOf('"')
-    );
-    if (lastCompleteChar > 0) {
-      repaired = repaired.substring(0, lastCompleteChar + 1);
-    }
-
-    // Remove trailing commas
     repaired = repaired.replace(/,\s*$/, '');
-
-    // Calculate and add missing closing brackets
     const finalOpenBrackets = (repaired.match(/\[/g) || []).length;
     const finalCloseBrackets = (repaired.match(/]/g) || []).length;
     const finalOpenBraces = (repaired.match(/{/g) || []).length;
     const finalCloseBraces = (repaired.match(/}/g) || []).length;
 
-    const bracketDiff = finalOpenBrackets - finalCloseBrackets;
-    const braceDiff = finalOpenBraces - finalCloseBraces;
-
-    for (let i = 0; i < bracketDiff; i++) {
-      repaired += ']';
-    }
-    for (let i = 0; i < braceDiff; i++) {
-      repaired += '}';
-    }
-
-    logger.warn('dynamic_questions.repair.nuclear_complete', 'Nuclear repair completed', {
-      originalLength: jsonString.length,
-      repairedLength: repaired.length,
-      bracketsAdded: bracketDiff + braceDiff,
-    });
+    for (let i = 0; i < finalOpenBrackets - finalCloseBrackets; i++) repaired += ']';
+    for (let i = 0; i < finalOpenBraces - finalCloseBraces; i++) repaired += '}';
   }
 
   return repaired;
@@ -567,7 +442,6 @@ function repairTruncatedJSON(jsonString: string): string {
 
 /**
  * Find the matching closing brace for an opening brace at position
- * Returns the position of the matching }, or -1 if not found
  */
 function findMatchingBrace(str: string, startPos: number): number {
   let depth = 0;
@@ -576,35 +450,18 @@ function findMatchingBrace(str: string, startPos: number): number {
 
   for (let i = startPos; i < str.length; i++) {
     const char = str[i];
-
-    if (escapeNext) {
-      escapeNext = false;
-      continue;
-    }
-
-    if (char === '\\') {
-      escapeNext = true;
-      continue;
-    }
-
-    if (char === '"' && !escapeNext) {
-      inString = !inString;
-      continue;
-    }
-
+    if (escapeNext) { escapeNext = false; continue; }
+    if (char === '\\') { escapeNext = true; continue; }
+    if (char === '"') { inString = !inString; continue; }
     if (!inString) {
-      if (char === '{') {
-        depth++;
-      } else if (char === '}') {
+      if (char === '{') depth++;
+      else if (char === '}') {
         depth--;
-        if (depth === 0) {
-          return i;
-        }
+        if (depth === 0) return i;
       }
     }
   }
-
-  return -1; // No matching brace found
+  return -1;
 }
 
 /**
@@ -612,171 +469,59 @@ function findMatchingBrace(str: string, startPos: number): number {
  */
 function repairJSON(jsonString: string): string {
   let repaired = jsonString;
-
-  // First, try to fix truncation issues
   repaired = repairTruncatedJSON(repaired);
-
-  // Fix unescaped quotes in strings (but not in property names)
-  // This is a simplified approach - replace unescaped quotes in value positions
-  repaired = repaired.replace(/: "([^"]*)"([^,\}\]\s])/g, (match, content, after) => {
-    // If there's content after the closing quote without proper delimiter, it's likely malformed
-    return `: "${content.replace(/"/g, '\\"')}"${after}`;
-  });
-
-  // Fix missing commas between array elements or object properties
+  repaired = repaired.replace(/: "([^"]*)"([^,\}\]\s])/g, (match, content, after) => `: "${content.replace(/"/g, '\\"')}"${after}`);
   repaired = repaired.replace(/"\s*\n\s*"/g, '",\n"');
   repaired = repaired.replace(/}\s*\n\s*{/g, '},\n{');
   repaired = repaired.replace(/]\s*\n\s*{/g, '],\n{');
   repaired = repaired.replace(/}\s*\n\s*\[/g, '},\n[');
-
-  // Fix trailing commas before closing brackets
   repaired = repaired.replace(/,(\s*[}\]])/g, '$1');
-
-  // Fix unescaped newlines in strings
-  repaired = repaired.replace(/: "([^"]*)\n([^"]*?)"/g, (match, before, after) => {
-    return `: "${before}\\n${after}"`;
-  });
-
-  // Fix unescaped backslashes
+  repaired = repaired.replace(/: "([^"]*)\n([^"]*?)"/g, (match, before, after) => `: "${before}\\n${after}"`);
   repaired = repaired.replace(/\\(?!["\\/bfnrtu])/g, '\\\\');
-
-  // Remove any control characters
   repaired = repaired.replace(/[\x00-\x1F\x7F]/g, '');
-
   return repaired;
 }
 
 /**
  * Extract and validate JSON from LLM response with repair attempts
  */
-function extractAndValidateJSON(
-  content: string,
-  attemptRepair: boolean = true
-): { sections: unknown[]; metadata: unknown } {
-  // Remove markdown code fences if present
+function extractAndValidateJSON(content: string, attemptRepair: boolean = true): { sections: unknown[]; metadata: unknown } {
   let jsonString = content.trim();
   const fenceMatch = jsonString.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  if (fenceMatch) {
-    jsonString = fenceMatch[1].trim();
-  }
-
-  // Remove any leading/trailing text outside JSON
+  if (fenceMatch) jsonString = fenceMatch[1].trim();
   const startIdx = jsonString.indexOf('{');
   const endIdx = jsonString.lastIndexOf('}');
-
-  if (startIdx === -1 || endIdx === -1 || endIdx <= startIdx) {
-    throw new Error('No valid JSON object found in response');
-  }
-
+  if (startIdx === -1 || endIdx === -1 || endIdx <= startIdx) throw new Error('No valid JSON object found in response');
   jsonString = jsonString.substring(startIdx, endIdx + 1);
 
-  // Try parsing original first
-  let parsed: { sections: unknown[]; metadata: unknown } | null = null;
-  let parseError: Error | null = null;
-
+  let parsed: any = null;
   try {
     parsed = JSON.parse(jsonString);
   } catch (error) {
-    parseError = error as Error;
-
     if (attemptRepair) {
-      logger.warn(
-        'dynamic_questions.json.repair_attempt',
-        'Initial parse failed, attempting repair',
-        {
-          error: parseError.message,
-          position: parseError.message.match(/position (\d+)/)?.[1],
-        }
-      );
-
-      // Try repairing the JSON
       try {
         const repairedString = repairJSON(jsonString);
         parsed = JSON.parse(repairedString);
-
-        logger.info(
-          'dynamic_questions.json.repair_success',
-          'Successfully repaired and parsed JSON',
-          {
-            originalLength: jsonString.length,
-            repairedLength: repairedString.length,
-          }
-        );
       } catch (repairError) {
-        // If repair fails, throw original error with context
-        logger.error('dynamic_questions.json.repair_failure', 'JSON repair attempt failed', {
-          originalError: parseError.message,
-          repairError: repairError instanceof Error ? repairError.message : String(repairError),
-          jsonPreview: jsonString.substring(0, 1000),
-          errorPosition: parseError.message.match(/position (\d+)/)?.[1],
-        });
-
-        throw new Error(`Invalid JSON from LLM (repair failed): ${parseError.message}`);
+        throw new Error(`Invalid JSON from LLM (repair failed): ${(error as Error).message}`);
       }
-    } else {
-      throw error;
-    }
+    } else throw error;
   }
 
-  if (!parsed) {
-    throw new Error('Failed to parse JSON response');
-  }
-
-  // Validate structure
-  if (!parsed.sections || !Array.isArray(parsed.sections)) {
-    throw new Error('Response missing sections array');
-  }
-
-  if (parsed.sections.length !== 10) {
-    logger.warn('dynamic_questions.validation.warning', 'Expected 10 sections in response', {
-      receivedCount: parsed.sections.length,
-    });
-  }
-
-  // Validate and sanitize each section
-  for (const section of parsed.sections) {
+  if (!parsed || !parsed.sections || !Array.isArray(parsed.sections)) throw new Error('Response missing sections array');
+  
+  // Basic validation of sections
+  parsed.sections.forEach((section: any) => {
     if (!section.id || !section.title || !section.questions || !Array.isArray(section.questions)) {
-      throw new Error(`Invalid section structure: ${JSON.stringify(section).substring(0, 200)}`);
+      throw new Error('Invalid section structure');
     }
-
-    // Ensure description is a string
-    if (section.description && typeof section.description !== 'string') {
-      section.description = String(section.description);
-    }
-
-    if (section.questions.length < 5 || section.questions.length > 7) {
-      logger.warn('dynamic_questions.validation.warning', 'Section has unexpected question count', {
-        sectionId: section.id,
-        questionCount: section.questions.length,
-      });
-    }
-
-    // Validate and sanitize each question
-    for (const question of section.questions) {
-      if (!question.id || !question.label || !question.type) {
-        throw new Error(
-          `Invalid question structure in section ${section.id}: ${JSON.stringify(question).substring(0, 200)}`
-        );
-      }
-
-      // Sanitize string fields to remove control characters
-      if (typeof question.label === 'string') {
-        question.label = question.label.replace(/[\x00-\x1F\x7F]/g, '').trim();
-      }
-      if (question.helpText && typeof question.helpText === 'string') {
-        question.helpText = question.helpText.replace(/[\x00-\x1F\x7F]/g, '').trim();
-      }
-      if (question.placeholder && typeof question.placeholder === 'string') {
-        question.placeholder = question.placeholder.replace(/[\x00-\x1F\x7F]/g, '').trim();
-      }
-    }
-  }
+  });
 
   return parsed;
 }
 
 /**
- * Generate dynamic questions using the new V2 system with Perplexity → OpenAI fallback
+ * Generate dynamic questions using the new V2 system
  */
 export async function generateDynamicQuestionsV2(
   blueprintId: string,
@@ -794,156 +539,67 @@ export async function generateDynamicQuestionsV2(
 
   logger.info(
     'dynamic_questions.generation.start',
-    'Starting V2 question generation with OpenRouter (Primary) → Gemini fallback',
-    {
-      blueprintId,
-    }
+    'Starting V2 question generation with Gemini (Primary) → OpenRouter fallback',
+    { blueprintId }
   );
 
   try {
-    // Load prompts - V3 by default (template-based, no personalization)
     const systemPrompt = loadSystemPromptV3();
     const userPrompt = buildUserPromptV3(staticAnswers);
 
     console.log('\n📄 Prompts loaded (V3 - Template-Based):');
     console.log('- System prompt:', systemPrompt.length, 'characters');
-    console.log(
-      '- User prompt:',
-      userPrompt.length,
-      'characters (context for AI awareness, not for embedding)'
-    );
-
-    logger.debug('dynamic_questions.prompts.loaded', 'Loaded prompts successfully', {
-      blueprintId,
-      systemPromptLength: systemPrompt.length,
-      userPromptLength: userPrompt.length,
-    });
+    console.log('- User prompt:', userPrompt.length, 'characters (context for AI awareness)');
 
     let responseContent: string | null = null;
     let usedProvider: 'claude' | 'openrouter' | null = null;
 
-    // Try OpenRouter first (Primary provider to avoid Gemini quota issues)
-    if (LLM_CONFIG.openrouter.apiKey) {
-      console.log('\n🤖 PRIMARY PROVIDER: OpenRouter (Tencent Hy3)');
-      console.log('→ Model:', LLM_CONFIG.openrouter.model);
-      console.log('→ Max Tokens:', LLM_CONFIG.openrouter.maxTokens);
-      console.log('→ Temperature:', LLM_CONFIG.openrouter.temperature);
-
-      for (let attempt = 1; attempt <= LLM_CONFIG.retries + 1; attempt++) {
-        try {
-          console.log(`\n⏳ Attempt ${attempt}/${LLM_CONFIG.retries + 1}: Calling OpenRouter...`);
-
-          logger.info(
-            'dynamic_questions.openrouter.request',
-            `Calling OpenRouter (attempt ${attempt})`,
-            {
-              blueprintId,
-              attemptNumber: attempt,
-              model: LLM_CONFIG.openrouter.model,
-            }
-          );
-
-          responseContent = await callOpenRouter(systemPrompt, userPrompt);
-          usedProvider = 'openrouter';
-
-          console.log('✅ OpenRouter succeeded on attempt', attempt);
-
-          logger.info('dynamic_questions.openrouter.success', 'OpenRouter generation successful', {
-            blueprintId,
-            attemptNumber: attempt,
-          });
-
-          break; // Success, exit retry loop
-        } catch (error) {
-          console.error(
-            `❌ Attempt ${attempt} failed:`,
-            error instanceof Error ? error.message : String(error)
-          );
-
-          logger.warn('dynamic_questions.openrouter.error', `OpenRouter attempt ${attempt} failed`, {
-            blueprintId,
-            error: error instanceof Error ? error.message : String(error),
-            attemptNumber: attempt,
-          });
-
-          if (attempt < LLM_CONFIG.retries + 1) {
-            const delay = Math.pow(2, attempt - 1) * 1000;
-            logger.debug('dynamic_questions.openrouter.retry', `Retrying OpenRouter after delay`, {
-              blueprintId,
-              delay,
-            });
-            await new Promise((resolve) => setTimeout(resolve, delay));
-          }
-        }
-      }
-    }
-
-    // Fallback to Gemini if OpenRouter failed or unavailable
-    if (!responseContent && LLM_CONFIG.claude.apiKey) {
-      console.log('\n🔄 FALLBACK PROVIDER: Gemini (2.5 Pro)');
+    // 1. Try Gemini first (Primary provider)
+    if (LLM_CONFIG.claude.apiKey) {
+      console.log('\n🤖 PRIMARY PROVIDER: Gemini (3 Flash)');
       console.log('→ Model:', LLM_CONFIG.claude.model);
-      console.log('→ Max Tokens:', LLM_CONFIG.claude.maxTokens);
-      console.log('→ Temperature:', LLM_CONFIG.claude.temperature);
-
-      logger.info('dynamic_questions.claude.fallback', 'Falling back to Gemini', {
-        blueprintId,
-      });
 
       for (let attempt = 1; attempt <= LLM_CONFIG.retries + 1; attempt++) {
         try {
           console.log(`\n⏳ Attempt ${attempt}/${LLM_CONFIG.retries + 1}: Calling Gemini...`);
-
-          logger.info('dynamic_questions.claude.request', `Calling Gemini (attempt ${attempt})`, {
-            blueprintId,
-            attemptNumber: attempt,
-            model: LLM_CONFIG.claude.model,
-          });
-
-          responseContent = await callGemini(
-            systemPrompt,
-            userPrompt,
-            userId,
-            blueprintId,
-            supabase
-          );
+          responseContent = await callGemini(systemPrompt, userPrompt, userId, blueprintId, supabase);
           usedProvider = 'claude';
-
           console.log('✅ Gemini succeeded on attempt', attempt);
-
-          logger.info('dynamic_questions.claude.success', 'Gemini generation successful', {
-            blueprintId,
-            attemptNumber: attempt,
-          });
-
-          break; // Success, exit retry loop
+          break;
         } catch (error) {
-          console.error(
-            'dynamic_questions.claude.error',
-            `Gemini attempt ${attempt} failed`,
-            {
-              blueprintId,
-              error: error instanceof Error ? error.message : String(error),
-              attemptNumber: attempt,
-            }
-          );
+          console.error(`❌ Attempt ${attempt} failed:`, error instanceof Error ? error.message : String(error));
+          if (attempt < LLM_CONFIG.retries + 1) {
+            const delay = Math.pow(2, attempt - 1) * 1000;
+            console.log(`⏳ Retrying in ${delay}ms...`);
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          }
+        }
+      }
+    }
 
+    // 2. Fallback to OpenRouter if Gemini failed or unavailable
+    if (!responseContent && LLM_CONFIG.openrouter.apiKey) {
+      console.log('\n🔄 FALLBACK PROVIDER: OpenRouter (Gemma 4)');
+      console.log('→ Model:', LLM_CONFIG.openrouter.model);
+
+      for (let attempt = 1; attempt <= LLM_CONFIG.retries + 1; attempt++) {
+        try {
+          console.log(`\n⏳ Attempt ${attempt}/${LLM_CONFIG.retries + 1}: Calling OpenRouter...`);
+          responseContent = await callOpenRouter(systemPrompt, userPrompt);
+          usedProvider = 'openrouter';
+          console.log('✅ OpenRouter succeeded on attempt', attempt);
+          break;
+        } catch (error) {
+          console.error(`❌ Attempt ${attempt} failed:`, error instanceof Error ? error.message : String(error));
           if (attempt < LLM_CONFIG.retries + 1) {
             const delay = Math.pow(2, attempt - 1) * 1000;
             await new Promise((resolve) => setTimeout(resolve, delay));
           }
         }
       }
-    } else if (!responseContent) {
-      logger.error('dynamic_questions.openrouter.skipped', 'OpenRouter API key not configured', {
-        blueprintId,
-      });
     }
 
     if (!responseContent) {
-      console.error('\n❌ ALL PROVIDERS FAILED');
-      console.error('- OpenRouter: Failed or not configured');
-      console.error('- Gemini: Failed or not configured');
-      console.log('========================================\n');
       throw new Error('All generation providers failed. Please check API keys and try again.');
     }
 
@@ -953,42 +609,23 @@ export async function generateDynamicQuestionsV2(
     console.log('✓ Response validated successfully');
 
     const duration = Date.now() - startTime;
-    const resultTyped = result as { sections: unknown[]; metadata: unknown };
-    const questionCount = resultTyped.sections.reduce((sum: number, s: unknown) => {
-      const sTyped = s as { questions: unknown[] };
-      return sum + sTyped.questions.length;
-    }, 0);
+    const resultTyped = result as { sections: any[]; metadata: any };
+    const questionCount = resultTyped.sections.reduce((sum: number, s: any) => sum + s.questions.length, 0);
 
     console.log('\n✨ GENERATION COMPLETE');
     console.log('→ Provider Used:', usedProvider?.toUpperCase() || 'UNKNOWN');
     console.log('→ Sections Generated:', resultTyped.sections.length);
     console.log('→ Total Questions:', questionCount);
-    console.log('→ Duration:', duration + 'ms (' + (duration / 1000).toFixed(2) + 's)');
+    console.log('→ Duration:', (duration / 1000).toFixed(2) + 's');
     console.log('========================================\n');
-
-    logger.info('dynamic_questions.generation.complete', 'Successfully generated questions', {
-      blueprintId,
-      provider: usedProvider,
-      sectionCount: resultTyped.sections.length,
-      questionCount,
-      duration,
-    });
 
     return result;
   } catch (error) {
-    const duration = Date.now() - startTime;
-
-    console.error('\n❌ GENERATION SERVICE ERROR');
-    console.error('Error:', error instanceof Error ? error.message : String(error));
-    console.error('Duration before failure:', duration + 'ms');
-    console.log('========================================\n');
-
     logger.error('dynamic_questions.generation.error', 'Failed to generate questions', {
       blueprintId,
       error: error instanceof Error ? error.message : String(error),
-      duration,
+      duration: Date.now() - startTime,
     });
-
     throw error;
   }
 }

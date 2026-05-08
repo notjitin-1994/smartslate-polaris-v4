@@ -1,6 +1,6 @@
 /**
  * Blueprint Generation Orchestrator Service
- * Implements dual-fallback: Gemini 3.1 Pro → Gemini 3.1 Pro
+ * Implements dual-fallback: Gemini 3 Flash → OpenRouter (Gemma 4 31B)
  */
 
 import { GeminiClient, GeminiApiError } from '@/lib/claude/client';
@@ -42,7 +42,7 @@ export interface GenerationResult {
   success: boolean;
   blueprint: any;
   metadata: {
-    model: 'gemini-3.1-pro-preview' | 'gemini-3.1-pro-preview';
+    model: string;
     duration: number;
     timestamp: string;
     fallbackUsed: boolean;
@@ -70,8 +70,8 @@ export class BlueprintGenerationService {
 
   /**
    * Generate blueprint with dual-fallback cascade
-   * 1. Try Gemini 3.1 Pro (primary) - if API key available
-   * 2. On failure or missing key, try Gemini 3.1 Pro (fallback) - if API key available
+   * 1. Try Gemini (3 Flash) - Primary provider
+   * 2. On failure or missing key, try OpenRouter (Gemma 4 31B) - Fallback
    */
   async generate(context: BlueprintContext): Promise<GenerationResult> {
     const endTimer = performanceMonitor.startTimer(
@@ -129,7 +129,7 @@ export class BlueprintGenerationService {
         success: false,
         blueprint: null,
         metadata: {
-          model: 'gemini-3.1-pro-preview',
+          model: 'unknown',
           duration: 0,
           timestamp: new Date().toISOString(),
           fallbackUsed: false,
@@ -164,7 +164,7 @@ export class BlueprintGenerationService {
         success: false,
         blueprint: null,
         metadata: {
-          model: 'gemini-3.1-pro-preview',
+          model: 'unknown',
           duration: 0,
           timestamp: new Date().toISOString(),
           fallbackUsed: false,
@@ -202,7 +202,7 @@ export class BlueprintGenerationService {
         success: true,
         blueprint: cachedBlueprint,
         metadata: {
-          model: 'gemini-3.1-pro-preview',
+          model: 'cache',
           duration: metric.duration,
           timestamp: new Date().toISOString(),
           fallbackUsed: false,
@@ -231,7 +231,7 @@ export class BlueprintGenerationService {
         success: true,
         blueprint: similarBlueprint,
         metadata: {
-          model: 'gemini-3.1-pro-preview',
+          model: 'cache-similar',
           duration: metric.duration,
           timestamp: new Date().toISOString(),
           fallbackUsed: false,
@@ -254,18 +254,17 @@ export class BlueprintGenerationService {
     const systemPrompt = loadBlueprintSystemPrompt();
     const userPrompt = buildBlueprintPrompt(sanitizedContext);
 
-    // Check if Gemini API key is available
+    // 1. Try Gemini (3 Flash) - Primary provider
     const hasGeminiKey = this.config.apiKey && this.config.apiKey.trim().length > 0;
 
     if (hasGeminiKey) {
-      // Try Gemini 3.1 Pro (primary)
       try {
         const blueprint = await this.generateWithGemini(
           context,
           this.config.primaryModel,
           systemPrompt,
           userPrompt,
-          18000 // Increased max_tokens for Sonnet 4.5 to prevent truncation
+          32000 // Flash has large output support
         );
 
         const duration = Date.now() - startTime;
@@ -282,9 +281,9 @@ export class BlueprintGenerationService {
 
         const metric = endTimer();
 
-        logger.info('blueprint.generation.success', 'Blueprint generation succeeded', {
+        logger.info('blueprint.generation.success', 'Blueprint generation succeeded via Gemini', {
           blueprintId: context.blueprintId,
-          model: 'gemini-3.1-pro-preview',
+          model: this.config.primaryModel,
           duration,
           attempts: 1,
           cached: true,
@@ -294,7 +293,7 @@ export class BlueprintGenerationService {
           success: true,
           blueprint: blueprint.data,
           metadata: {
-            model: 'gemini-3.1-pro-preview',
+            model: this.config.primaryModel,
             duration: metric.duration,
             timestamp: new Date().toISOString(),
             fallbackUsed: false,
@@ -302,119 +301,72 @@ export class BlueprintGenerationService {
           },
           usage: blueprint.usage,
         };
-      } catch (sonnetError) {
-        logger.warn('blueprint.generation.claude_primary_failed', 'Gemini primary failed', {
+      } catch (geminiError) {
+        logger.warn('blueprint.generation.claude_primary_failed', 'Gemini primary failed, trying OpenRouter fallback', {
           blueprintId: context.blueprintId,
-          error: (sonnetError as Error).message,
+          error: (geminiError as Error).message,
         });
-
-        // Check if we should fallback to Sonnet 4
-        const fallbackDecision = shouldFallbackToSonnet4(sonnetError as Error);
-
-        logFallbackDecision(fallbackDecision, {
-          blueprintId: context.blueprintId,
-          model: 'gemini-3.1-pro-preview',
-          attempt: 1,
-        });
-
-        if (!fallbackDecision.shouldFallback) {
-          // Don't fallback - return error
-          const duration = Date.now() - startTime;
-
-          logger.error(
-            'blueprint.generation.failed_no_fallback',
-            'Generation failed without fallback',
-            {
-              blueprintId: context.blueprintId,
-              duration,
-              error: (sonnetError as Error).message,
-            }
-          );
-
-          return {
-            success: false,
-            blueprint: null,
-            metadata: {
-              model: 'gemini-3.1-pro-preview',
-              duration,
-              timestamp: new Date().toISOString(),
-              fallbackUsed: false,
-              attempts: 1,
-            },
-            error: (sonnetError as Error).message,
-          };
-        }
-
-        // Try Gemini 3.1 Pro (fallback)
-        try {
-          const blueprint = await this.generateWithGemini(
-            context,
-            this.config.fallbackModel,
-            systemPrompt,
-            userPrompt,
-            20000 // Increased max_tokens for Sonnet 4 to prevent truncation
-          );
-
-          const duration = Date.now() - startTime;
-
-          logger.info('blueprint.generation.fallback_success', 'Gemini fallback succeeded', {
-            blueprintId: context.blueprintId,
-            model: 'gemini-3.1-pro-preview',
-            duration,
-            attempts: 2,
-            fallbackTrigger: fallbackDecision.trigger,
-          });
-
-          return {
-            success: true,
-            blueprint: blueprint.data,
-            metadata: {
-              model: 'gemini-3.1-pro-preview',
-              duration,
-              timestamp: new Date().toISOString(),
-              fallbackUsed: true,
-              attempts: 2,
-            },
-            usage: blueprint.usage,
-          };
-        } catch (sonnet4Error) {
-          logger.error(
-            'blueprint.generation.claude_fallback_failed',
-            'Gemini 3.1 Pro fallback failed',
-            {
-              blueprintId: context.blueprintId,
-              sonnet45Error: (sonnetError as Error).message,
-              sonnet4Error: (sonnet4Error as Error).message,
-            }
-          );
-        }
       }
-    } else {
-      const duration = Date.now() - startTime;
-
-      logger.error('blueprint.generation.claude_unavailable', 'Gemini API key not available', {
-        blueprintId: context.blueprintId,
-        duration,
-      });
-
-      return {
-        success: false,
-        blueprint: null,
-        metadata: {
-          model: 'gemini-3.1-pro-preview',
-          duration,
-          timestamp: new Date().toISOString(),
-          fallbackUsed: false,
-          attempts: 0,
-        },
-        error: 'Gemini API key not available. Please configure GOOGLE_GENERATIVE_AI_API_KEY.',
-      };
     }
 
-    // If we reach here, all Gemini attempts failed
+    // 2. Try OpenRouter (Gemma 4 31B) - Fallback provider
+    const hasOpenRouterKey = this.config.openrouterApiKey && this.config.openrouterApiKey.trim().length > 0;
+
+    if (hasOpenRouterKey) {
+      try {
+        const result = await this.generateWithOpenRouter(
+          context,
+          this.config.openrouterModel,
+          systemPrompt,
+          userPrompt,
+          32000
+        );
+
+        const duration = Date.now() - startTime;
+
+        try {
+          await cacheBlueprint(staticAnswers, result.data);
+        } catch (cacheError) {
+          logger.warn('blueprint.generation.cache_error', 'Failed to cache generated blueprint', {
+            blueprintId: context.blueprintId,
+            error: (cacheError as Error).message,
+          });
+        }
+
+        const metric = endTimer();
+
+        logger.info('blueprint.generation.success', 'Blueprint generation succeeded via OpenRouter', {
+          blueprintId: context.blueprintId,
+          model: this.config.openrouterModel,
+          duration,
+          attempts: hasGeminiKey ? 2 : 1,
+          cached: true,
+        });
+
+        return {
+          success: true,
+          blueprint: result.data,
+          metadata: {
+            model: this.config.openrouterModel,
+            duration: metric.duration,
+            timestamp: new Date().toISOString(),
+            fallbackUsed: true,
+            attempts: hasGeminiKey ? 2 : 1,
+          },
+          usage: result.usage,
+        };
+      } catch (orError) {
+        logger.error('blueprint.generation.openrouter_failed', 'OpenRouter fallback failed', {
+          blueprintId: context.blueprintId,
+          error: (orError as Error).message,
+        });
+      }
+    }
+
+    // If we reach here, all attempts failed
     const duration = Date.now() - startTime;
 
-    logger.error('blueprint.generation.all_failed', 'All Gemini generation methods failed', {
+    logger.error('blueprint.generation.all_failed', 'All generation methods failed', {
       blueprintId: context.blueprintId,
       duration,
     });
@@ -423,13 +375,13 @@ export class BlueprintGenerationService {
       success: false,
       blueprint: null,
       metadata: {
-        model: 'gemini-3.1-pro-preview',
+        model: 'failed',
         duration,
         timestamp: new Date().toISOString(),
         fallbackUsed: true,
-        attempts: hasGeminiKey ? 2 : 0,
+        attempts: (hasGeminiKey ? 1 : 0) + (hasOpenRouterKey ? 1 : 0),
       },
-      error: 'All Gemini generation methods failed. Please check your API configuration.',
+      error: 'All generation methods failed. Please check your API configuration.',
     };
   }
 

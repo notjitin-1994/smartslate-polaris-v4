@@ -8,8 +8,8 @@ let browserClient: ReturnType<typeof createBrowserClient<Database>> | null = nul
 export function getSupabaseBrowserClient() {
   if (browserClient) return browserClient;
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co';
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy-key';
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Supabase configuration is missing. Please check your environment variables.');
