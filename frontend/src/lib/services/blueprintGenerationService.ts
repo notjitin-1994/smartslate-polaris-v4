@@ -434,6 +434,59 @@ export class BlueprintGenerationService {
   }
 
   /**
+   * Generate blueprint using OpenRouter (Gemma 4 31B)
+   */
+  private async generateWithOpenRouter(
+    context: BlueprintContext,
+    model: string,
+    systemPrompt: string,
+    userPrompt: string,
+    maxTokens: number
+  ): Promise<{ data: any; usage: { input_tokens: number; output_tokens: number } }> {
+    logger.info('blueprint.generation.openrouter_attempt', 'Attempting OpenRouter generation', {
+      blueprintId: context.blueprintId,
+      model,
+      maxTokens,
+    });
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.config.openrouterApiKey}`,
+        'HTTP-Referer': 'https://smartslate.io',
+        'X-Title': 'SmartSlate Polaris',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        temperature: this.config.temperature,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`OpenRouter API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    const text = data.choices[0].message.content;
+    const validated = validateAndNormalizeBlueprint(text);
+
+    return {
+      data: validated,
+      usage: {
+        input_tokens: data.usage?.prompt_tokens || 0,
+        output_tokens: data.usage?.completion_tokens || 0,
+      },
+    };
+  }
+
+  /**
    * Generate blueprint using Gemini (Sonnet or Opus)
    */
   private async generateWithGemini(

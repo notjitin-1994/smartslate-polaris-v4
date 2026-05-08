@@ -15,7 +15,7 @@ const logger = createServiceLogger('dynamic-questions');
 const LLM_CONFIG = {
   openrouter: {
     apiKey: process.env.OPENROUTER_API_KEY || '',
-    model: 'tencent/hy3-preview:free',
+    model: 'google/gemma-4-31b-it:free',
     baseUrl: 'https://openrouter.ai/api/v1',
     maxTokens: 32000,
     temperature: 0.3,

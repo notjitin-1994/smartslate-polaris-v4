@@ -3,10 +3,12 @@
  * Secure server-side configuration for Gemini 3.1 Pro and Sonnet 4
  */
 
-export interface GeminiConfig {
+export interface LLMConfig {
   primaryModel: string;
   fallbackModel: string;
+  openrouterModel: string;
   apiKey: string;
+  openrouterApiKey: string;
   baseUrl: string;
   version: string;
   maxTokens: number;
@@ -16,25 +18,31 @@ export interface GeminiConfig {
 }
 
 /**
- * Get Gemini configuration from environment variables
+ * Get LLM configuration from environment variables
  * CRITICAL: This function must ONLY be called server-side
  * Never expose API keys to the client
  */
-export function getGeminiConfig(): GeminiConfig {
-  // Load API key from environment - try multiple sources for compatibility
+export function getLLMConfig(): LLMConfig {
+  // Load API keys from environment
   const apiKey = (
     process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
     process.env.NEXT_PUBLIC_GOOGLE_GENERATIVE_AI_API_KEY ||
     ''
   ).trim();
 
+  const openrouterApiKey = (
+    process.env.OPENROUTER_API_KEY ||
+    ''
+  ).trim();
+
   // During build time or when API key is not available, return a safe default config
-  // The blueprint generation service will handle missing API keys gracefully
-  if (!apiKey) {
+  if (!apiKey && !openrouterApiKey) {
     return {
       primaryModel: 'gemini-2.5-pro',
       fallbackModel: 'gemini-2.5-pro',
+      openrouterModel: 'google/gemma-4-31b-it:free',
       apiKey: '',
+      openrouterApiKey: '',
       baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
       version: '2023-06-01',
       maxTokens: 32000,
@@ -53,15 +61,21 @@ export function getGeminiConfig(): GeminiConfig {
   return {
     primaryModel: 'gemini-2.5-pro',
     fallbackModel: 'gemini-2.5-pro',
+    openrouterModel: 'google/gemma-4-31b-it:free',
     apiKey,
+    openrouterApiKey,
     baseUrl,
     version,
     maxTokens: 32000,
     temperature: 0.2,
-    timeout: 840000, // 14 minutes - avg generation time is ~13 minutes (779.7s)
+    timeout: 840000, // 14 minutes
     retries: 2,
   };
 }
+
+// Keep aliases for backward compatibility
+export type GeminiConfig = LLMConfig;
+export const getGeminiConfig = getLLMConfig;
 
 /**
  * Validate that Gemini configuration is available

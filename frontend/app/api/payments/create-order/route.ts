@@ -3,12 +3,6 @@ import Razorpay from 'razorpay';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
-// Initialize Razorpay instance
-const razorpay = new Razorpay({
-  key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
 // Request validation schema
 const createOrderSchema = z.object({
   tier: z.enum(['explorer', 'navigator', 'voyager', 'crew', 'fleet', 'armada', 'enterprise']),
@@ -75,6 +69,12 @@ export async function POST(request: NextRequest) {
       seats: seats || 1, // 1 for individual plans
       totalAmount,
       razorpayAmount,
+    });
+
+    // Initialize Razorpay instance
+    const razorpay = new Razorpay({
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'dummy_key',
+      key_secret: process.env.RAZORPAY_KEY_SECRET || 'dummy_secret',
     });
 
     // Create Razorpay order

@@ -1,7 +1,8 @@
 export * from './utils';
 export * from './tierDisplay';
 export * from './formatPrice';
-export * from './currencyFormatter';
+// Omit getCurrencySymbol from currencyFormatter to prevent conflict with formatPrice
+export { getCurrencyLocale, formatCurrency, parseCurrency } from './currencyFormatter';
 export * from './toast';
 export * from './usageErrorHandler';
 export * from './sessionTracker';
