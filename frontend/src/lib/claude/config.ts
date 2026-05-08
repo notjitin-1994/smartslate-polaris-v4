@@ -32,8 +32,8 @@ export function getGeminiConfig(): GeminiConfig {
   // The blueprint generation service will handle missing API keys gracefully
   if (!apiKey) {
     return {
-      primaryModel: 'gemini-3.1-pro-preview',
-      fallbackModel: 'gemini-3.1-pro-preview',
+      primaryModel: 'gemini-2.5-pro',
+      fallbackModel: 'gemini-2.5-pro',
       apiKey: '',
       baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
       version: '2023-06-01',
@@ -51,8 +51,8 @@ export function getGeminiConfig(): GeminiConfig {
   const version = (process.env.ANTHROPIC_VERSION || '2023-06-01').trim();
 
   return {
-    primaryModel: 'gemini-3.1-pro-preview',
-    fallbackModel: 'gemini-3.1-pro-preview',
+    primaryModel: 'gemini-2.5-pro',
+    fallbackModel: 'gemini-2.5-pro',
     apiKey,
     baseUrl,
     version,

@@ -11,13 +11,20 @@ import { TrackedGeminiClient } from '@/lib/claude/clientWithCostTracking';
 
 const logger = createServiceLogger('dynamic-questions');
 
-// LLM Configuration - Gemini sole provider
+// LLM Configuration - Gemini primary with OpenRouter fallback
 const LLM_CONFIG = {
   claude: {
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_GENERATIVE_AI_API_KEY || '',
-    model: 'gemini-3-pro',
-    maxTokens: 32000, // Gemini 1.5/3 Pro supports large contexts
-    temperature: 0.3, // Reduced to 0.3 for better schema adherence
+    model: 'gemini-2.5-pro',
+    maxTokens: 32000,
+    temperature: 0.3,
+  },
+  openrouter: {
+    apiKey: process.env.OPENROUTER_API_KEY || '',
+    model: 'tencent/hy3-preview:free',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    maxTokens: 32000,
+    temperature: 0.3,
   },
   timeout: 840000, // 14 minutes
   retries: 2,
@@ -312,27 +319,26 @@ async function callGemini(
 }
 
 /**
- * Call LLM provider (Perplexity)
+ * Call LLM provider (OpenRouter)
  */
-async function callPerplexity(systemPrompt: string, userPrompt: string): Promise<string> {
-  const config = LLM_CONFIG.perplexity;
+async function callOpenRouter(systemPrompt: string, userPrompt: string): Promise<string> {
+  const config = LLM_CONFIG.openrouter;
 
   if (!config.apiKey) {
-    throw new Error('Perplexity API key not configured');
+    throw new Error('OpenRouter API key not configured');
   }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), LLM_CONFIG.timeout);
 
   try {
-    // Perplexity doesn't support system prompts, so combine them
-    const combinedPrompt = `${systemPrompt}\n\n${userPrompt}`;
-
     const response = await fetch(`${config.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${config.apiKey}`,
+        'HTTP-Referer': 'https://smartslate.io', // Required by some OpenRouter models
+        'X-Title': 'SmartSlate Polaris',
       },
       body: JSON.stringify({
         model: config.model,
@@ -340,8 +346,12 @@ async function callPerplexity(systemPrompt: string, userPrompt: string): Promise
         temperature: config.temperature,
         messages: [
           {
+            role: 'system',
+            content: systemPrompt,
+          },
+          {
             role: 'user',
-            content: combinedPrompt,
+            content: userPrompt,
           },
         ],
       }),
@@ -352,7 +362,7 @@ async function callPerplexity(systemPrompt: string, userPrompt: string): Promise
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Perplexity API error: ${response.status} - ${JSON.stringify(errorData)}`);
+      throw new Error(`OpenRouter API error: ${response.status} - ${JSON.stringify(errorData)}`);
     }
 
     const data = await response.json();
@@ -810,7 +820,7 @@ export async function generateDynamicQuestionsV2(
     });
 
     let responseContent: string | null = null;
-    let usedProvider: 'claude' | 'perplexity' | null = null;
+    let usedProvider: 'claude' | 'openrouter' | null = null;
 
     // Try Gemini first (primary provider)
     if (LLM_CONFIG.claude.apiKey) {
