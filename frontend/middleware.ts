@@ -12,7 +12,6 @@ const PUBLIC_PATHS = new Set([
   '/favicon.ico',
   '/demo-loading',
   '/pricing',
-  '/my-starmaps',
   '/subscription',
   '/share', // Public share pages - no auth required
   '/landing', // Landing page - public access

@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { UsageStatsCard } from '@/components/dashboard/UsageStatsCard';
 import { QuickActionsCardWithLimits } from '@/components/dashboard/QuickActionsCardWithLimits';
+import { RecentBlueprintsCard } from '@/components/dashboard/RecentBlueprintsCard';
 import { FeedbackCard } from '@/components/feedback';
 import { useUserProfile } from '@/lib/hooks/useUserProfile';
 import { useUserUsage } from '@/lib/hooks/useUserUsage';
@@ -164,6 +165,16 @@ function DashboardContent() {
                 <QuickActionsCardWithLimits />
               </motion.div>
             </div>
+
+            {/* Recent Starmaps */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9, duration: 0.5 }}
+              className="mb-6"
+            >
+              <RecentBlueprintsCard />
+            </motion.div>
 
             {/* Feedback Section */}
             <motion.div

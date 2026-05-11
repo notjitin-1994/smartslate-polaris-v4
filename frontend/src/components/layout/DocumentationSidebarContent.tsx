@@ -28,7 +28,7 @@ export function DocumentationSidebarContent() {
     {
       title: 'My Learning Design Starmaps',
       icon: IconMap,
-      href: '/my-starmaps',
+      href: '/starmaps',
       isExternal: false,
     },
     ...(isAdmin

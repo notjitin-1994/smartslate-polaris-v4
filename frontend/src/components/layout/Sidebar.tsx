@@ -98,7 +98,7 @@ export function Sidebar({ user, onSignOut }: SidebarProps) {
 
   const quickAccessItems = [
     { title: 'Dashboard', icon: IconApps, path: '/' },
-    { title: 'My Starmaps', icon: IconMap, path: '/my-starmaps' },
+    { title: 'My Starmaps', icon: IconMap, path: '/starmaps' },
     ...(isAdmin
       ? [
           {

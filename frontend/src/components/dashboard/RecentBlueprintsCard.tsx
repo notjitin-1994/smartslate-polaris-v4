@@ -108,7 +108,7 @@ export function RecentBlueprintsCard() {
             <p className="text-caption text-text-secondary">Your latest blueprints</p>
           </div>
         </div>
-        <Link href="/my-starmaps">
+        <Link href="/starmaps">
           <Button className="bg-primary hover:bg-primary/90 text-xs text-black">View All</Button>
         </Link>
       </div>

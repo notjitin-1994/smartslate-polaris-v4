@@ -30,7 +30,7 @@ const quickActions = [
     icon: FileText,
     title: 'My Starmaps',
     description: 'View your saved blueprints',
-    href: '/my-starmaps',
+    href: '/starmaps',
     color: 'from-indigo-600 to-indigo-700',
     bgColor: 'bg-indigo-600/10',
     borderColor: 'border-indigo-600/20',
