@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   PlayCircle,
 } from 'lucide-react';
+import { parseDurationToHours } from '../utils';
 
 interface Module {
   module_id?: string;
@@ -67,21 +68,7 @@ export function ContentOutlineInfographic({
 
   // Calculate total duration
   const totalDuration = modules.reduce((sum, module) => {
-    const duration = module.duration || '';
-    const weeks = duration.match(/(\d+)\s*(?:week|weeks|wk|w)\b/i);
-    const days = duration.match(/(\d+)\s*(?:day|days|d)\b/i);
-    const hours = duration.match(/(\d+)\s*(?:hour|hours|hr|h)\b/i);
-    const minutes = duration.match(/(\d+)\s*(?:minute|minutes|min|m)\b/i);
-
-    // Convert to learning hours (not calendar hours):
-    // 1 week = 10 study hours, 1 day = 2 study hours
-    const totalHours =
-      (weeks ? parseInt(weeks[1]) * 10 : 0) +
-      (days ? parseInt(days[1]) * 2 : 0) +
-      (hours ? parseInt(hours[1]) : 0) +
-      (minutes ? parseInt(minutes[1]) / 60 : 0);
-
-    return sum + totalHours;
+    return sum + parseDurationToHours(module.duration || '');
   }, 0);
 
   return (
